@@ -1,0 +1,201 @@
+# ==========================================
+# WINDOWS TECHNICIAN v0.1
+# DIAGNOSTIC ENGINE
+# ==========================================
+
+from engine.confidence import ConfidenceCalculator
+
+class DiagnosticEngine:
+
+    VALID_SEVERITIES = {
+        "INFO",
+        "WARNING",
+        "CRITICAL"
+    }
+
+    def __init__(self, recommendation_engine=None):
+
+        self.findings = []
+        self.rules = []
+        self.recommendation_engine = recommendation_engine
+        self.confidence_calculator = ConfidenceCalculator()
+
+    def _validate_finding(self, finding):
+
+        if not isinstance(finding, dict):
+            raise ValueError("Finding must be a dictionary.")
+
+        required_fields = [
+            "category",
+            "severity",
+            "message"
+        ]
+
+        for field in required_fields:
+
+            if field not in finding:
+                raise ValueError(
+                    f"Finding is missing required field: {field}"
+                )
+
+        if not isinstance(finding["category"], str):
+            raise ValueError(
+                "Finding category must be a string."
+            )
+
+        valid_severities = {
+            "INFO",
+            "WARNING",
+            "CRITICAL",
+            "NORMAL"
+        }
+
+        if finding["severity"] not in valid_severities:
+            raise ValueError(
+                f"Invalid severity: {finding['severity']}"
+            )
+
+        if not isinstance(finding["message"], str):
+            raise ValueError(
+                "Finding message must be a string."
+            )
+
+        confidence = finding.get("confidence")
+
+        if confidence is not None:
+
+            if not isinstance(confidence, (int, float)):
+                raise ValueError(
+                    "Finding confidence must be numeric."
+                )
+
+            if not 0.0 <= confidence <= 1.0:
+                raise ValueError(
+                    "Finding confidence must be between 0.0 and 1.0."
+                )
+
+        return True
+
+    def add_finding(self, finding):
+
+        self._validate_finding(finding)
+
+        finding = self._add_confidence_level(finding)
+
+        self.findings.append(finding)
+
+    def add_rule(self, rule):
+
+        if not hasattr(rule, "evaluate"):
+            raise ValueError("Invalid diagnostic rule.")
+
+        self.rules.append(rule)
+
+    def run_rules(self, evidence):
+
+        for rule in self.rules:
+
+            rule_evidence = evidence.get(
+                rule.category,
+                {}
+            )
+
+            findings = rule.evaluate(
+                rule_evidence
+            )
+
+            if findings is None:
+                continue
+
+            if isinstance(findings, list):
+
+                for finding in findings:
+                    self.add_finding(finding)
+
+            else:
+
+                self.add_finding(findings)
+
+        return self.get_findings()
+    def diagnose(self, evidence):
+
+        self.clear_findings()
+
+        self.run_rules(evidence)
+
+        recommendations = []
+
+        if self.recommendation_engine is not None:
+
+            recommendations = (
+                self.recommendation_engine
+                .get_recommendations(self.findings)
+            )
+
+        return {
+            "status": self.get_overall_status(),
+            "total_findings": len(self.findings),
+            "findings": self.findings,
+            "recommendations": recommendations
+        }
+
+    def get_findings(self):
+
+        return self.findings
+
+    def clear_findings(self):
+
+        self.findings.clear()
+
+    def get_summary(self):
+
+        return {
+            "total_findings": len(self.findings),
+            "findings": self.findings
+        }
+
+    def get_overall_status(self):
+
+        if not self.findings:
+            return "NORMAL"
+
+        severity_priority = {
+            "INFO": 1,
+            "WARNING": 2,
+            "CRITICAL": 3
+        }
+
+        highest_severity = "INFO"
+        highest_priority = 0
+
+        for finding in self.findings:
+
+            severity = finding.get(
+                "severity",
+                "INFO"
+            )
+
+            priority = severity_priority.get(
+                severity,
+                1
+            )
+
+            if priority > highest_priority:
+
+                highest_priority = priority
+                highest_severity = severity
+
+        return highest_severity
+
+    def _add_confidence_level(self, finding):
+
+        confidence = finding.get("confidence")
+
+        if confidence is None:
+            return finding
+
+        finding["confidence_level"] = (
+            self.confidence_calculator.classify(confidence)
+        )
+
+        return finding
