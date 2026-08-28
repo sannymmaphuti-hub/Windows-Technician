@@ -1,11 +1,12 @@
 # ==========================================
-# WINDOWS TECHNICIAN v0.1
+# WINDOWS TECHNICIAN v0.2
 # APPLICATION ENTRY POINT
 # ==========================================
 
 from pathlib import Path
 
 from application.technician import Technician
+
 
 class TechnicianApp:
 
@@ -20,7 +21,7 @@ class TechnicianApp:
     def get_status(self):
 
         return self.technician.get_status()
-    
+
     def get_primary_issue(self):
 
         return self.technician.get_primary_issue()
@@ -39,7 +40,10 @@ class TechnicianApp:
             exist_ok=True
         )
 
-        report_path = reports_directory / "technician_report.txt"
+        report_path = (
+            reports_directory /
+            "technician_report.txt"
+        )
 
         report_path.write_text(
             report,
@@ -49,18 +53,256 @@ class TechnicianApp:
         return str(report_path)
 
 
+def print_section(title):
+
+    print()
+    print(title)
+    print("------------------------------------------")
+
+
+def print_findings(diagnosis):
+
+    findings = diagnosis.get(
+        "findings",
+        []
+    )
+
+    if not findings:
+
+        print_section("FINDINGS")
+        print("No significant findings detected.")
+        return
+
+    print_section("FINDINGS")
+
+    for number, finding in enumerate(
+        findings,
+        start=1
+    ):
+
+        print(
+            f"{number}. "
+            f"{finding.get('category', 'SYSTEM')}"
+        )
+
+        print(
+            f"   Severity   : "
+            f"{finding.get('severity', 'INFO')}"
+        )
+
+        print(
+            f"   Confidence : "
+            f"{finding.get('confidence_level', 'N/A')}"
+        )
+
+        print(
+            f"   Message    : "
+            f"{finding.get('message', '')}"
+        )
+
+        if finding.get("reason"):
+
+            print(
+                f"   Reason     : "
+                f"{finding['reason']}"
+            )
+
+
+def print_correlations(result):
+
+    correlations = result.get(
+        "correlations",
+        []
+    )
+
+    print_section("DIAGNOSTIC CORRELATIONS")
+
+    if not correlations:
+
+        print(
+            "No significant correlations "
+            "identified."
+        )
+
+        return
+
+    for number, correlation in enumerate(
+        correlations,
+        start=1
+    ):
+
+        print(
+            f"{number}. {correlation}"
+        )
+
+
+def print_root_causes(result):
+
+    candidates = result.get(
+        "root_cause_candidates",
+        []
+    )
+
+    primary = result.get(
+        "primary_root_cause"
+    )
+
+    print_section("ROOT-CAUSE ANALYSIS")
+
+    if not candidates:
+
+        print(
+            "No root-cause candidate meets "
+            "the current evidence threshold."
+        )
+
+        print(
+            "The system detected findings, "
+            "but will not guess a root cause "
+            "without sufficient evidence."
+        )
+
+        return
+
+    for number, candidate in enumerate(
+        candidates,
+        start=1
+    ):
+
+        print(
+            f"{number}. "
+            f"{candidate.get('cause', 'Unknown cause')}"
+        )
+
+        print(
+            f"   Category          : "
+            f"{candidate.get('category', 'SYSTEM')}"
+        )
+
+        print(
+            f"   Confidence        : "
+            f"{candidate.get('confidence', 'N/A')}"
+        )
+
+        print(
+            f"   Confidence Level  : "
+            f"{candidate.get('confidence_level', 'N/A')}"
+        )
+
+        print(
+            f"   Reason            : "
+            f"{candidate.get('reason', '')}"
+        )
+
+        evidence = candidate.get(
+            "evidence",
+            []
+        )
+
+        if evidence:
+
+            print(
+                "   Evidence:"
+            )
+
+            for item in evidence:
+
+                print(
+                    f"      - {item}"
+                )
+
+    print()
+
+    print("PRIMARY ROOT CAUSE")
+    print("------------------------------------------")
+
+    if primary:
+
+        print(
+            f"Cause      : "
+            f"{primary.get('cause', 'Unknown')}"
+        )
+
+        print(
+            f"Category   : "
+            f"{primary.get('category', 'SYSTEM')}"
+        )
+
+        print(
+            f"Confidence : "
+            f"{primary.get('confidence', 'N/A')}"
+        )
+
+        print(
+            f"Level      : "
+            f"{primary.get('confidence_level', 'N/A')}"
+        )
+
+        print(
+            f"Reason     : "
+            f"{primary.get('reason', '')}"
+        )
+
+    else:
+
+        print(
+            "No primary root cause selected."
+        )
+
+
+def print_recommendations(diagnosis):
+
+    recommendations = diagnosis.get(
+        "recommendations",
+        []
+    )
+
+    print_section("RECOMMENDATIONS")
+
+    if not recommendations:
+
+        print(
+            "No recommendations generated."
+        )
+
+        return
+
+    for number, recommendation in enumerate(
+        recommendations,
+        start=1
+    ):
+
+        print(
+            f"{number}. "
+            f"{recommendation.get('category', 'SYSTEM')}"
+        )
+
+        print(
+            f"   Severity      : "
+            f"{recommendation.get('severity', 'INFO')}"
+        )
+
+        print(
+            f"   Recommendation: "
+            f"{recommendation.get('recommendation', '')}"
+        )
+
+
 def main():
 
     app = TechnicianApp()
 
     print("==========================================")
-    print("       WINDOWS TECHNICIAN v0.1")
+    print("       WINDOWS TECHNICIAN v0.2")
+    print("       INTELLIGENT DIAGNOSTICS")
     print("==========================================")
     print()
 
     print("Running system diagnostics...")
+    print("Collecting evidence...")
+    print("Analyzing system state...")
+    print("Evaluating diagnostic intelligence...")
     print("Please wait...")
-    print()
 
     result = app.run_diagnostics()
 
@@ -70,93 +312,57 @@ def main():
     # DIAGNOSTIC SUMMARY
     # ==================================================
 
-    print("DIAGNOSTIC RESULT")
-    print("------------------------------------------")
+    print_section("DIAGNOSTIC SUMMARY")
 
     print(
-        f"Status         : "
-        f"{diagnosis['status']}"
+        f"Status          : "
+        f"{diagnosis.get('status', 'UNKNOWN')}"
     )
 
     print(
-        f"Total Findings : "
-        f"{diagnosis['total_findings']}"
+        f"Total Findings  : "
+        f"{diagnosis.get('total_findings', 0)}"
     )
 
     print(
-        f"Recommendations: "
-        f"{len(diagnosis['recommendations'])}"
+        f"Recommendations : "
+        f"{len(diagnosis.get('recommendations', []))}"
     )
 
     # ==================================================
     # FINDINGS
     # ==================================================
 
-    if diagnosis["findings"]:
+    print_findings(diagnosis)
 
-        print()
-        print("FINDINGS")
-        print("------------------------------------------")
+    # ==================================================
+    # CORRELATION
+    # ==================================================
 
-        for number, finding in enumerate(
-            diagnosis["findings"],
-            start=1
-        ):
+    print_correlations(result)
 
-            print(
-                f"{number}. "
-                f"{finding['category']}"
-            )
+    # ==================================================
+    # ROOT CAUSE
+    # ==================================================
 
-            print(
-                f"   Severity   : "
-                f"{finding['severity']}"
-            )
-
-            print(
-                f"   Confidence : "
-                f"{finding.get('confidence_level', 'N/A')}"
-            )
-
-            print(
-                f"   Message    : "
-                f"{finding['message']}"
-            )
+    print_root_causes(result)
 
     # ==================================================
     # RECOMMENDATIONS
     # ==================================================
 
-    if diagnosis["recommendations"]:
+    print_recommendations(diagnosis)
 
-        print()
-        print("RECOMMENDATIONS")
-        print("------------------------------------------")
-
-        for number, recommendation in enumerate(
-            diagnosis["recommendations"],
-            start=1
-        ):
-
-            print(
-                f"{number}. "
-                f"{recommendation['category']}"
-            )
-
-            print(
-                f"   Severity      : "
-                f"{recommendation['severity']}"
-            )
-
-            print(
-                f"   Recommendation: "
-                f"{recommendation['recommendation']}"
-            )
+    # ==================================================
+    # COMPLETE
+    # ==================================================
 
     print()
     print("==========================================")
     print("Diagnostic complete.")
     print("==========================================")
 
+
 if __name__ == "__main__":
+
     main()

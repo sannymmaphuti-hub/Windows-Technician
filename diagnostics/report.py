@@ -1,5 +1,5 @@
 # ==========================================
-# WINDOWS TECHNICIAN v0.1
+# WINDOWS TECHNICIAN v0.2
 # DIAGNOSTIC REPORT GENERATOR
 # ==========================================
 
@@ -33,7 +33,7 @@ def generate_report(
     # ==========================================
 
     report.append("==========================================")
-    report.append("       WINDOWS TECHNICIAN v0.1")
+    report.append("       WINDOWS TECHNICIAN v0.2")
     report.append("          DIAGNOSTIC REPORT")
     report.append("==========================================")
     report.append("")
@@ -582,7 +582,7 @@ def generate_report(
     # ==========================================
 
     report.append("==========================================")
-    report.append("END OF WINDOWS TECHNICIAN v0.1 REPORT")
+    report.append("END OF WINDOWS TECHNICIAN v0.2 REPORT")
     report.append("==========================================")
 
     return "\n".join(report)

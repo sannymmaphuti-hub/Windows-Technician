@@ -1,5 +1,5 @@
 # ==========================================
-# WINDOWS TECHNICIAN v0.1
+# WINDOWS TECHNICIAN v0.2
 # GITIGNORE
 # ==========================================
 
@@ -37,3 +37,6 @@ Thumbs.db
 *.tmp
 *.temp
 *.bak
+
+# Generated profiling output
+profile.txt

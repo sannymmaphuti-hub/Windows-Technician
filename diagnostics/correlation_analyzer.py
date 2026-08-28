@@ -1,5 +1,5 @@
 # ==========================================================
-# WINDOWS TECHNICIAN v0.1
+# WINDOWS TECHNICIAN v0.2
 # DIAGNOSTIC CORRELATION ENGINE
 # ==========================================================
 
@@ -15,45 +15,95 @@ def correlate_memory_and_cpu_behavior(
     It identifies evidence that may indicate
     a relationship between memory pressure
     and CPU behaviour.
+
+    Supports both:
+        - Legacy correlation findings using
+          "classification": "CPU SPIKE"
+        - v0.2 process intelligence findings using
+          "behavior": "SPIKE"
     """
 
     findings = []
 
-    memory_status = memory_diagnostics["status"]
+    if not isinstance(memory_diagnostics, dict):
+        return findings
+
+    if not isinstance(process_behavior_findings, list):
+        return findings
+
+    memory_status = memory_diagnostics.get(
+        "status",
+        "INFO"
+    )
 
     # ======================================================
-    # MEMORY PRESSURE + CPU BEHAVIOR
+    # MEMORY PRESSURE
     # ======================================================
 
-    if memory_status in (
+    if memory_status not in (
         "WARNING",
+        "CRITICAL",
         "HIGH MEMORY PRESSURE"
     ):
+        return findings
 
-        for finding in process_behavior_findings:
+    # ======================================================
+    # PROCESS BEHAVIOR
+    # ======================================================
 
-            process_name = finding["name"]
-            classification = finding["classification"]
+    for finding in process_behavior_findings:
 
-            if (
-                process_name.lower() == "memcompression"
-                and classification == "CPU SPIKE"
-            ):
+        if not isinstance(finding, dict):
+            continue
 
-                findings.append({
-                    "severity": "INFO",
-                    "category": "CROSS-DIAGNOSTIC CORRELATION",
-                    "relationship": (
-                        "MEMORY PRESSURE + CPU SPIKE"
-                    ),
-                    "process": process_name,
-                    "message": (
-                        "High memory pressure coincided "
-                        "with temporary CPU activity from "
-                        "MemCompression. This may indicate "
-                        "Windows responding to memory pressure."
-                    )
-                })
+        process_name = finding.get(
+            "name",
+            "Unknown"
+        )
+
+        # --------------------------------------------------
+        # Support both old and new field names.
+        # --------------------------------------------------
+
+        behavior = finding.get(
+            "behavior"
+        )
+
+        classification = finding.get(
+            "classification"
+        )
+
+        is_cpu_spike = (
+            behavior == "SPIKE"
+            or classification == "CPU SPIKE"
+        )
+
+        # --------------------------------------------------
+        # MemCompression + CPU spike
+        # --------------------------------------------------
+
+        if (
+            isinstance(process_name, str)
+            and process_name.lower() == "memcompression"
+            and is_cpu_spike
+        ):
+
+            findings.append({
+                "severity": "INFO",
+                "category": (
+                    "CROSS-DIAGNOSTIC CORRELATION"
+                ),
+                "relationship": (
+                    "MEMORY PRESSURE + CPU SPIKE"
+                ),
+                "process": process_name,
+                "message": (
+                    "High memory pressure coincided "
+                    "with temporary CPU activity from "
+                    "MemCompression. This may indicate "
+                    "Windows responding to memory pressure."
+                )
+            })
 
     return findings
 
@@ -65,15 +115,15 @@ def correlate_memory_and_cpu_behavior(
 if __name__ == "__main__":
 
     test_memory = {
-        "status": "HIGH MEMORY PRESSURE"
+        "status": "CRITICAL"
     }
 
     test_behavior = [
         {
-            "severity": "INFO",
+            "severity": "CRITICAL",
             "category": "PROCESS CPU BEHAVIOR",
             "name": "MemCompression",
-            "classification": "CPU SPIKE",
+            "behavior": "SPIKE",
             "message": (
                 "MemCompression experienced "
                 "temporary high CPU activity."

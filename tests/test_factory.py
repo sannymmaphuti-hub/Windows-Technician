@@ -1,10 +1,12 @@
 # ==========================================
-# WINDOWS TECHNICIAN v0.1
+
+# WINDOWS TECHNICIAN v0.2
+
 # FACTORY TESTS
+
 # ==========================================
 
 from engine.factory import create_diagnostic_engine
-
 
 def test_factory_returns_analyzer():
 
@@ -15,7 +17,6 @@ def test_factory_returns_analyzer():
     assert hasattr(analyzer, "collectors")
     assert hasattr(analyzer, "rules")
     assert hasattr(analyzer, "engine")
-
 
 def test_factory_configures_all_collectors():
 
@@ -31,9 +32,9 @@ def test_factory_configures_all_collectors():
         "MEMORY",
         "STORAGE",
         "NETWORK",
-        "GPU"
+        "GPU",
+        "PROCESS"
     }
-
 
 def test_factory_configures_all_rules():
 
@@ -52,7 +53,6 @@ def test_factory_configures_all_rules():
         "GPU"
     }
 
-
 def test_factory_configures_recommendation_engine():
 
     analyzer = create_diagnostic_engine()
@@ -65,3 +65,4 @@ def test_factory_engine_contains_all_rules():
     analyzer = create_diagnostic_engine()
 
     assert len(analyzer.engine.rules) == 5
+

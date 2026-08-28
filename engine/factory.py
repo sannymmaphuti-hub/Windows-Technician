@@ -1,5 +1,5 @@
 # ==========================================
-# WINDOWS TECHNICIAN v0.1
+# WINDOWS TECHNICIAN v0.2
 # DIAGNOSTIC ENGINE FACTORY
 # ==========================================
 
@@ -18,9 +18,12 @@ from engine.rules.network_rule import NetworkAdapterRule
 from engine.rules.gpu_rule import GPUStatusRule
 
 from engine.recommendation_engine import RecommendationEngine
+from engine.collectors.process_collector import ProcessCollector
 
 
 def create_diagnostic_engine():
+
+    process_collector = ProcessCollector()
 
     return Analyzer(
 
@@ -29,7 +32,8 @@ def create_diagnostic_engine():
             MemoryCollector(),
             StorageCollector(),
             NetworkCollector(),
-            GPUCollector()
+            GPUCollector(),
+            process_collector
         ],
 
         rules=[
@@ -40,5 +44,6 @@ def create_diagnostic_engine():
             GPUStatusRule()
         ],
 
-        recommendation_engine=RecommendationEngine()
+        recommendation_engine=RecommendationEngine(),
+        process_collector=process_collector
     )

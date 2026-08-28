@@ -1,6 +1,6 @@
 
 # ==========================================
-# WINDOWS TECHNICIAN v0.1
+# WINDOWS TECHNICIAN v0.2
 # CPU CONTRIBUTOR DIAGNOSTIC RULE
 # ==========================================
 
@@ -63,4 +63,5 @@ class CPUContributorRule(BaseRule):
             ),
             "confidence": 0.90
         }
+
 

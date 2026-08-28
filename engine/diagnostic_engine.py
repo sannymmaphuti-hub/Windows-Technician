@@ -1,5 +1,5 @@
 # ==========================================
-# WINDOWS TECHNICIAN v0.1
+# WINDOWS TECHNICIAN v0.2
 # DIAGNOSTIC ENGINE
 # ==========================================
 
@@ -117,11 +117,24 @@ class DiagnosticEngine:
                 self.add_finding(findings)
 
         return self.get_findings()
-    def diagnose(self, evidence):
+
+    def analyze(self, evidence, additional_findings=None):
+
+        return self.diagnose(
+            evidence,
+            additional_findings=additional_findings
+        )
+    
+    def diagnose(self, evidence, additional_findings=None):
 
         self.clear_findings()
 
         self.run_rules(evidence)
+
+        if additional_findings:
+
+            for finding in additional_findings:
+                self.add_finding(finding)
 
         recommendations = []
 

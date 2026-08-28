@@ -779,3 +779,25 @@ def test_engine_still_accepts_single_finding():
     })
 
     assert result["total_findings"] == 1
+def test_engine_diagnose_accepts_external_findings():
+
+    engine = DiagnosticEngine()
+
+    external_finding = {
+        "category": "PROCESS",
+        "severity": "CRITICAL",
+        "message": "chrome.exe is a significant CPU contributor.",
+        "process": "chrome.exe",
+        "pid": 1234
+    }
+
+    result = engine.diagnose(
+        {},
+        additional_findings=[
+            external_finding
+        ]
+    )
+
+    assert result["total_findings"] == 1
+    assert result["findings"][0]["category"] == "PROCESS"
+    assert result["status"] == "CRITICAL"

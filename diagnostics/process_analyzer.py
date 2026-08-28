@@ -3,7 +3,7 @@ import time
 
 
 # ==========================================================
-# WINDOWS TECHNICIAN v0.1
+# WINDOWS TECHNICIAN v0.2
 # PROCESS DIAGNOSTIC ENGINE
 # ==========================================================
 

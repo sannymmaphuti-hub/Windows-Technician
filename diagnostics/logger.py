@@ -1,5 +1,5 @@
 # ==========================================================
-# WINDOWS TECHNICIAN v0.1
+# WINDOWS TECHNICIAN v0.2
 # DIAGNOSTIC LOGGER
 # ==========================================================
 
@@ -58,7 +58,7 @@ def create_log_file():
         )
 
         file.write(
-            "WINDOWS TECHNICIAN v0.1\n"
+            "WINDOWS TECHNICIAN v0.2\n"
         )
 
         file.write(

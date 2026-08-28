@@ -1,8 +1,8 @@
 # Security Policy
 
-## Windows Technician v0.1
+## Windows Technician v0.2
 
-Windows Technician is a diagnostic and troubleshooting project designed to analyze system information and identify potential technical issues.
+Windows Technician is a diagnostic and troubleshooting project designed to analyze Windows system information, collect diagnostic evidence, identify potential technical issues, analyze relationships between diagnostic findings, prioritize issues, and provide recommendations.
 
 ## Reporting a Security Vulnerability
 
@@ -10,27 +10,29 @@ If you discover a security vulnerability in this project, please report it priva
 
 Please include:
 
-- A description of the vulnerability
-- Steps to reproduce the issue
-- The affected component or file
-- Potential impact
-- Any suggested mitigation
+* A description of the vulnerability
+* Steps to reproduce the issue
+* The affected component or file
+* Potential impact
+* Any suggested mitigation
 
 Do not include passwords, private keys, personal information, or other sensitive data in a vulnerability report.
 
 ## Supported Version
 
 | Version | Supported |
-|---------|-----------|
-| v0.1    | Yes       |
+| ------- | --------- |
+| v0.2    | Yes       |
 
 ## Security Considerations
 
-Windows Technician v0.1 is intended for diagnostic purposes.
+Windows Technician v0.2 is intended for diagnostic purposes.
 
-The software should be run with appropriate user permissions and should not be granted elevated privileges unless a future feature specifically requires them.
+The software should be run with appropriate user permissions and should not be granted elevated privileges unless a feature specifically requires them.
 
 Diagnostic results should be reviewed by the user or technician before taking corrective action.
+
+The diagnostic system should not be treated as an automated authority for making system changes. Recommendations should be evaluated before implementation.
 
 ## Responsible Disclosure
 

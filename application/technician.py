@@ -1,16 +1,16 @@
 # ==========================================
-# WINDOWS TECHNICIAN v0.1
+# WINDOWS TECHNICIAN v0.2
 # APPLICATION SERVICE
 # ==========================================
 
 from engine.factory import create_diagnostic_engine
-
 
 class Technician:
 
     def __init__(self):
 
         self.diagnostic_engine = create_diagnostic_engine()
+        
 
         self.last_result = None
 
@@ -111,7 +111,7 @@ class Technician:
         report = []
 
         report.append(
-            "WINDOWS TECHNICIAN v0.1"
+            "WINDOWS TECHNICIAN v0.2"
         )
 
         report.append(
