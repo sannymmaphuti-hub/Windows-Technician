@@ -1,5 +1,5 @@
 # ==========================================================
-# WINDOWS TECHNICIAN v0.2
+# Windows Technician v0.3
 # DIAGNOSTIC CORRELATION ENGINE
 # ==========================================================
 
@@ -19,7 +19,7 @@ def correlate_memory_and_cpu_behavior(
     Supports both:
         - Legacy correlation findings using
           "classification": "CPU SPIKE"
-        - v0.2 process intelligence findings using
+        - v0.3 process intelligence findings using
           "behavior": "SPIKE"
     """
 

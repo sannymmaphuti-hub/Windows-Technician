@@ -1,22 +1,105 @@
 # ==========================================
-# WINDOWS TECHNICIAN v0.2
+# WINDOWS TECHNICIAN v0.3
 # APPLICATION SERVICE
 # ==========================================
 
-from engine.factory import create_diagnostic_engine
+from copy import deepcopy
+
+from engine.diagnostic_orchestrator import DiagnosticOrchestrator
+from engine.case_decision import CaseDecision
+from engine.report import generate_case_report
+
 
 class Technician:
 
     def __init__(self):
 
-        self.diagnostic_engine = create_diagnostic_engine()
-        
+        self.diagnostic_orchestrator = (
+            DiagnosticOrchestrator()
+        )
+
+        # Compatibility with existing application tests
+        self.diagnostic_engine = (
+            self.diagnostic_orchestrator.pipeline
+        )
 
         self.last_result = None
 
     def diagnose(self):
 
-        self.last_result = self.diagnostic_engine.analyze()
+        result = self.diagnostic_orchestrator.run()
+
+        case = self.diagnostic_orchestrator.get_case()
+
+        case_decision = CaseDecision(case).evaluate()
+
+        diagnostic_case = {
+            "evidence": deepcopy(
+                case.evidence
+            ),
+
+            "findings": deepcopy(
+                case.findings
+            ),
+
+            "correlations": deepcopy(
+                case.correlations
+            ),
+
+            "root_causes": deepcopy(
+                case.root_causes
+            ),
+
+            "root_cause_candidates": deepcopy(
+                case.root_cause_candidates
+            ),
+
+            "primary_root_cause": deepcopy(
+                case.primary_root_cause
+            ),
+
+            "recommendations": deepcopy(
+                case.recommendations
+            ),
+
+            "status": deepcopy(
+                case.status
+            ),
+
+            "process_intelligence": deepcopy(
+                case.process_intelligence
+            ),
+
+            "memory_intelligence": deepcopy(
+                case.memory_intelligence
+            ),
+
+            "memory_history": deepcopy(
+                case.memory_history
+            ),
+
+            "memory_trend_intelligence": deepcopy(
+                case.memory_trend_intelligence
+            ),
+
+            "memory_temporal_intelligence": deepcopy(
+                case.memory_temporal_intelligence
+            ),
+
+            "memory_diagnostic_intelligence": deepcopy(
+                case.memory_diagnostic_intelligence
+            )
+        }
+
+        self.last_result = result
+
+        self.last_result[
+            "diagnostic_case"
+        ] = diagnostic_case
+
+        self.last_result[
+            "case_decision"
+        ] = deepcopy(case_decision)
 
         return self.last_result
 
@@ -26,7 +109,11 @@ class Technician:
 
             self.diagnose()
 
-        return self.last_result["diagnosis"]["status"]
+        return self.last_result[
+            "diagnosis"
+        ][
+            "status"
+        ]
 
     def get_primary_issue(self):
 
@@ -34,7 +121,9 @@ class Technician:
 
             self.diagnose()
 
-        diagnosis = self.last_result["diagnosis"]
+        diagnosis = self.last_result[
+            "diagnosis"
+        ]
 
         findings = diagnosis.get(
             "findings",
@@ -46,7 +135,9 @@ class Technician:
             return {
                 "status": "HEALTHY",
                 "category": "SYSTEM",
-                "issue": "No significant system issue detected.",
+                "issue": (
+                    "No significant system issue detected."
+                ),
                 "severity": "INFO",
                 "priority_score": 0,
                 "reason": (
@@ -58,7 +149,10 @@ class Technician:
         highest_priority = max(
             findings,
             key=lambda finding: (
-                finding.get("priority_score", 0)
+                finding.get(
+                    "priority_score",
+                    0
+                )
             )
         )
 
@@ -95,7 +189,8 @@ class Technician:
                 "reason",
                 highest_priority.get(
                     "message",
-                    "No diagnostic explanation available."
+                    "No diagnostic explanation "
+                    "available."
                 )
             )
         }
@@ -103,73 +198,8 @@ class Technician:
     def get_report(self):
 
         if self.last_result is None:
-
             self.diagnose()
 
-        diagnosis = self.last_result["diagnosis"]
+        case = self.diagnostic_orchestrator.get_case()
 
-        report = []
-
-        report.append(
-            "WINDOWS TECHNICIAN v0.2"
-        )
-
-        report.append(
-            "=========================================="
-        )
-
-        report.append(
-            f"Status: {diagnosis['status']}"
-        )
-
-        report.append(
-            f"Total Findings: "
-            f"{diagnosis['total_findings']}"
-        )
-
-        report.append("")
-
-        report.append("FINDINGS")
-        report.append("------------------------------------------")
-
-        for number, finding in enumerate(
-            diagnosis.get("findings", []),
-            start=1
-        ):
-
-            report.append(
-                f"{number}. "
-                f"{finding.get('category', 'SYSTEM')}"
-            )
-
-            report.append(
-                f"   Severity: "
-                f"{finding.get('severity', 'INFO')}"
-            )
-
-            report.append(
-                f"   Message: "
-                f"{finding.get('message', '')}"
-            )
-
-        report.append("")
-
-        report.append("RECOMMENDATIONS")
-        report.append("------------------------------------------")
-
-        for number, recommendation in enumerate(
-            diagnosis.get("recommendations", []),
-            start=1
-        ):
-
-            report.append(
-                f"{number}. "
-                f"{recommendation.get('category', 'SYSTEM')}"
-            )
-
-            report.append(
-                f"   Recommendation: "
-                f"{recommendation.get('recommendation', '')}"
-            )
-
-        return "\n".join(report)
+        return generate_case_report(case)

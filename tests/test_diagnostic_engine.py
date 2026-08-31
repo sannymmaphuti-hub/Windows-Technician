@@ -801,3 +801,364 @@ def test_engine_diagnose_accepts_external_findings():
     assert result["total_findings"] == 1
     assert result["findings"][0]["category"] == "PROCESS"
     assert result["status"] == "CRITICAL"
+
+def test_engine_diagnose_result_contains_diagnostic_case_sections():
+
+    engine = DiagnosticEngine()
+
+    engine.add_rule(CPUUsageRule())
+
+    evidence = {
+        "CPU": {
+            "usage_percent": 90
+        }
+    }
+
+    result = engine.diagnose(evidence)
+
+    assert "evidence" in result
+    assert "findings" in result
+    assert "correlations" in result
+    assert "root_causes" in result
+    assert "recommendations" in result
+    assert "status" in result
+
+def test_engine_diagnose_does_not_share_evidence_with_input():
+
+    evidence = {
+        "CPU": {
+            "usage_percent": 90
+        }
+    }
+
+    engine = DiagnosticEngine()
+
+    engine.add_rule(CPUUsageRule())
+
+    result = engine.diagnose(evidence)
+
+    assert result["evidence"] == evidence
+    assert result["evidence"] is not evidence
+    assert result["evidence"]["CPU"] is not evidence["CPU"]
+
+def test_engine_diagnose_does_not_share_nested_evidence_data():
+
+    evidence = {
+        "CPU": {
+            "usage_percent": 90,
+            "details": {
+                "source": "system_monitor"
+            }
+        }
+    }
+
+    engine = DiagnosticEngine()
+
+    engine.add_rule(CPUUsageRule())
+
+    result = engine.diagnose(evidence)
+
+    assert result["evidence"] == evidence
+
+    assert (
+        result["evidence"]["CPU"]
+        is not evidence["CPU"]
+    )
+
+    assert (
+        result["evidence"]["CPU"]["details"]
+        is not evidence["CPU"]["details"]
+    )
+
+def test_engine_diagnose_does_not_share_findings_with_internal_state():
+
+    engine = DiagnosticEngine()
+
+    engine.add_rule(CPUUsageRule())
+
+    evidence = {
+        "CPU": {
+            "usage_percent": 90
+        }
+    }
+
+    result = engine.diagnose(evidence)
+
+    assert result["findings"] == engine.get_findings()
+
+    assert (
+        result["findings"]
+        is not engine.get_findings()
+    )
+
+def test_engine_diagnose_does_not_share_nested_finding_data():
+
+    class NestedFindingRule:
+
+        category = "CPU"
+
+        def evaluate(self, evidence):
+
+            return {
+                "category": "CPU",
+                "severity": "WARNING",
+                "message": "CPU pressure detected.",
+                "details": {
+                    "source": "cpu_monitor",
+                    "usage_percent": 90
+                }
+            }
+
+    engine = DiagnosticEngine()
+
+    engine.add_rule(
+        NestedFindingRule()
+    )
+
+    result = engine.diagnose({
+        "CPU": {
+            "usage_percent": 90
+        }
+    })
+
+    assert result["findings"] == engine.get_findings()
+
+    assert (
+        result["findings"][0]
+        is not engine.get_findings()[0]
+    )
+
+    assert (
+        result["findings"][0]["details"]
+        is not engine.get_findings()[0]["details"]
+    )
+
+def test_engine_diagnose_does_not_share_recommendations_with_engine():
+
+    class FakeRecommendationEngine:
+
+        def get_recommendations(self, findings):
+
+            return [
+                {
+                    "category": "CPU",
+                    "severity": "WARNING",
+                    "action": "Investigate CPU usage.",
+                    "details": {
+                        "source": "recommendation_engine"
+                    }
+                }
+            ]
+
+    recommendation_engine = FakeRecommendationEngine()
+
+    engine = DiagnosticEngine(
+        recommendation_engine
+    )
+
+    engine.add_rule(CPUUsageRule())
+
+    result = engine.diagnose({
+        "CPU": {
+            "usage_percent": 90
+        }
+    })
+
+    recommendations = (
+        recommendation_engine.get_recommendations(
+            engine.get_findings()
+        )
+    )
+
+    assert result["recommendations"] == recommendations
+
+    assert (
+        result["recommendations"]
+        is not recommendations
+    )
+
+    assert (
+        result["recommendations"][0]
+        is not recommendations[0]
+    )
+
+    assert (
+        result["recommendations"][0]["details"]
+        is not recommendations[0]["details"]
+    )
+
+def test_engine_diagnose_result_contains_empty_case_sections():
+
+    engine = DiagnosticEngine()
+
+    engine.add_rule(CPUUsageRule())
+
+    result = engine.diagnose({
+        "CPU": {
+            "usage_percent": 90
+        }
+    })
+
+    assert "correlations" in result
+    assert "root_causes" in result
+
+    assert result["correlations"] == []
+    assert result["root_causes"] == []
+
+def test_engine_diagnose_preserves_correlations_and_root_causes():
+
+    engine = DiagnosticEngine()
+
+    engine.add_rule(CPUUsageRule())
+
+    evidence = {
+        "CPU": {
+            "usage_percent": 90
+        }
+    }
+
+    correlation = {
+        "type": "CPU_MEMORY",
+        "strength": "HIGH",
+        "message": "CPU and memory pressure are correlated."
+    }
+
+    root_cause = {
+        "category": "SYSTEM",
+        "severity": "WARNING",
+        "message": "System resource pressure may be contributing to performance degradation."
+    }
+
+    result = engine.diagnose(
+        evidence,
+        correlations=[correlation],
+        root_causes=[root_cause]
+    )
+
+    assert result["correlations"] == [correlation]
+    assert result["root_causes"] == [root_cause]
+
+def test_engine_diagnose_does_not_share_nested_correlation_or_root_cause_data():
+
+    evidence = {
+        "CPU": {
+            "usage_percent": 90
+        }
+    }
+
+    correlation = {
+        "type": "CPU_MEMORY",
+        "strength": "HIGH",
+        "details": {
+            "cpu": 90,
+            "memory": 85
+        }
+    }
+
+    root_cause = {
+        "category": "SYSTEM",
+        "severity": "WARNING",
+        "message": "System resource pressure detected.",
+        "details": {
+            "source": "resource_analysis"
+        }
+    }
+
+    engine = DiagnosticEngine()
+
+    engine.add_rule(CPUUsageRule())
+
+    result = engine.diagnose(
+        evidence,
+        correlations=[correlation],
+        root_causes=[root_cause]
+    )
+
+    assert result["correlations"] == [correlation]
+    assert result["root_causes"] == [root_cause]
+
+    assert result["correlations"] is not [correlation]
+    assert result["root_causes"] is not [root_cause]
+
+    assert (
+        result["correlations"][0]
+        is not correlation
+    )
+
+    assert (
+        result["root_causes"][0]
+        is not root_cause
+    )
+
+    assert (
+        result["correlations"][0]["details"]
+        is not correlation["details"]
+    )
+
+    assert (
+        result["root_causes"][0]["details"]
+        is not root_cause["details"]
+    )
+
+def test_engine_analyze_preserves_correlations_and_root_causes():
+
+    correlation = {
+        "type": "CPU_MEMORY",
+        "strength": "HIGH",
+        "message": "CPU and memory pressure are correlated."
+    }
+
+    root_cause = {
+        "category": "SYSTEM",
+        "severity": "WARNING",
+        "message": "System resource pressure may be contributing to degradation."
+    }
+
+    engine = DiagnosticEngine()
+
+    engine.add_rule(CPUUsageRule())
+
+    result = engine.analyze(
+        {
+            "CPU": {
+                "usage_percent": 90
+            }
+        },
+        correlations=[correlation],
+        root_causes=[root_cause]
+    )
+
+    assert result["correlations"] == [correlation]
+    assert result["root_causes"] == [root_cause]
+
+def test_engine_diagnose_automatically_generates_correlations():
+
+    from engine.correlation_engine import CorrelationEngine
+
+    engine = DiagnosticEngine(
+        correlation_engine=CorrelationEngine()
+    )
+
+    evidence = {
+        "CPU": {
+            "usage_percent": 92
+        },
+
+        "Memory": {
+            "usage_percent": 88
+        }
+    }
+
+    result = engine.diagnose(evidence)
+
+    assert len(result["correlations"]) == 1
+
+    assert (
+        result["correlations"][0]["type"]
+        == "CPU_MEMORY"
+    )
+
+    assert (
+        result["correlations"][0]["strength"]
+        == "HIGH"
+    )

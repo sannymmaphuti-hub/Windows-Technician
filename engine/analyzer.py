@@ -1,6 +1,6 @@
 
 # ==========================================
-# WINDOWS TECHNICIAN v0.2
+# Windows Technician v0.3
 # DIAGNOSTIC ANALYZER
 # ==========================================
 
@@ -699,7 +699,6 @@ class Analyzer:
     # ==========================================
     # OVERALL DIAGNOSIS STATUS
     # ==========================================
-
     def _calculate_overall_status(
         self,
         findings
@@ -739,7 +738,11 @@ class Analyzer:
             if priority > highest_priority:
 
                 highest_priority = priority
-                highest_severity = severity
+
+                if severity in ("INFO", "NORMAL"):
+                    highest_severity = "NORMAL"
+                else:
+                    highest_severity = severity
 
         return highest_severity
 
@@ -1143,4 +1146,3 @@ class Analyzer:
             "diagnosis":
                 diagnosis
         }
-

@@ -1,7 +1,9 @@
 # ==========================================
-# WINDOWS TECHNICIAN v0.2
+# Windows Technician v0.3
 # DIAGNOSTIC ENGINE
 # ==========================================
+
+import copy
 
 from engine.confidence import ConfidenceCalculator
 
@@ -13,11 +15,18 @@ class DiagnosticEngine:
         "CRITICAL"
     }
 
-    def __init__(self, recommendation_engine=None):
+    def __init__(
+        self,
+        recommendation_engine=None,
+        correlation_engine=None
+    ):
 
         self.findings = []
         self.rules = []
+
         self.recommendation_engine = recommendation_engine
+        self.correlation_engine = correlation_engine
+
         self.confidence_calculator = ConfidenceCalculator()
 
     def _validate_finding(self, finding):
@@ -118,18 +127,43 @@ class DiagnosticEngine:
 
         return self.get_findings()
 
-    def analyze(self, evidence, additional_findings=None):
+    def analyze(
+        self,
+        evidence,
+        additional_findings=None,
+        correlations=None,
+        root_causes=None
+    ):
 
         return self.diagnose(
             evidence,
-            additional_findings=additional_findings
+            additional_findings=additional_findings,
+            correlations=correlations,
+            root_causes=root_causes
         )
-    
-    def diagnose(self, evidence, additional_findings=None):
+
+    def diagnose(
+        self,
+        evidence,
+        additional_findings=None,
+        correlations=None,
+        root_causes=None
+    ):
 
         self.clear_findings()
 
+        if correlations is None:
+            correlations = []
+
+        if root_causes is None:
+            root_causes = []
+
         self.run_rules(evidence)
+
+        if self.correlation_engine is not None:
+            correlations = self.correlation_engine.analyze(
+                evidence
+            )
 
         if additional_findings:
 
@@ -146,12 +180,14 @@ class DiagnosticEngine:
             )
 
         return {
+            "evidence": copy.deepcopy(evidence),
             "status": self.get_overall_status(),
             "total_findings": len(self.findings),
-            "findings": self.findings,
-            "recommendations": recommendations
+            "findings": copy.deepcopy(self.findings),
+            "correlations": copy.deepcopy(correlations),
+            "root_causes": copy.deepcopy(root_causes),
+            "recommendations": copy.deepcopy(recommendations)
         }
-
     def get_findings(self):
 
         return self.findings

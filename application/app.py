@@ -1,12 +1,11 @@
 # ==========================================
-# WINDOWS TECHNICIAN v0.2
+# WINDOWS TECHNICIAN v0.3
 # APPLICATION ENTRY POINT
 # ==========================================
-
+from copy import deepcopy
 from pathlib import Path
 
 from application.technician import Technician
-
 
 class TechnicianApp:
 
@@ -16,7 +15,9 @@ class TechnicianApp:
 
     def run_diagnostics(self):
 
-        return self.technician.diagnose()
+        return deepcopy(
+            self.technician.diagnose()
+        )
 
     def get_status(self):
 
@@ -293,7 +294,7 @@ def main():
     app = TechnicianApp()
 
     print("==========================================")
-    print("       WINDOWS TECHNICIAN v0.2")
+    print("       WINDOWS TECHNICIAN v0.3")
     print("       INTELLIGENT DIAGNOSTICS")
     print("==========================================")
     print()

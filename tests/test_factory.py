@@ -1,6 +1,6 @@
 # ==========================================
 
-# WINDOWS TECHNICIAN v0.2
+# Windows Technician v0.3
 
 # FACTORY TESTS
 
@@ -65,4 +65,3 @@ def test_factory_engine_contains_all_rules():
     analyzer = create_diagnostic_engine()
 
     assert len(analyzer.engine.rules) == 5
-

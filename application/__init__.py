@@ -1,5 +1,5 @@
 # ==========================================
-# WINDOWS TECHNICIAN v0.2
+# Windows Technician v0.3
 # APPLICATION SERVICE
 # ==========================================
 
@@ -111,7 +111,7 @@ class Technician:
         report = []
 
         report.append(
-            "WINDOWS TECHNICIAN v0.2"
+            "Windows Technician v0.3"
         )
 
         report.append(

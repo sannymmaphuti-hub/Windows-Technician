@@ -1,12 +1,12 @@
 # ==========================================
-# WINDOWS TECHNICIAN v0.2
+# WINDOWS TECHNICIAN v0.3
 # GITIGNORE
 # ==========================================
 
 # Python bytecode
 __pycache__/
 *.py[cod]
-*$py.class
+*.class
 
 # Pytest
 .pytest_cache/

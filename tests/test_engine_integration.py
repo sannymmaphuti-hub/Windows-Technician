@@ -1,5 +1,5 @@
 # ==========================================
-# WINDOWS TECHNICIAN v0.2
+# Windows Technician v0.3
 # ENGINE INTEGRATION TEST
 # ==========================================
 
@@ -59,3 +59,19 @@ def test_production_engine_returns_valid_diagnosis():
         diagnosis["recommendations"],
         list
     )
+
+def test_production_engine_info_finding_does_not_produce_info_status():
+
+    analyzer = create_diagnostic_engine()
+
+    info_finding = {
+        "category": "TEST",
+        "severity": "INFO",
+        "message": "Informational test finding"
+    }
+
+    status = analyzer._calculate_overall_status(
+        [info_finding]
+    )
+
+    assert status == "NORMAL"

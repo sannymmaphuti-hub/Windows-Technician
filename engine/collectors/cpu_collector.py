@@ -1,5 +1,5 @@
 # ==========================================
-# WINDOWS TECHNICIAN v0.2
+# Windows Technician v0.3
 # CPU EVIDENCE COLLECTOR
 # ==========================================
 
