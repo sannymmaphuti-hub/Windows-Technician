@@ -6,50 +6,59 @@ from copy import deepcopy
 from pathlib import Path
 
 from application.technician import Technician
+from application.diagnostic_view import DiagnosticView
+from application.dashboard_view_model import DashboardViewModel
+
 
 class TechnicianApp:
-
     def __init__(self):
-
         self.technician = Technician()
+        self._execution_state = "READY"
+
+    def get_execution_state(self):
+        return self._execution_state
 
     def run_diagnostics(self):
+        self._execution_state = "RUNNING"
 
-        return deepcopy(
-            self.technician.diagnose()
-        )
+        try:
+            result = self.technician.diagnose()
+            self._execution_state = "COMPLETED"
+            return deepcopy(result)
+
+        except Exception:
+            self._execution_state = "ERROR"
+            raise
 
     def get_status(self):
-
         return self.technician.get_status()
 
     def get_primary_issue(self):
-
         return self.technician.get_primary_issue()
 
     def get_report(self):
-
         return self.technician.get_report()
 
+    def get_dashboard_view_model(self):
+        if self.technician.last_result is None:
+            self.technician.diagnose()
+
+        diagnostic_view = DiagnosticView(
+            self.technician.last_result
+        )
+
+        return DashboardViewModel(
+            diagnostic_view,
+            execution_state=self._execution_state
+        )
+
     def save_report(self):
-
+        
         report = self.get_report()
-
         reports_directory = Path("reports")
-
-        reports_directory.mkdir(
-            exist_ok=True
-        )
-
-        report_path = (
-            reports_directory /
-            "technician_report.txt"
-        )
-
-        report_path.write_text(
-            report,
-            encoding="utf-8"
-        )
+        reports_directory.mkdir(exist_ok=True)
+        report_path = reports_directory / "technician_report.txt"
+        report_path.write_text(report, encoding="utf-8")
 
         return str(report_path)
 

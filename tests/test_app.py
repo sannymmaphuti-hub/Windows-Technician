@@ -6,6 +6,7 @@
 from application.app import TechnicianApp
 from copy import deepcopy
 from pathlib import Path
+import pytest
 
 
 def test_application_can_be_created():
@@ -798,3 +799,84 @@ def test_application_save_report_returns_existing_file():
 
     assert Path(report_path).exists()
     assert Path(report_path).is_file()
+
+def test_technician_app_starts_ready():
+    app = TechnicianApp()
+
+    assert app.get_execution_state() == "READY"
+
+
+def test_technician_app_enters_running_state_during_diagnostics(monkeypatch):
+    app = TechnicianApp()
+    states = []
+
+    original_diagnose = app.technician.diagnose
+
+    def tracked_diagnose():
+        states.append(app.get_execution_state())
+        return original_diagnose()
+
+    monkeypatch.setattr(
+        app.technician,
+        "diagnose",
+        tracked_diagnose
+    )
+
+    app.run_diagnostics()
+
+    assert states == ["RUNNING"]
+
+
+def test_technician_app_completes_after_successful_diagnostics():
+    app = TechnicianApp()
+
+    app.run_diagnostics()
+
+    assert app.get_execution_state() == "COMPLETED"
+
+def test_technician_app_enters_error_state_when_diagnostics_fail(monkeypatch):
+    app = TechnicianApp()
+
+    def failing_diagnose():
+        raise RuntimeError("Diagnostic failure")
+
+    monkeypatch.setattr(
+        app.technician,
+        "diagnose",
+        failing_diagnose
+    )
+
+    with pytest.raises(RuntimeError, match="Diagnostic failure"):
+        app.run_diagnostics()
+
+    assert app.get_execution_state() == "ERROR"
+
+def test_technician_app_exposes_dashboard_view_model():
+    app = TechnicianApp()
+
+    app.run_diagnostics()
+
+    model = app.get_dashboard_view_model()
+
+    assert model is not None
+
+
+def test_technician_app_dashboard_view_model_contains_execution_state():
+    app = TechnicianApp()
+
+    app.run_diagnostics()
+
+    model = app.get_dashboard_view_model()
+
+    assert model.execution_state == "COMPLETED"
+    assert model.execution_label == "Diagnostics Complete"
+
+
+def test_technician_app_dashboard_view_model_contains_diagnostic_status():
+    app = TechnicianApp()
+
+    app.run_diagnostics()
+
+    model = app.get_dashboard_view_model()
+
+    assert model.status == app.get_status()
