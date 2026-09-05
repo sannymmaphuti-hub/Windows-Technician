@@ -1,6 +1,12 @@
-from application.app import TechnicianApp
-from gui.dashboard import DashboardWidget
 from types import SimpleNamespace
+
+from PySide6.QtCore import Qt
+
+from application.app import TechnicianApp
+from application.diagnostic_view import DiagnosticView
+from application.dashboard_view_model import DashboardViewModel
+
+from gui.dashboard import DashboardWidget
 
 
 def test_dashboard_widget_can_be_created(qtbot):
@@ -43,6 +49,7 @@ def test_dashboard_widget_has_reasonable_minimum_size(qtbot):
     assert dashboard.minimumWidth() >= 900
     assert dashboard.minimumHeight() >= 550
 
+
 def test_dashboard_widget_has_header(qtbot):
     app = TechnicianApp()
 
@@ -62,6 +69,7 @@ def test_dashboard_widget_has_content_area(qtbot):
 
     assert dashboard.content_area is not None
 
+
 def test_dashboard_has_title(qtbot):
     app = TechnicianApp()
 
@@ -72,6 +80,7 @@ def test_dashboard_has_title(qtbot):
     assert dashboard.title is not None
     assert dashboard.title.text() == "System Overview"
 
+
 def test_dashboard_has_health_summary(qtbot):
     app = TechnicianApp()
 
@@ -80,6 +89,7 @@ def test_dashboard_has_health_summary(qtbot):
     qtbot.addWidget(dashboard)
 
     assert dashboard.health_summary is not None
+
 
 def test_dashboard_has_health_status(qtbot, monkeypatch):
     app = TechnicianApp()
@@ -90,20 +100,23 @@ def test_dashboard_has_health_status(qtbot, monkeypatch):
 
     assert dashboard.health_status is not None
 
-def test_dashboard_receives_dashboard_view_model(qtbot):
+
+def test_dashboard_receives_dashboard_view_model(
+    qtbot,
+    dashboard_view_model,
+):
     app = TechnicianApp()
-
-    app.run_diagnostics()
-
-    view_model = app.get_dashboard_view_model()
 
     dashboard = DashboardWidget(app)
 
     qtbot.addWidget(dashboard)
 
+    view_model = dashboard_view_model
+
     dashboard.set_view_model(view_model)
 
     assert dashboard.view_model is view_model
+
 
 def test_dashboard_creation_does_not_run_diagnostics(qtbot, monkeypatch):
     app = TechnicianApp()
@@ -125,20 +138,23 @@ def test_dashboard_creation_does_not_run_diagnostics(qtbot, monkeypatch):
 
     assert dashboard is not None
 
-def test_dashboard_can_update_dashboard_view_model(qtbot):
+
+def test_dashboard_can_update_dashboard_view_model(
+    qtbot,
+    dashboard_view_model,
+):
     app = TechnicianApp()
-
-    app.run_diagnostics()
-
-    view_model = app.get_dashboard_view_model()
 
     dashboard = DashboardWidget(app)
 
     qtbot.addWidget(dashboard)
 
+    view_model = dashboard_view_model
+
     dashboard.set_view_model(view_model)
 
     assert dashboard.view_model is view_model
+
 
 def test_dashboard_updates_health_status_from_view_model(
     qtbot,
@@ -157,65 +173,74 @@ def test_dashboard_updates_health_status_from_view_model(
         == view_model.health_label
     )
 
-def test_dashboard_updates_health_severity_from_view_model(qtbot):
+
+def test_dashboard_updates_health_severity_from_view_model(
+    qtbot,
+    dashboard_view_model,
+):
     app = TechnicianApp()
-
-    app.run_diagnostics()
-
-    view_model = app.get_dashboard_view_model()
 
     dashboard = DashboardWidget(app)
 
     qtbot.addWidget(dashboard)
+
+    view_model = dashboard_view_model
 
     dashboard.set_view_model(view_model)
 
     assert dashboard.health_severity == view_model.health_severity
 
-def test_dashboard_updates_execution_state_from_view_model(qtbot):
+
+def test_dashboard_updates_execution_state_from_view_model(
+    qtbot,
+    dashboard_view_model,
+):
     app = TechnicianApp()
-
-    app.run_diagnostics()
-
-    view_model = app.get_dashboard_view_model()
 
     dashboard = DashboardWidget(app)
 
     qtbot.addWidget(dashboard)
+
+    view_model = dashboard_view_model
 
     dashboard.set_view_model(view_model)
 
     assert dashboard.execution_state == view_model.execution_state
 
-def test_dashboard_updates_execution_label_from_view_model(qtbot):
+
+def test_dashboard_updates_execution_label_from_view_model(
+    qtbot,
+    dashboard_view_model,
+):
     app = TechnicianApp()
-
-    app.run_diagnostics()
-
-    view_model = app.get_dashboard_view_model()
 
     dashboard = DashboardWidget(app)
 
     qtbot.addWidget(dashboard)
+
+    view_model = dashboard_view_model
 
     dashboard.set_view_model(view_model)
 
     assert dashboard.execution_label == view_model.execution_label
 
-def test_dashboard_updates_execution_severity_from_view_model(qtbot):
+
+def test_dashboard_updates_execution_severity_from_view_model(
+    qtbot,
+    dashboard_view_model,
+):
     app = TechnicianApp()
-
-    app.run_diagnostics()
-
-    view_model = app.get_dashboard_view_model()
 
     dashboard = DashboardWidget(app)
 
     qtbot.addWidget(dashboard)
 
+    view_model = dashboard_view_model
+
     dashboard.set_view_model(view_model)
 
     assert dashboard.execution_severity == view_model.execution_severity
+
 
 def test_dashboard_has_execution_status(qtbot):
     app = TechnicianApp()
@@ -226,36 +251,41 @@ def test_dashboard_has_execution_status(qtbot):
 
     assert dashboard.execution_status is not None
 
-def test_dashboard_updates_execution_status_from_view_model(qtbot):
+
+def test_dashboard_updates_execution_status_from_view_model(
+    qtbot,
+    dashboard_view_model,
+):
     app = TechnicianApp()
-
-    app.run_diagnostics()
-
-    view_model = app.get_dashboard_view_model()
 
     dashboard = DashboardWidget(app)
 
     qtbot.addWidget(dashboard)
+
+    view_model = dashboard_view_model
 
     dashboard.set_view_model(view_model)
 
     assert dashboard.execution_status.text() == view_model.execution_label
 
-def test_dashboard_updates_statuses_together_from_view_model(qtbot):
+
+def test_dashboard_updates_statuses_together_from_view_model(
+    qtbot,
+    dashboard_view_model,
+):
     app = TechnicianApp()
-
-    app.run_diagnostics()
-
-    view_model = app.get_dashboard_view_model()
 
     dashboard = DashboardWidget(app)
 
     qtbot.addWidget(dashboard)
+
+    view_model = dashboard_view_model
 
     dashboard.set_view_model(view_model)
 
     assert dashboard.health_status.text() == view_model.health_label
     assert dashboard.execution_status.text() == view_model.execution_label
+
 
 def test_dashboard_starts_without_view_model(qtbot):
     app = TechnicianApp()
@@ -266,6 +296,7 @@ def test_dashboard_starts_without_view_model(qtbot):
 
     assert dashboard.view_model is None
 
+
 def test_dashboard_starts_with_ready_execution_status(qtbot):
     app = TechnicianApp()
 
@@ -275,6 +306,7 @@ def test_dashboard_starts_with_ready_execution_status(qtbot):
 
     assert dashboard.execution_status.text() == "Ready"
 
+
 def test_dashboard_has_cpu_usage(qtbot):
     app = TechnicianApp()
 
@@ -283,6 +315,7 @@ def test_dashboard_has_cpu_usage(qtbot):
     qtbot.addWidget(dashboard)
 
     assert dashboard.cpu_usage is not None
+
 
 def test_dashboard_updates_cpu_usage_from_view_model(
     qtbot,
@@ -301,6 +334,7 @@ def test_dashboard_updates_cpu_usage_from_view_model(
         == dashboard_view_model.cpu_usage_display
     )
 
+
 def test_dashboard_has_memory_usage(qtbot):
     app = TechnicianApp()
 
@@ -310,12 +344,15 @@ def test_dashboard_has_memory_usage(qtbot):
 
     assert dashboard.memory_usage is not None
 
+
 def test_dashboard_updates_memory_usage_from_view_model(
     qtbot,
     dashboard_view_model,
 ):
     app = TechnicianApp()
+
     dashboard = DashboardWidget(app)
+
     qtbot.addWidget(dashboard)
 
     view_model = dashboard_view_model
@@ -324,19 +361,25 @@ def test_dashboard_updates_memory_usage_from_view_model(
 
     assert dashboard.memory_usage.text() == view_model.memory_usage_display
 
+
 def test_dashboard_has_storage_usage(qtbot):
     app = TechnicianApp()
+
     dashboard = DashboardWidget(app)
+
     qtbot.addWidget(dashboard)
 
     assert hasattr(dashboard, "storage_usage")
+
 
 def test_dashboard_updates_storage_usage_from_view_model(
     qtbot,
     dashboard_view_model,
 ):
     app = TechnicianApp()
+
     dashboard = DashboardWidget(app)
+
     qtbot.addWidget(dashboard)
 
     view_model = dashboard_view_model
@@ -345,19 +388,25 @@ def test_dashboard_updates_storage_usage_from_view_model(
 
     assert dashboard.storage_usage.text() == view_model.storage_usage_display
 
+
 def test_dashboard_has_storage_capacity(qtbot):
     app = TechnicianApp()
+
     dashboard = DashboardWidget(app)
+
     qtbot.addWidget(dashboard)
 
     assert hasattr(dashboard, "storage_capacity")
+
 
 def test_dashboard_updates_storage_capacity_from_view_model(
     qtbot,
     dashboard_view_model,
 ):
     app = TechnicianApp()
+
     dashboard = DashboardWidget(app)
+
     qtbot.addWidget(dashboard)
 
     view_model = dashboard_view_model
@@ -369,19 +418,25 @@ def test_dashboard_updates_storage_capacity_from_view_model(
         == view_model.storage_capacity_display
     )
 
+
 def test_dashboard_has_storage_free(qtbot):
     app = TechnicianApp()
+
     dashboard = DashboardWidget(app)
+
     qtbot.addWidget(dashboard)
 
     assert hasattr(dashboard, "storage_free")
+
 
 def test_dashboard_updates_storage_free_from_view_model(
     qtbot,
     dashboard_view_model,
 ):
     app = TechnicianApp()
+
     dashboard = DashboardWidget(app)
+
     qtbot.addWidget(dashboard)
 
     view_model = dashboard_view_model
@@ -393,20 +448,28 @@ def test_dashboard_updates_storage_free_from_view_model(
         == view_model.storage_free_display
     )
 
+
 def test_dashboard_has_primary_insight(qtbot):
     app = TechnicianApp()
+
     dashboard = DashboardWidget(app)
+
     qtbot.addWidget(dashboard)
 
     assert hasattr(dashboard, "primary_insight")
 
-def test_dashboard_updates_primary_insight_from_view_model(qtbot):
+
+def test_dashboard_updates_primary_insight_from_view_model(
+    qtbot,
+    dashboard_view_model,
+):
     app = TechnicianApp()
+
     dashboard = DashboardWidget(app)
+
     qtbot.addWidget(dashboard)
 
-    app.run_diagnostics()
-    view_model = app.get_dashboard_view_model()
+    view_model = dashboard_view_model
 
     dashboard.set_view_model(view_model)
 
@@ -424,20 +487,28 @@ def test_dashboard_updates_primary_insight_from_view_model(qtbot):
             )
         )
 
+
 def test_dashboard_has_primary_root_cause(qtbot):
     app = TechnicianApp()
+
     dashboard = DashboardWidget(app)
+
     qtbot.addWidget(dashboard)
 
     assert hasattr(dashboard, "primary_root_cause")
 
-def test_dashboard_updates_primary_root_cause_from_view_model(qtbot):
+
+def test_dashboard_updates_primary_root_cause_from_view_model(
+    qtbot,
+    dashboard_view_model,
+):
     app = TechnicianApp()
+
     dashboard = DashboardWidget(app)
+
     qtbot.addWidget(dashboard)
 
-    app.run_diagnostics()
-    view_model = app.get_dashboard_view_model()
+    view_model = dashboard_view_model
 
     dashboard.set_view_model(view_model)
 
@@ -461,16 +532,22 @@ def test_dashboard_updates_primary_root_cause_from_view_model(qtbot):
             )
         )
 
+
 def test_dashboard_has_primary_recommendation(qtbot):
     app = TechnicianApp()
+
     dashboard = DashboardWidget(app)
+
     qtbot.addWidget(dashboard)
 
     assert hasattr(dashboard, "primary_recommendation")
 
+
 def test_dashboard_updates_primary_recommendation_from_view_model(qtbot):
     app = TechnicianApp()
+
     dashboard = DashboardWidget(app)
+
     qtbot.addWidget(dashboard)
 
     view_model = SimpleNamespace(
@@ -498,6 +575,7 @@ def test_dashboard_updates_primary_recommendation_from_view_model(qtbot):
         == "Close unnecessary background applications."
     )
 
+
 def test_dashboard_has_metric_cards(qtbot):
     app = TechnicianApp()
 
@@ -508,6 +586,7 @@ def test_dashboard_has_metric_cards(qtbot):
     assert hasattr(dashboard, "cpu_card")
     assert hasattr(dashboard, "memory_card")
     assert hasattr(dashboard, "storage_card")
+
 
 def test_dashboard_metric_cards_are_in_layout(qtbot):
     app = TechnicianApp()
@@ -538,16 +617,18 @@ def test_dashboard_metric_cards_are_in_layout(qtbot):
 
     assert metric_layout is not None
 
-def test_dashboard_updates_metric_cards_from_view_model(qtbot):
+
+def test_dashboard_updates_metric_cards_from_view_model(
+    qtbot,
+    dashboard_view_model,
+):
     app = TechnicianApp()
-
-    app.run_diagnostics()
-
-    view_model = app.get_dashboard_view_model()
 
     dashboard = DashboardWidget(app)
 
     qtbot.addWidget(dashboard)
+
+    view_model = dashboard_view_model
 
     dashboard.set_view_model(view_model)
 
@@ -555,18 +636,18 @@ def test_dashboard_updates_metric_cards_from_view_model(qtbot):
     assert dashboard.memory_card.value.text() == view_model.memory_usage_display
     assert dashboard.storage_card.value.text() == view_model.storage_usage_display
 
+
 def test_dashboard_metric_cards_receive_status_severity(
-    qtbot
+    qtbot,
+    dashboard_view_model,
 ):
     app = TechnicianApp()
-
-    app.run_diagnostics()
-
-    view_model = app.get_dashboard_view_model()
 
     dashboard = DashboardWidget(app)
 
     qtbot.addWidget(dashboard)
+
+    view_model = dashboard_view_model
 
     dashboard.set_view_model(view_model)
 
@@ -580,16 +661,18 @@ def test_dashboard_metric_cards_receive_status_severity(
         == view_model.health_severity
     )
 
-def test_dashboard_cpu_card_receives_cpu_status(qtbot):
+
+def test_dashboard_cpu_card_receives_cpu_status(
+    qtbot,
+    dashboard_view_model,
+):
     app = TechnicianApp()
-
-    app.run_diagnostics()
-
-    view_model = app.get_dashboard_view_model()
 
     dashboard = DashboardWidget(app)
 
     qtbot.addWidget(dashboard)
+
+    view_model = dashboard_view_model
 
     dashboard.set_view_model(view_model)
 
@@ -597,16 +680,18 @@ def test_dashboard_cpu_card_receives_cpu_status(qtbot):
         view_model.cpu_status or "Unknown"
     )
 
-def test_dashboard_memory_card_receives_health_status(qtbot):
+
+def test_dashboard_memory_card_receives_health_status(
+    qtbot,
+    dashboard_view_model,
+):
     app = TechnicianApp()
-
-    app.run_diagnostics()
-
-    view_model = app.get_dashboard_view_model()
 
     dashboard = DashboardWidget(app)
 
     qtbot.addWidget(dashboard)
+
+    view_model = dashboard_view_model
 
     dashboard.set_view_model(view_model)
 
@@ -615,22 +700,24 @@ def test_dashboard_memory_card_receives_health_status(qtbot):
     )
 
 
-def test_dashboard_storage_card_receives_health_status(qtbot):
+def test_dashboard_storage_card_receives_health_status(
+    qtbot,
+    dashboard_view_model,
+):
     app = TechnicianApp()
-
-    app.run_diagnostics()
-
-    view_model = app.get_dashboard_view_model()
 
     dashboard = DashboardWidget(app)
 
     qtbot.addWidget(dashboard)
+
+    view_model = dashboard_view_model
 
     dashboard.set_view_model(view_model)
 
     assert dashboard.storage_card.status.text() == (
         view_model.health_label
     )
+
 
 def test_dashboard_metric_cards_are_arranged_horizontally(qtbot):
     app = TechnicianApp()
@@ -663,12 +750,16 @@ def test_dashboard_metric_cards_are_arranged_horizontally(qtbot):
 
     assert metric_layout.__class__.__name__ == "QHBoxLayout"
 
+
 def test_dashboard_metric_cards_share_horizontal_space(qtbot):
     app = TechnicianApp()
+
     dashboard = DashboardWidget(app)
+
     qtbot.addWidget(dashboard)
 
     layout = dashboard.layout()
+
     assert layout is not None
 
     metric_layout = None
@@ -693,9 +784,12 @@ def test_dashboard_metric_cards_share_horizontal_space(qtbot):
     assert metric_layout.stretch(1) == 1
     assert metric_layout.stretch(2) == 1
 
+
 def test_dashboard_metric_cards_have_equal_widths(qtbot):
     app = TechnicianApp()
+
     dashboard = DashboardWidget(app)
+
     qtbot.addWidget(dashboard)
 
     dashboard.resize(1200, 700)
@@ -714,6 +808,7 @@ def test_dashboard_metric_cards_have_equal_widths(qtbot):
     assert abs(cpu_width - memory_width) <= 2
     assert abs(memory_width - storage_width) <= 2
 
+
 def test_dashboard_has_named_surface_sections(qtbot):
     app = TechnicianApp()
 
@@ -724,6 +819,7 @@ def test_dashboard_has_named_surface_sections(qtbot):
     assert dashboard.header.objectName() == "DashboardHeader"
     assert dashboard.health_summary.objectName() == "HealthSummary"
     assert dashboard.content_area.objectName() == "DiagnosticContent"
+
 
 def test_dashboard_surface_sections_follow_visual_hierarchy(qtbot):
     app = TechnicianApp()
@@ -745,6 +841,7 @@ def test_dashboard_surface_sections_follow_visual_hierarchy(qtbot):
     assert content_index != -1
 
     assert header_index < health_index < content_index
+
 
 def test_dashboard_metric_cards_follow_health_summary(qtbot):
     app = TechnicianApp()
@@ -778,6 +875,7 @@ def test_dashboard_metric_cards_follow_health_summary(qtbot):
     assert metric_layout_index != -1
     assert health_index < metric_layout_index
 
+
 def test_dashboard_header_contains_only_identity_and_execution_status(qtbot):
     app = TechnicianApp()
 
@@ -794,6 +892,7 @@ def test_dashboard_header_contains_only_identity_and_execution_status(qtbot):
 
     assert header_layout.indexOf(dashboard.cpu_usage) == -1
 
+
 def test_dashboard_header_has_typographic_hierarchy(qtbot):
     app = TechnicianApp()
 
@@ -806,6 +905,7 @@ def test_dashboard_header_has_typographic_hierarchy(qtbot):
         > dashboard.execution_status.font().pointSize()
     )
 
+
 def test_dashboard_header_title_is_bold(qtbot):
     app = TechnicianApp()
 
@@ -814,6 +914,7 @@ def test_dashboard_header_title_is_bold(qtbot):
     qtbot.addWidget(dashboard)
 
     assert dashboard.title.font().bold()
+
 
 def test_dashboard_health_status_has_typographic_priority(qtbot):
     app = TechnicianApp()
@@ -827,6 +928,7 @@ def test_dashboard_health_status_has_typographic_priority(qtbot):
 
     assert health_font.pointSize() > memory_font.pointSize()
 
+
 def test_dashboard_health_status_is_bold(qtbot):
     app = TechnicianApp()
 
@@ -835,6 +937,7 @@ def test_dashboard_health_status_is_bold(qtbot):
     qtbot.addWidget(dashboard)
 
     assert dashboard.health_status.font().bold()
+
 
 def test_dashboard_surface_sections_have_visual_surface_styling(qtbot):
     app = TechnicianApp()
@@ -852,6 +955,7 @@ def test_dashboard_surface_sections_have_visual_surface_styling(qtbot):
     assert "border-radius" in dashboard.content_area.styleSheet()
     assert "padding" in dashboard.content_area.styleSheet()
 
+
 def test_dashboard_major_sections_have_spacing(qtbot):
     app = TechnicianApp()
 
@@ -863,6 +967,7 @@ def test_dashboard_major_sections_have_spacing(qtbot):
 
     assert layout is not None
     assert layout.spacing() > 0
+
 
 def test_dashboard_diagnostic_insight_has_typographic_priority(qtbot):
     app = TechnicianApp()
@@ -878,6 +983,7 @@ def test_dashboard_diagnostic_insight_has_typographic_priority(qtbot):
     assert insight_font.pointSize() > root_cause_font.pointSize()
     assert insight_font.pointSize() > recommendation_font.pointSize()
 
+
 def test_dashboard_primary_insight_is_bold(qtbot):
     app = TechnicianApp()
 
@@ -887,8 +993,10 @@ def test_dashboard_primary_insight_is_bold(qtbot):
 
     assert dashboard.primary_insight.font().bold()
 
+
 def test_dashboard_has_diagnostic_insight_card(qtbot):
     app = TechnicianApp()
+
     dashboard = DashboardWidget(app)
 
     qtbot.addWidget(dashboard)
@@ -898,6 +1006,7 @@ def test_dashboard_has_diagnostic_insight_card(qtbot):
 
 def test_dashboard_has_root_cause_card(qtbot):
     app = TechnicianApp()
+
     dashboard = DashboardWidget(app)
 
     qtbot.addWidget(dashboard)
@@ -907,8 +1016,381 @@ def test_dashboard_has_root_cause_card(qtbot):
 
 def test_dashboard_has_recommendation_card(qtbot):
     app = TechnicianApp()
+
     dashboard = DashboardWidget(app)
 
     qtbot.addWidget(dashboard)
 
     assert dashboard.recommendation_card is not None
+
+# ------------------------------------------------------------------
+# Run Diagnostics Interaction Contract
+# ------------------------------------------------------------------
+
+
+def test_dashboard_has_run_diagnostics_button(qtbot):
+    app = TechnicianApp()
+
+    dashboard = DashboardWidget(app)
+
+    qtbot.addWidget(dashboard)
+
+    assert dashboard.run_diagnostics_button is not None
+
+
+def test_dashboard_run_diagnostics_button_has_correct_label(qtbot):
+    app = TechnicianApp()
+
+    dashboard = DashboardWidget(app)
+
+    qtbot.addWidget(dashboard)
+
+    assert dashboard.run_diagnostics_button.text() == "Run Diagnostics"
+
+
+def test_dashboard_run_diagnostics_button_starts_analysis(
+    qtbot,
+    monkeypatch,
+):
+    app = TechnicianApp()
+
+    dashboard = DashboardWidget(app)
+
+    qtbot.addWidget(dashboard)
+
+    calls = []
+
+    def fake_run_diagnostics():
+        calls.append(True)
+
+    monkeypatch.setattr(
+        app,
+        "run_diagnostics",
+        fake_run_diagnostics,
+    )
+
+    dashboard.run_diagnostics_button.click()
+
+    qtbot.waitUntil(
+        lambda: calls == [True],
+        timeout=1000,
+    )
+
+
+def test_dashboard_shows_analyzing_while_diagnostics_run(
+    qtbot,
+    monkeypatch,
+):
+    app = TechnicianApp()
+
+    dashboard = DashboardWidget(app)
+
+    qtbot.addWidget(dashboard)
+
+    execution_states = []
+
+    def fake_run_diagnostics():
+        execution_states.append(
+            dashboard.execution_status.text()
+        )
+
+    monkeypatch.setattr(
+        app,
+        "run_diagnostics",
+        fake_run_diagnostics,
+    )
+
+    dashboard.run_diagnostics_button.click()
+
+    qtbot.waitUntil(
+        lambda: execution_states == ["Analyzing..."],
+        timeout=1000,
+    )
+
+
+def test_dashboard_disables_run_button_during_diagnostics(
+    qtbot,
+    monkeypatch,
+):
+    app = TechnicianApp()
+
+    dashboard = DashboardWidget(app)
+
+    qtbot.addWidget(dashboard)
+
+    button_states = []
+
+    def fake_run_diagnostics():
+        button_states.append(
+            dashboard.run_diagnostics_button.isEnabled()
+        )
+
+    monkeypatch.setattr(
+        app,
+        "run_diagnostics",
+        fake_run_diagnostics,
+    )
+
+    dashboard.run_diagnostics_button.click()
+
+    qtbot.waitUntil(
+        lambda: len(button_states) == 1,
+        timeout=1000,
+    )
+
+    assert button_states == [False]
+
+
+def test_dashboard_refreshes_after_successful_diagnostics(
+    qtbot,
+    monkeypatch,
+    dashboard_view_model,
+):
+    app = TechnicianApp()
+
+    dashboard = DashboardWidget(app)
+
+    qtbot.addWidget(dashboard)
+
+    monkeypatch.setattr(
+        app,
+        "run_diagnostics",
+        lambda: None,
+    )
+
+    monkeypatch.setattr(
+        app,
+        "get_dashboard_view_model",
+        lambda: dashboard_view_model,
+    )
+
+    dashboard.run_diagnostics_button.click()
+
+    qtbot.waitUntil(
+        lambda: dashboard.view_model is dashboard_view_model,
+        timeout=1000,
+    )
+
+    assert dashboard.view_model is dashboard_view_model
+
+
+def test_dashboard_shows_completed_after_successful_diagnostics(
+    qtbot,
+    monkeypatch,
+    dashboard_view_model,
+):
+    app = TechnicianApp()
+
+    dashboard = DashboardWidget(app)
+
+    qtbot.addWidget(dashboard)
+
+    monkeypatch.setattr(
+        app,
+        "run_diagnostics",
+        lambda: None,
+    )
+
+    monkeypatch.setattr(
+        app,
+        "get_dashboard_view_model",
+        lambda: dashboard_view_model,
+    )
+
+    dashboard.run_diagnostics_button.click()
+
+    qtbot.waitUntil(
+        lambda: dashboard.execution_state == "COMPLETED",
+        timeout=1000,
+    )
+
+    assert dashboard.execution_label == "Diagnostics Complete"
+    assert (
+        dashboard.execution_status.text()
+        == "Diagnostics Complete"
+    )
+
+
+def test_dashboard_reenables_run_button_after_success(
+    qtbot,
+    monkeypatch,
+    dashboard_view_model,
+):
+    app = TechnicianApp()
+
+    dashboard = DashboardWidget(app)
+
+    qtbot.addWidget(dashboard)
+
+    monkeypatch.setattr(
+        app,
+        "run_diagnostics",
+        lambda: None,
+    )
+
+    monkeypatch.setattr(
+        app,
+        "get_dashboard_view_model",
+        lambda: dashboard_view_model,
+    )
+
+    dashboard.run_diagnostics_button.click()
+
+    qtbot.waitUntil(
+        lambda: dashboard.run_diagnostics_button.isEnabled(),
+        timeout=1000,
+    )
+
+    assert dashboard.run_diagnostics_button.isEnabled()
+
+
+def test_dashboard_updates_health_after_successful_diagnostics(
+    qtbot,
+    monkeypatch,
+):
+    app = TechnicianApp()
+
+    dashboard = DashboardWidget(app)
+
+    qtbot.addWidget(dashboard)
+
+    refreshed_view_model = DashboardViewModel(
+        DiagnosticView(
+            {
+                "evidence": {},
+                "diagnosis": {
+                    "status": "WARNING",
+                    "total_findings": 1,
+                    "findings": [
+                        {
+                            "issue": "High memory usage detected.",
+                            "severity": "WARNING",
+                            "priority_score": 90,
+                        }
+                    ],
+                    "correlations": [],
+                    "root_causes": [],
+                    "recommendations": [],
+                },
+                "diagnostic_case": {
+                    "root_cause_candidates": [],
+                    "primary_root_cause": None,
+                },
+                "case_decision": {},
+            }
+        ),
+        execution_state="COMPLETED",
+    )
+
+    monkeypatch.setattr(
+        app,
+        "run_diagnostics",
+        lambda: None,
+    )
+
+    monkeypatch.setattr(
+        app,
+        "get_dashboard_view_model",
+        lambda: refreshed_view_model,
+    )
+
+    dashboard.run_diagnostics_button.click()
+
+    qtbot.waitUntil(
+        lambda: dashboard.view_model is refreshed_view_model,
+        timeout=1000,
+    )
+
+    assert dashboard.health_status.text() == "Needs Attention"
+
+    assert (
+        dashboard.diagnostic_insight_card.content.text()
+        == "High memory usage detected."
+    )
+
+
+def test_dashboard_remains_responsive_during_diagnostics(
+    qtbot,
+    monkeypatch,
+):
+    app = TechnicianApp()
+
+    dashboard = DashboardWidget(app)
+
+    qtbot.addWidget(dashboard)
+
+    execution_started = []
+    release_diagnostics = []
+
+    def fake_run_diagnostics():
+        execution_started.append(True)
+
+        while not release_diagnostics:
+            qtbot.wait(10)
+
+    monkeypatch.setattr(
+        app,
+        "run_diagnostics",
+        fake_run_diagnostics,
+    )
+
+    dashboard.run_diagnostics_button.click()
+
+    qtbot.waitUntil(
+        lambda: execution_started == [True],
+        timeout=1000,
+    )
+
+    assert (
+        dashboard.run_diagnostics_button.isEnabled()
+        is False
+    )
+
+    release_diagnostics.append(True)
+
+    qtbot.waitUntil(
+        lambda: dashboard.run_diagnostics_button.isEnabled(),
+        timeout=1000,
+    )
+
+    
+def test_dashboard_diagnostic_worker_is_created(
+    qtbot,
+    monkeypatch,
+):
+    app = TechnicianApp()
+
+    dashboard = DashboardWidget(app)
+
+    qtbot.addWidget(dashboard)
+
+    created = []
+
+    from gui import dashboard as dashboard_module
+
+    original_worker = dashboard_module.DiagnosticWorker
+
+    def track_worker(technician_app):
+        created.append(technician_app)
+        return original_worker(technician_app)
+
+    monkeypatch.setattr(
+        dashboard_module,
+        "DiagnosticWorker",
+        track_worker,
+    )
+
+    monkeypatch.setattr(
+        app,
+        "run_diagnostics",
+        lambda: None,
+    )
+
+    dashboard.run_diagnostics_button.click()
+
+    qtbot.waitUntil(
+        lambda: len(created) == 1,
+        timeout=1000,
+    )
+
+    assert created == [app]
