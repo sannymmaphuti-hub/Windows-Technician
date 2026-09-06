@@ -75,3 +75,41 @@ def test_diagnostic_card_can_update_severity(qtbot):
 
     assert card.severity == "critical"
     assert card.property("statusSeverity") == "critical"
+
+def test_diagnostic_card_has_reasonable_minimum_height(qtbot):
+    card = DiagnosticCard(
+        title="Diagnostic Insight",
+        content="High memory usage detected.",
+        severity="warning",
+    )
+
+    qtbot.addWidget(card)
+
+    assert card.minimumHeight() >= 80
+
+
+def test_diagnostic_card_content_supports_word_wrapping(qtbot):
+    card = DiagnosticCard(
+        title="Diagnostic Insight",
+        content=(
+            "This is a long diagnostic explanation that "
+            "should remain readable inside the dashboard card."
+        ),
+        severity="warning",
+    )
+
+    qtbot.addWidget(card)
+
+    assert card.content.wordWrap() is True
+
+
+def test_diagnostic_card_title_supports_word_wrapping(qtbot):
+    card = DiagnosticCard(
+        title="Diagnostic Insight",
+        content="Test content.",
+        severity="info",
+    )
+
+    qtbot.addWidget(card)
+
+    assert card.title.wordWrap() is True

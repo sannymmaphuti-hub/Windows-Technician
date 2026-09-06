@@ -1394,3 +1394,11 @@ def test_dashboard_diagnostic_worker_is_created(
     )
 
     assert created == [app]
+
+    qtbot.waitUntil(
+        lambda: (
+            dashboard._diagnostic_thread is None
+            or not dashboard._diagnostic_thread.isRunning()
+        ),
+        timeout=2000,
+    )

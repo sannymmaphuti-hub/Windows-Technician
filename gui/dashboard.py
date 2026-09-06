@@ -1,10 +1,11 @@
-from PySide6.QtCore import QThread
+from PySide6.QtCore import QThread, Qt
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (
     QFrame,
     QHBoxLayout,
     QLabel,
     QPushButton,
+    QScrollArea,
     QVBoxLayout,
     QWidget,
 )
@@ -198,16 +199,44 @@ class DashboardWidget(QWidget):
         # Diagnostic Content Area
         self.content_area = QFrame()
         self.content_area.setObjectName("DiagnosticContent")
+
         self.content_area.setStyleSheet(
             """
             QFrame#DiagnosticContent {
                 border-radius: 12px;
-                padding: 16px;
+                padding: 8px;
             }
             """
         )
 
-        content_layout = QVBoxLayout()
+        # Scroll area for diagnostic cards
+        self.diagnostic_scroll = QScrollArea()
+        self.diagnostic_scroll.setWidgetResizable(True)
+        self.diagnostic_scroll.setHorizontalScrollBarPolicy(
+            Qt.ScrollBarPolicy.ScrollBarAlwaysOff
+        )
+        self.diagnostic_scroll.setVerticalScrollBarPolicy(
+            Qt.ScrollBarPolicy.ScrollBarAsNeeded
+        )
+        self.diagnostic_scroll.setFrameShape(
+            QFrame.Shape.NoFrame
+        )
+
+        # Container inside the scroll area
+        diagnostic_container = QWidget()
+
+        content_layout = QVBoxLayout(
+            diagnostic_container
+        )
+
+        content_layout.setContentsMargins(
+            0,
+            0,
+            0,
+            0,
+        )
+
+        content_layout.setSpacing(12)
 
         content_layout.addWidget(
             self.diagnostic_insight_card
@@ -221,8 +250,27 @@ class DashboardWidget(QWidget):
             self.recommendation_card
         )
 
-        self.content_area.setLayout(
-            content_layout
+        # Keep cards at their natural height
+        content_layout.addStretch()
+
+        self.diagnostic_scroll.setWidget(
+            diagnostic_container
+        )
+
+        # Put the scroll area inside the dashboard content frame
+        content_area_layout = QVBoxLayout(
+            self.content_area
+        )
+
+        content_area_layout.setContentsMargins(
+            0,
+            0,
+            0,
+            0,
+        )
+
+        content_area_layout.addWidget(
+            self.diagnostic_scroll
         )
 
         # Main Dashboard Layout
@@ -275,11 +323,13 @@ class DashboardWidget(QWidget):
         )
 
         self._diagnostic_worker.finished.connect(
-            self._diagnostic_thread.quit
+            self._diagnostic_thread.quit,
+            Qt.DirectConnection,
         )
 
         self._diagnostic_worker.error.connect(
-            self._diagnostic_thread.quit
+            self._diagnostic_thread.quit,
+            Qt.DirectConnection,
         )
 
         self._diagnostic_worker.finished.connect(
