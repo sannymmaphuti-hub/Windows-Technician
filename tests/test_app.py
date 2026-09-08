@@ -4,9 +4,11 @@
 # ==========================================
 
 from application.app import TechnicianApp
+from application.technician import Technician
 from copy import deepcopy
 from pathlib import Path
 import pytest
+from engine.remediation_action import RemediationAction
 
 
 def test_application_can_be_created():
@@ -880,3 +882,1201 @@ def test_technician_app_dashboard_view_model_contains_diagnostic_status():
     model = app.get_dashboard_view_model()
 
     assert model.status == app.get_status()
+
+def test_diagnose_includes_remediation_actions():
+    technician = Technician()
+
+    result = technician.diagnose()
+
+    assert "remediation_actions" in result
+    assert isinstance(
+        result["remediation_actions"],
+        list
+    )
+
+def test_technician_has_remediation_coordinator():
+    technician = Technician()
+
+    assert technician.remediation_coordinator is not None
+
+def test_diagnose_does_not_execute_remediation_actions():
+    technician = Technician()
+
+    result = technician.diagnose()
+
+    for action in result["remediation_actions"]:
+        assert action.authorization_status == "UNAUTHORIZED"
+        assert action.execution_status == "NOT_EXECUTED"
+
+def test_technician_can_execute_authorized_remediation():
+    technician = Technician()
+
+    action = RemediationAction(
+        action_id="memory_review",
+        description="Review memory-intensive processes.",
+        operation=lambda: None,
+    )
+
+    action.authorize()
+
+    result = technician.remediation_coordinator.execute(action)
+
+    assert result.action_id == "memory_review"
+    assert result.execution_status == "EXECUTED"
+
+def test_technician_can_remediate_authorized_action():
+    technician = Technician()
+
+    action = RemediationAction(
+        action_id="memory_review",
+        description="Review memory-intensive processes.",
+        operation=lambda: None,
+    )
+
+    action.authorize()
+
+    result = technician.remediate(action)
+
+    assert result.action_id == "memory_review"
+    assert result.execution_status == "EXECUTED"
+
+def test_technician_cannot_remediate_unauthorized_action():
+    technician = Technician()
+
+    action = RemediationAction(
+        action_id="memory_review",
+        description="Review memory-intensive processes.",
+        operation=lambda: None,
+    )
+
+    result = technician.remediate(action)
+
+    assert result.execution_status == "NOT_EXECUTED"
+    assert action.authorization_status == "UNAUTHORIZED"
+
+def test_technician_can_authorize_remediation_action():
+    technician = Technician()
+
+    action = RemediationAction(
+        action_id="memory_review",
+        description="Review memory-intensive processes.",
+        operation=lambda: None,
+    )
+
+    assert action.authorization_status == "UNAUTHORIZED"
+
+    technician.authorize_remediation(action)
+
+    assert action.authorization_status == "AUTHORIZED"
+    assert action.execution_status == "NOT_EXECUTED"
+
+def test_technician_authorization_does_not_execute_remediation():
+    technician = Technician()
+    executions = []
+
+    action = RemediationAction(
+        action_id="memory_review",
+        description="Review memory-intensive processes.",
+        operation=lambda: executions.append("run"),
+    )
+
+    technician.authorize_remediation(action)
+
+    assert action.authorization_status == "AUTHORIZED"
+    assert action.execution_status == "NOT_EXECUTED"
+    assert executions == []
+
+def test_technician_authorize_then_remediate():
+    technician = Technician()
+    executions = []
+
+    action = RemediationAction(
+        action_id="memory_review",
+        description="Review memory-intensive processes.",
+        operation=lambda: executions.append("run"),
+    )
+
+    technician.authorize_remediation(action)
+
+    result = technician.remediate(action)
+
+    assert action.authorization_status == "AUTHORIZED"
+    assert action.execution_status == "EXECUTED"
+    assert executions == ["run"]
+
+    assert result.action_id == "memory_review"
+    assert result.execution_status == "EXECUTED"
+
+def test_technician_remediate_can_verify_result():
+    technician = Technician()
+
+    action = RemediationAction(
+        action_id="memory_review",
+        description="Review memory-intensive processes.",
+        operation=lambda: None,
+    )
+
+    technician.authorize_remediation(action)
+
+    result = technician.remediate(
+        action,
+        expected="memory_normal",
+        observed="memory_normal",
+    )
+
+    assert result.execution_status == "EXECUTED"
+    assert result.verification_result is not None
+    assert result.verification_result["verified"] is True
+    assert result.verification_result["action_id"] == "memory_review"
+
+def test_technician_remediate_can_record_failed_verification():
+    technician = Technician()
+
+    action = RemediationAction(
+        action_id="memory_review",
+        description="Review memory-intensive processes.",
+        operation=lambda: None,
+    )
+
+    technician.authorize_remediation(action)
+
+    result = technician.remediate(
+        action,
+        expected="memory_normal",
+        observed="memory_high",
+    )
+
+    assert result.execution_status == "EXECUTED"
+    assert result.verification_result is not None
+    assert result.verification_result["verified"] is False
+    assert result.verification_result["action_id"] == "memory_review"
+
+def test_technician_failed_remediation_is_not_verified():
+    technician = Technician()
+
+    action = RemediationAction(
+        action_id="memory_review",
+        description="Review memory-intensive processes.",
+        operation=lambda: (_ for _ in ()).throw(
+            RuntimeError("remediation failed")
+        ),
+    )
+
+    technician.authorize_remediation(action)
+
+    result = technician.remediate(
+        action,
+        expected="memory_normal",
+        observed="memory_normal",
+    )
+
+    assert result.execution_status == "FAILED"
+    assert result.verification_result is None
+
+def test_technician_remediate_unauthorized_action_does_not_execute():
+    technician = Technician()
+    executions = []
+
+    action = RemediationAction(
+        action_id="memory_review",
+        description="Review memory-intensive processes.",
+        operation=lambda: executions.append("run"),
+    )
+
+    result = technician.remediate(action)
+
+    assert action.authorization_status == "UNAUTHORIZED"
+    assert action.execution_status == "NOT_EXECUTED"
+    assert executions == []
+
+    assert result.action_id == "memory_review"
+    assert result.execution_status == "NOT_EXECUTED"
+    assert result.verification_result is None
+
+def test_diagnose_remediation_actions_are_unexecuted():
+    technician = Technician()
+
+    result = technician.diagnose()
+
+    for action in result["remediation_actions"]:
+        assert action.authorization_status == "UNAUTHORIZED"
+        assert action.execution_status == "NOT_EXECUTED"
+
+def test_diagnose_remediation_actions_preserve_context():
+    technician = Technician()
+
+    result = technician.diagnose()
+
+    for action in result["remediation_actions"]:
+        assert action.action_id
+        assert action.description
+        assert action.category is not None
+        assert action.severity in {"WARNING", "CRITICAL"}
+
+def test_technician_complete_remediation_workflow():
+    technician = Technician()
+
+    diagnosis = technician.diagnose()
+
+    actions = diagnosis["remediation_actions"]
+
+    if not actions:
+        pytest.skip("No remediation actions available from current diagnosis.")
+
+    action = actions[0]
+
+    assert action.authorization_status == "UNAUTHORIZED"
+    assert action.execution_status == "NOT_EXECUTED"
+
+    technician.authorize_remediation(action)
+
+    assert action.authorization_status == "AUTHORIZED"
+    assert action.execution_status == "NOT_EXECUTED"
+
+    result = technician.remediate(action)
+
+    assert result.action_id == action.action_id
+    assert result.execution_status == "NOT_EXECUTED"
+
+def test_diagnose_remediation_actions_have_no_implicit_operation():
+    technician = Technician()
+
+    result = technician.diagnose()
+
+    for action in result["remediation_actions"]:
+        assert action.operation is None
+
+def test_technician_has_remediation_operation_binder():
+    technician = Technician()
+
+    assert technician.remediation_operation_binder is not None
+
+def test_technician_can_bind_registered_remediation_operation():
+    technician = Technician()
+
+    operation = lambda: None
+
+    technician.remediation_operation_registry.register(
+        "test_operation",
+        operation,
+    )
+
+    action = RemediationAction(
+        action_id="action_001",
+        description="Review memory usage.",
+    )
+
+    technician.remediation_operation_binder.bind(
+        action=action,
+        operation_id="test_operation"
+    )
+
+    assert action.operation is operation
+
+def test_technician_can_bind_operation_to_planned_action():
+    technician = Technician()
+
+    operation = lambda: None
+
+    technician.remediation_operation_registry.register(
+        "test_operation",
+        operation,
+    )
+
+    recommendation = {
+        "category": "MEMORY",
+        "severity": "WARNING",
+        "recommendation": "Review memory-intensive processes.",
+    }
+
+    actions = technician.remediation_action_planner.create_actions(
+        [recommendation]
+    )
+
+    assert len(actions) == 1
+    assert actions[0].operation is None
+
+    technician.remediation_operation_binder.bind(
+        action=actions[0],
+        operation_id="test_operation",
+    )
+
+    assert actions[0].operation is operation
+
+def test_technician_rejects_unregistered_operation_for_planned_action():
+    technician = Technician()
+
+    recommendation = {
+        "category": "MEMORY",
+        "severity": "WARNING",
+        "recommendation": "Review memory-intensive processes.",
+    }
+
+    actions = technician.remediation_action_planner.create_actions(
+        [recommendation]
+    )
+
+    assert len(actions) == 1
+    assert actions[0].operation is None
+
+    with pytest.raises(ValueError):
+        technician.remediation_operation_binder.bind(
+            action=actions[0],
+            operation_id="unknown_operation",
+        )
+
+    assert actions[0].operation is None
+
+def test_technician_can_execute_bound_and_authorized_planned_action():
+    technician = Technician()
+
+    state = {
+        "executed": False,
+    }
+
+    def operation():
+        state["executed"] = True
+
+    technician.remediation_operation_registry.register(
+        "test_operation",
+        operation,
+    )
+
+    recommendation = {
+        "category": "MEMORY",
+        "severity": "WARNING",
+        "recommendation": "Review memory-intensive processes.",
+    }
+
+    actions = technician.remediation_action_planner.create_actions(
+        [recommendation]
+    )
+
+    assert len(actions) == 1
+
+    action = actions[0]
+
+    assert action.operation is None
+    assert action.authorization_status == "UNAUTHORIZED"
+    assert action.execution_status == "NOT_EXECUTED"
+
+    technician.remediation_operation_binder.bind(
+        action=action,
+        operation_id="test_operation"
+    )
+
+    assert action.operation is operation
+    assert state["executed"] is False
+
+    technician.authorize_remediation(action)
+
+    assert action.authorization_status == "AUTHORIZED"
+    assert state["executed"] is False
+
+    result = technician.remediate(action)
+
+    assert result.execution_status == "EXECUTED"
+    assert action.execution_status == "EXECUTED"
+    assert state["executed"] is True
+
+def test_technician_can_record_failed_verification_for_bound_remediation():
+    technician = Technician()
+
+    state = {
+        "memory_reviewed": False,
+    }
+
+    def operation():
+        state["memory_reviewed"] = True
+
+    technician.remediation_operation_registry.register(
+        "test_operation",
+        operation,
+    )
+
+    recommendation = {
+        "category": "MEMORY",
+        "severity": "WARNING",
+        "recommendation": "Review memory-intensive processes.",
+    }
+
+    actions = technician.remediation_action_planner.create_actions(
+        [recommendation]
+    )
+
+    action = actions[0]
+
+    technician.remediation_operation_binder.bind(
+        action=action,
+        operation_id="test_operation"
+    )
+
+    technician.authorize_remediation(action)
+
+    result = technician.remediate(action)
+
+    assert result.execution_status == "EXECUTED"
+    assert state["memory_reviewed"] is True
+
+    verification = technician.remediation_coordinator.verifier.verify(
+        expected=False,
+        observed=state["memory_reviewed"],
+        action_id=action.action_id,
+    )
+
+    result.verification_result = verification
+
+    assert result.verification_result is not None
+    assert result.verification_result["verified"] is False
+
+def test_technician_does_not_verify_failed_bound_remediation():
+    technician = Technician()
+
+    def failing_operation():
+        raise RuntimeError("simulated remediation failure")
+
+    technician.remediation_operation_registry.register(
+        "test_operation",
+        failing_operation,
+    )
+
+    recommendation = {
+        "category": "MEMORY",
+        "severity": "WARNING",
+        "recommendation": "Review memory-intensive processes.",
+    }
+
+    actions = technician.remediation_action_planner.create_actions(
+        [recommendation]
+    )
+
+    action = actions[0]
+
+    technician.remediation_operation_binder.bind(
+        action=action,
+        operation_id="test_operation",
+    )
+
+    technician.authorize_remediation(action)
+
+    result = technician.remediate(
+        action,
+        expected=True,
+        observed=True,
+    )
+
+    assert result.execution_status == "FAILED"
+    assert result.verification_result is None
+
+def test_technician_cannot_execute_bound_operation_without_authorization():
+    technician = Technician()
+
+    state = {
+        "executed": False,
+    }
+
+    def operation():
+        state["executed"] = True
+
+    technician.remediation_operation_registry.register(
+        "test_operation",
+        operation,
+    )
+
+    recommendation = {
+        "category": "MEMORY",
+        "severity": "WARNING",
+        "recommendation": "Review memory-intensive processes.",
+    }
+
+    actions = technician.remediation_action_planner.create_actions(
+        [recommendation]
+    )
+
+    action = actions[0]
+
+    technician.remediation_operation_binder.bind(
+        action=action,
+        operation_id="test_operation",
+    )
+
+    assert action.operation is operation
+    assert action.authorization_status == "UNAUTHORIZED"
+
+    result = technician.remediate(action)
+
+    assert result.execution_status == "NOT_EXECUTED"
+    assert action.execution_status == "NOT_EXECUTED"
+    assert state["executed"] is False
+
+def test_technician_cannot_execute_denied_bound_operation():
+    technician = Technician()
+
+    state = {
+        "executed": False,
+    }
+
+    def operation():
+        state["executed"] = True
+
+    technician.remediation_operation_registry.register(
+        "test_operation",
+        operation,
+    )
+
+    recommendation = {
+        "category": "MEMORY",
+        "severity": "WARNING",
+        "recommendation": "Review memory-intensive processes.",
+    }
+
+    actions = technician.remediation_action_planner.create_actions(
+        [recommendation]
+    )
+
+    action = actions[0]
+
+    technician.remediation_operation_binder.bind(
+        action=action,
+        operation_id="test_operation",
+    )
+
+    action.deny()
+
+    assert action.authorization_status == "DENIED"
+
+    result = technician.remediate(action)
+
+    assert result.execution_status == "NOT_EXECUTED"
+    assert action.execution_status == "NOT_EXECUTED"
+    assert state["executed"] is False
+
+def test_binding_preserves_existing_authorization():
+    technician = Technician()
+
+    operation = lambda: None
+
+    technician.remediation_operation_registry.register(
+        "test_operation",
+        operation,
+    )
+
+    action = RemediationAction(
+        action_id="action_001",
+        description="Review memory usage.",
+    )
+
+    technician.authorize_remediation(action)
+
+    assert action.authorization_status == "AUTHORIZED"
+    assert action.operation is None
+
+    technician.remediation_operation_binder.bind(
+        action=action,
+        operation_id="test_operation"
+    )
+
+    assert action.operation is operation
+    assert action.authorization_status == "AUTHORIZED"
+    assert action.execution_status == "NOT_EXECUTED"
+
+def test_binding_preserves_existing_execution_status():
+    technician = Technician()
+
+    operation = lambda: None
+
+    technician.remediation_operation_registry.register(
+        "test_operation",
+        operation,
+    )
+
+    action = RemediationAction(
+        action_id="action_001",
+        description="Review memory usage.",
+        requires_authorization=False,
+    )
+
+    technician.remediation_operation_binder.bind(
+        action=action,
+        operation_id="test_operation"
+    )
+
+    technician.remediate(action)
+
+    assert action.execution_status == "EXECUTED"
+
+    technician.remediation_operation_binder.bind(
+        action=action,
+        operation_id="test_operation"
+    )
+
+    assert action.operation is operation
+    assert action.execution_status == "EXECUTED"
+
+def test_binding_rejects_missing_action():
+    technician = Technician()
+
+    operation = lambda: None
+
+    technician.remediation_operation_registry.register(
+        "test_operation",
+        operation,
+    )
+
+    with pytest.raises(ValueError, match="action is required"):
+        technician.remediation_operation_binder.bind(
+            action=None,
+            operation_id="test_operation",
+        )
+
+def test_binding_rejects_missing_operation_id():
+    technician = Technician()
+
+    action = RemediationAction(
+        action_id="action_001",
+        description="Review memory usage.",
+    )
+
+    with pytest.raises(ValueError, match="operation_id is required"):
+        technician.remediation_operation_binder.bind(
+            action=action,
+            operation_id=None,
+        )
+
+def test_binding_rejects_rebinding_existing_operation():
+    technician = Technician()
+
+    first_operation = lambda: None
+    second_operation = lambda: None
+
+    technician.remediation_operation_registry.register(
+        "test_operation",
+        first_operation,
+    )
+
+    technician.remediation_operation_registry.register(
+        "second_operation",
+        second_operation,
+    )
+
+    action = RemediationAction(
+        action_id="action_001",
+        description="Review memory usage.",
+    )
+
+    technician.remediation_operation_binder.bind(
+        action=action,
+        operation_id="test_operation",
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="operation already bound",
+    ):
+        technician.remediation_operation_binder.bind(
+            action=action,
+            operation_id="second_operation",
+        )
+
+    assert action.operation is first_operation
+    assert action.authorization_status == "UNAUTHORIZED"
+    assert action.execution_status == "NOT_EXECUTED"
+
+def test_binding_preserves_denied_authorization():
+    technician = Technician()
+
+    operation = lambda: None
+
+    technician.remediation_operation_registry.register(
+        "test_operation",
+        operation,
+    )
+
+    action = RemediationAction(
+        action_id="action_001",
+        description="Review memory usage.",
+    )
+
+    action.deny()
+
+    technician.remediation_operation_binder.bind(
+        action=action,
+        operation_id="test_operation",
+    )
+
+    assert action.operation is operation
+    assert action.authorization_status == "DENIED"
+    assert action.execution_status == "NOT_EXECUTED"
+
+def test_binding_preserves_authorized_state():
+    technician = Technician()
+
+    operation = lambda: None
+
+    technician.remediation_operation_registry.register(
+        "test_operation",
+        operation,
+    )
+
+    action = RemediationAction(
+        action_id="action_001",
+        description="Review memory usage.",
+    )
+
+    technician.authorize_remediation(action)
+
+    technician.remediation_operation_binder.bind(
+        action=action,
+        operation_id="test_operation",
+    )
+
+    assert action.operation is operation
+    assert action.authorization_status == "AUTHORIZED"
+    assert action.execution_status == "NOT_EXECUTED"
+
+def test_technician_can_bind_registered_operation_to_planned_action():
+    technician = Technician()
+
+    operation = lambda: None
+
+    technician.remediation_operation_registry.register(
+        "test_operation",
+        operation,
+    )
+
+    action = RemediationAction(
+        action_id="action_001",
+        description="Review memory usage.",
+        category="MEMORY",
+        severity="WARNING",
+    )
+
+    technician.remediation_operation_binder.bind(
+        action=action,
+        operation_id="test_operation",
+    )
+
+    assert action.operation is operation
+    assert action.authorization_status == "UNAUTHORIZED"
+    assert action.execution_status == "NOT_EXECUTED"
+
+def test_technician_can_bind_authorize_and_execute_planned_action():
+    technician = Technician()
+
+    state = {"executed": False}
+
+    def operation():
+        state["executed"] = True
+
+    technician.remediation_operation_registry.register(
+        "test_operation",
+        operation,
+    )
+
+    action = RemediationAction(
+        action_id="action_001",
+        description="Review memory usage.",
+    )
+
+    technician.remediation_operation_binder.bind(
+        action=action,
+        operation_id="test_operation",
+    )
+
+    assert action.authorization_status == "UNAUTHORIZED"
+    assert action.execution_status == "NOT_EXECUTED"
+    assert state["executed"] is False
+
+    technician.authorize_remediation(action)
+
+    assert action.authorization_status == "AUTHORIZED"
+    assert action.execution_status == "NOT_EXECUTED"
+    assert state["executed"] is False
+
+    result = technician.remediate(action)
+
+    assert result is not None
+    assert state["executed"] is True
+    assert action.execution_status == "EXECUTED"
+
+def test_technician_can_verify_bound_remediation_result():
+    technician = Technician()
+
+    state = {"executed": False}
+
+    def operation():
+        state["executed"] = True
+
+    technician.remediation_operation_registry.register(
+        "test_operation",
+        operation,
+    )
+
+    action = RemediationAction(
+        action_id="action_001",
+        description="Review memory usage.",
+    )
+
+    technician.remediation_operation_binder.bind(
+        action=action,
+        operation_id="test_operation",
+    )
+
+    technician.authorize_remediation(action)
+
+    result = technician.remediate(
+        action,
+        expected="healthy",
+        observed="healthy",
+    )
+
+    assert action.execution_status == "EXECUTED"
+    assert state["executed"] is True
+
+    assert result.verification_result["verified"] is True
+    assert result.verification_result["action_id"] == "action_001"
+    assert result.verification_result["expected"] == "healthy"
+    assert result.verification_result["observed"] == "healthy"
+
+def test_diagnose_remediation_actions_are_unbound_by_default():
+    technician = Technician()
+
+    result = technician.diagnose()
+
+    actions = result["remediation_actions"]
+
+    assert actions
+
+    for action in actions:
+        assert action.operation is None
+        assert action.execution_status == "NOT_EXECUTED"
+        assert action.authorization_status == "UNAUTHORIZED"
+
+def test_technician_can_select_remediation_operation():
+    technician = Technician()
+
+    action = RemediationAction(
+        action_id="action_001",
+        description="Review memory usage.",
+        category="MEMORY",
+        severity="WARNING",
+    )
+
+    operation_id = technician.select_remediation_operation(action)
+
+    assert operation_id == "memory_review"
+
+
+def test_technician_can_bind_selected_remediation_operation():
+    technician = Technician()
+
+    action = RemediationAction(
+        action_id="action_002",
+        description="Review memory usage.",
+        category="MEMORY",
+        severity="WARNING",
+    )
+
+    technician.bind_remediation_operation(action)
+
+    assert action.operation is (
+        technician.remediation_operation_registry.get(
+            "memory_review"
+        )
+    )
+
+
+def test_technician_does_not_bind_unsupported_remediation_operation():
+    technician = Technician()
+
+    action = RemediationAction(
+        action_id="action_003",
+        description="Investigate CPU usage.",
+        category="CPU",
+        severity="WARNING",
+    )
+
+    technician.bind_remediation_operation(action)
+
+    assert action.operation is None
+
+
+def test_technician_binding_does_not_execute_or_authorize():
+    technician = Technician()
+
+    state = {"executed": False}
+
+    def operation():
+        state["executed"] = True
+
+    technician.remediation_operation_registry.register(
+        "test_operation",
+        operation,
+    )
+
+    action = RemediationAction(
+        action_id="action_004",
+        description="Review memory usage.",
+        category="MEMORY",
+        severity="WARNING",
+    )
+
+    technician.bind_remediation_operation(action)
+
+    assert action.operation is (
+    technician.remediation_operation_registry.get(
+        "memory_review"
+    )
+    )
+    assert action.authorization_status == "UNAUTHORIZED"
+    assert action.execution_status == "NOT_EXECUTED"
+    assert state["executed"] is False
+
+def test_technician_complete_bound_remediation_workflow():
+    technician = Technician()
+
+    state = {"executed": False}
+
+    def operation():
+        state["executed"] = True
+
+    technician.remediation_operation_registry.register(
+        "test_operation",
+        operation,
+    )
+
+    action = RemediationAction(
+        action_id="action_005",
+        description="Review memory usage.",
+        category="MEMORY",
+        severity="WARNING",
+    )
+
+    technician.bind_remediation_operation(action)
+
+    assert action.operation is (
+        technician.remediation_operation_registry.get(
+            "memory_review"
+        )
+    )
+
+    assert action.authorization_status == "UNAUTHORIZED"
+    assert action.execution_status == "NOT_EXECUTED"
+
+    technician.authorize_remediation(action)
+
+    assert action.authorization_status == "AUTHORIZED"
+    assert action.execution_status == "NOT_EXECUTED"
+
+    result = technician.remediate(action)
+
+    assert result.execution_status == "EXECUTED"
+    assert action.execution_status == "EXECUTED"
+    assert action.operation.execution_status == "EXECUTED"
+
+def test_technician_bound_action_can_be_verified():
+    technician = Technician()
+
+    operation = lambda: None
+
+    technician.remediation_operation_registry.register(
+        "test_operation",
+        operation,
+    )
+
+    action = RemediationAction(
+        action_id="action_006",
+        description="Review memory usage.",
+        category="MEMORY",
+        severity="WARNING",
+    )
+
+    technician.bind_remediation_operation(action)
+    technician.authorize_remediation(action)
+
+    result = technician.remediate(
+        action,
+        expected="healthy",
+        observed="healthy",
+    )
+
+    assert result.execution_status == "EXECUTED"
+    assert result.verification_result["verified"] is True
+
+
+def test_technician_cannot_execute_bound_action_without_authorization():
+    technician = Technician()
+
+    state = {"executed": False}
+
+    def operation():
+        state["executed"] = True
+
+    technician.remediation_operation_registry.register(
+        "test_operation",
+        operation,
+    )
+
+    action = RemediationAction(
+        action_id="action_007",
+        description="Review memory usage.",
+        category="MEMORY",
+        severity="WARNING",
+    )
+
+    technician.bind_remediation_operation(action)
+
+    result = technician.remediate(action)
+
+    assert result.execution_status == "NOT_EXECUTED"
+    assert state["executed"] is False
+
+def test_technician_can_execute_registered_remediation_operation():
+    from engine.remediation_operation import RemediationOperation
+
+    technician = Technician()
+
+    executed = []
+
+    operation = RemediationOperation(
+        operation_id="test_operation",
+        description="Review memory-intensive processes.",
+        handler=lambda: executed.append(True),
+    )
+
+    technician.remediation_operation_registry.register(
+        "test_operation",
+        operation,
+    )
+
+    action = RemediationAction(
+        action_id="test_memory_action",
+        description="Review memory-intensive processes.",
+        category="MEMORY",
+        severity="WARNING",
+    )
+
+    technician.remediation_operation_binder.bind(
+    action=action,
+    operation_id="test_operation",
+    )
+
+    bound_action = action
+
+    assert bound_action.operation is operation
+    assert action.execution_status == "NOT_EXECUTED"
+    assert executed == []
+
+    technician.authorize_remediation(action)
+
+    result = technician.remediate(action)
+
+    assert result.execution_status == "EXECUTED"
+    assert action.execution_status == "EXECUTED"
+    assert operation.execution_status == "EXECUTED"
+    assert executed == [True]
+
+
+def test_technician_cannot_execute_registered_operation_without_authorization():
+    from engine.remediation_operation import RemediationOperation
+
+    technician = Technician()
+
+    executed = []
+
+    operation = RemediationOperation(
+        operation_id="test_operation",
+        description="Review memory-intensive processes.",
+        handler=lambda: executed.append(True),
+    )
+
+    technician.remediation_operation_registry.register(
+        "test_operation",
+        operation,
+    )
+
+    action = RemediationAction(
+        action_id="test_memory_action",
+        description="Review memory-intensive processes.",
+        category="MEMORY",
+        severity="WARNING",
+    )
+
+    technician.bind_remediation_operation(action)
+
+    result = technician.remediate(action)
+
+    assert result.execution_status != "EXECUTED"
+    assert action.execution_status != "EXECUTED"
+    assert operation.execution_status == "NOT_EXECUTED"
+    assert executed == []
+
+def test_technician_can_complete_diagnosis_to_remediation_workflow():
+    from engine.remediation_operation import RemediationOperation
+
+    technician = Technician()
+
+    result = technician.diagnose()
+
+    actions = result["remediation_actions"]
+
+    assert actions
+
+    action = actions[0]
+
+    assert action.operation is None
+    assert action.authorization_status == "UNAUTHORIZED"
+    assert action.execution_status == "NOT_EXECUTED"
+
+    operation_id = technician.select_remediation_operation(action)
+
+    assert operation_id == "memory_review"
+
+    technician.bind_remediation_operation(action)
+
+    assert action.operation is (
+        technician.remediation_operation_registry.get(
+            "memory_review"
+        )
+    )
+
+    assert action.execution_status == "NOT_EXECUTED"
+    assert action.operation.execution_status == "NOT_EXECUTED"
+
+    technician.authorize_remediation(action)
+
+    assert action.authorization_status == "AUTHORIZED"
+
+    remediation_result = technician.remediate(action)
+
+    assert remediation_result.execution_status == "EXECUTED"
+    assert action.execution_status == "EXECUTED"
+    assert action.operation.execution_status == "EXECUTED"
+
+def test_technician_loads_approved_remediation_operations():
+    from engine.remediation_operation import RemediationOperation
+
+    technician = Technician()
+
+    operation = technician.remediation_operation_registry.get(
+        "memory_review"
+    )
+
+    assert isinstance(operation, RemediationOperation)
+    assert operation.operation_id == "memory_review"
+    assert operation.execution_status == "NOT_EXECUTED"
+
+
+def test_technician_does_not_auto_bind_catalog_operation():
+    technician = Technician()
+
+    result = technician.diagnose()
+
+    actions = result["remediation_actions"]
+
+    assert actions
+
+    for action in actions:
+        assert action.operation is None
+        assert action.authorization_status == "UNAUTHORIZED"
+        assert action.execution_status == "NOT_EXECUTED"

@@ -8,14 +8,60 @@ from copy import deepcopy
 from engine.diagnostic_orchestrator import DiagnosticOrchestrator
 from engine.case_decision import CaseDecision
 from engine.report import generate_case_report
-
+from engine.remediation_action_planner import RemediationActionPlanner
+from engine.remediation_coordinator import RemediationCoordinator
+from engine.remediation_operation_binder import (
+    RemediationOperationBinder,
+)
+from engine.remediation_operation_registry import (
+    RemediationOperationRegistry,
+)
+from engine.remediation_operation_selector import (
+    RemediationOperationSelector,
+)
+from engine.remediation_operation_catalog import (
+    RemediationOperationCatalog,
+)
 
 class Technician:
 
     def __init__(self):
+        self.remediation_action_planner = (
+        RemediationActionPlanner()
+    )
+
+        self.remediation_coordinator = (
+            RemediationCoordinator()
+        )
 
         self.diagnostic_orchestrator = (
             DiagnosticOrchestrator()
+        )
+        self.remediation_operation_registry = (
+            RemediationOperationRegistry()
+        )
+        self.remediation_operation_catalog = (
+            RemediationOperationCatalog()
+        )
+
+        for operation_id, operation in (
+            self.remediation_operation_catalog
+            .get_operations()
+            .items()
+        ):
+            self.remediation_operation_registry.register(
+                operation_id,
+                operation,
+            )
+
+        self.remediation_operation_binder = (
+            RemediationOperationBinder(
+                registry=self.remediation_operation_registry,
+            )
+        )
+
+        self.remediation_operation_selector = (
+            RemediationOperationSelector()
         )
 
         # Compatibility with existing application tests
@@ -30,6 +76,10 @@ class Technician:
         result = self.diagnostic_orchestrator.run()
 
         case = self.diagnostic_orchestrator.get_case()
+        remediation_actions = (
+        self.remediation_action_planner
+        .create_actions_from_case(case)
+        )
 
         case_decision = CaseDecision(case).evaluate()
 
@@ -100,6 +150,10 @@ class Technician:
         self.last_result[
             "case_decision"
         ] = deepcopy(case_decision)
+
+        self.last_result[
+        "remediation_actions"
+        ] = remediation_actions
 
         return self.last_result
 
@@ -203,3 +257,28 @@ class Technician:
         case = self.diagnostic_orchestrator.get_case()
 
         return generate_case_report(case)
+
+    def select_remediation_operation(self, action):
+        return self.remediation_operation_selector.select(action)
+
+    def bind_remediation_operation(self, action):
+        operation_id = self.select_remediation_operation(action)
+
+        if operation_id is None:
+            return None
+
+        self.remediation_operation_binder.bind(
+            action,
+            operation_id,
+        )
+
+        return action
+
+    def remediate(self, action, expected=None, observed=None):
+        return self.remediation_coordinator.execute(
+            action,
+            expected=expected,
+            observed=observed,
+        )
+    def authorize_remediation(self, action):
+        action.authorize()
