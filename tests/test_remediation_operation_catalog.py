@@ -58,3 +58,19 @@ def test_catalog_operations_are_remediation_operations():
 
     for operation in operations.values():
         assert isinstance(operation, RemediationOperation)
+
+def test_catalog_get_operations_returns_copy():
+    catalog = RemediationOperationCatalog()
+
+    operations = catalog.get_operations()
+
+    operations.pop("memory_review")
+
+    assert catalog.get("memory_review") is not None
+
+def test_catalog_lookup_does_not_execute_operation():
+    catalog = RemediationOperationCatalog()
+
+    operation = catalog.get("memory_review")
+
+    assert operation.execution_status == "NOT_EXECUTED"

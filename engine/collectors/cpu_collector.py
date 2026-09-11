@@ -3,7 +3,12 @@
 # CPU EVIDENCE COLLECTOR
 # ==========================================
 
-from diagnostics.cpu import get_cpu_info, get_top_cpu_processes
+from concurrent.futures import ThreadPoolExecutor
+
+from diagnostics.cpu import (
+    get_cpu_info,
+    get_top_cpu_processes,
+)
 
 
 class CPUCollector:
@@ -12,9 +17,23 @@ class CPUCollector:
 
     def collect(self):
 
-        cpu_info = get_cpu_info()
+        with ThreadPoolExecutor(
+            max_workers=2
+        ) as executor:
 
-        top_processes = get_top_cpu_processes()
+            cpu_info_future = executor.submit(
+                get_cpu_info
+            )
+
+            top_processes_future = executor.submit(
+                get_top_cpu_processes
+            )
+
+            cpu_info = cpu_info_future.result()
+
+            top_processes = (
+                top_processes_future.result()
+            )
 
         return {
             "physical_cores": cpu_info["physical_cores"],

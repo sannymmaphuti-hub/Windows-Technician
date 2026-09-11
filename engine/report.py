@@ -377,6 +377,102 @@ def generate_case_report(case):
     report.append("")
 
     # ==========================================
+    # REMEDIATION AUDIT
+    # ==========================================
+
+    report.append("REMEDIATION AUDIT")
+    report.append("------------------------------------------")
+
+    remediation_audit = getattr(
+        case,
+        "remediation_audit",
+        None
+    )
+
+    if not remediation_audit:
+
+        report.append(
+            "No remediation audit records available."
+        )
+
+    else:
+
+        for record in remediation_audit:
+
+            if isinstance(record, dict):
+
+                action_id = record.get(
+                    "action_id",
+                    "Unknown action"
+                )
+
+                execution_status = record.get(
+                    "execution_status",
+                    "UNKNOWN"
+                )
+
+                description = record.get(
+                    "description"
+                )
+
+                authorization_status = record.get(
+                    "authorization_status"
+                )
+
+                reason = record.get(
+                    "reason"
+                )
+
+                verification_result = record.get(
+                    "verification_result"
+                )
+
+                report.append(
+                    f"Action : {action_id}"
+                )
+
+                report.append(
+                    f"Execution : {execution_status}"
+                )
+
+                if description is not None:
+
+                    report.append(
+                        f"Description : {description}"
+                    )
+
+                if authorization_status is not None:
+
+                    report.append(
+                        f"Authorization : {authorization_status}"
+                    )
+
+                if reason is not None:
+
+                    report.append(
+                        f"Reason : {reason}"
+                    )
+
+                if verification_result is not None:
+
+                    report.append(
+                        "Verification :"
+                    )
+
+                    _append_value(
+                        report,
+                        verification_result
+                    )
+
+            else:
+
+                report.append(
+                    str(record)
+                )
+
+            report.append("")
+
+    # ==========================================
     # REPORT FOOTER
     # ==========================================
 

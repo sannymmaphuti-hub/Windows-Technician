@@ -387,7 +387,11 @@ def test_technician_case_decision_preserves_case_data(
     }
 
     case.recommendations = [
-        "Investigate memory-consuming processes"
+        {
+            "recommendation": "Investigate memory-consuming processes",
+            "category": "MEMORY",
+            "severity": "WARNING",
+        }
     ]
 
     monkeypatch.setattr(
@@ -439,7 +443,11 @@ def test_technician_case_decision_is_independent_copy(
     }
 
     case.recommendations = [
-        "Investigate memory-consuming processes"
+        {
+            "recommendation": "Investigate memory-consuming processes",
+            "category": "MEMORY",
+            "severity": "WARNING",
+        }
     ]
 
     monkeypatch.setattr(
@@ -492,9 +500,12 @@ def test_technician_report_uses_current_diagnostic_case(
     }
 
     case.recommendations = [
-        "Investigate memory-consuming processes"
+        {
+            "recommendation": "Investigate memory-consuming processes",
+            "category": "MEMORY",
+            "severity": "WARNING",
+        }
     ]
-
     monkeypatch.setattr(
         technician.diagnostic_orchestrator,
         "run",

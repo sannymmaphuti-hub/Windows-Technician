@@ -43,8 +43,16 @@ class TechnicianApp:
         if self.technician.last_result is None:
             self.technician.diagnose()
 
-        diagnostic_view = DiagnosticView(
+        dashboard_result = deepcopy(
             self.technician.last_result
+        )
+
+        dashboard_result["remediation_audit"] = (
+            self.get_remediation_audit()
+        )
+
+        diagnostic_view = DiagnosticView(
+            dashboard_result
         )
 
         return DashboardViewModel(
@@ -61,6 +69,9 @@ class TechnicianApp:
         report_path.write_text(report, encoding="utf-8")
 
         return str(report_path)
+
+    def get_remediation_audit(self):
+        return self.technician.get_remediation_audit()
 
 
 def print_section(title):

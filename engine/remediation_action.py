@@ -1,4 +1,11 @@
+# ==========================================
+# WINDOWS TECHNICIAN v0.4
+# REMEDIATION ACTION
+# ==========================================
+
+
 class RemediationAction:
+
     def __init__(
         self,
         action_id,
@@ -11,17 +18,38 @@ class RemediationAction:
         self.action_id = action_id
         self.description = description
         self.requires_authorization = requires_authorization
-        self.operation = operation
         self.category = category
         self.severity = severity
 
         self.authorization_status = "UNAUTHORIZED"
         self.execution_status = "NOT_EXECUTED"
+        self.failure_reason = None
+        self._operation = operation
+
+    @property
+    def operation(self):
+        return self._operation
+
+    @operation.setter
+    def operation(self, operation):
+        if self.execution_status in {"EXECUTED", "FAILED"}:
+            return
+
+        self._operation = operation
 
     def authorize(self):
+        if self.authorization_status == "DENIED":
+            return
+
+        if self.execution_status in {"EXECUTED", "FAILED"}:
+            return
+
         self.authorization_status = "AUTHORIZED"
 
     def deny(self):
+        if self.execution_status in {"EXECUTED", "FAILED"}:
+            return
+
         self.authorization_status = "DENIED"
 
     def execute(self):
@@ -41,15 +69,16 @@ class RemediationAction:
             if hasattr(self.operation, "handler"):
                 if self.operation.handler is None:
                     return False
-
                 self.operation.handler()
             else:
                 self.operation()
-        except Exception:
+        except Exception as error:
             self.execution_status = "FAILED"
 
             if hasattr(self.operation, "execution_status"):
                 self.operation.execution_status = "FAILED"
+
+            self.failure_reason = str(error)
 
             return False
 
@@ -59,6 +88,7 @@ class RemediationAction:
             self.operation.execution_status = "EXECUTED"
 
         return True
+
     def __eq__(self, other):
         if not isinstance(other, RemediationAction):
             return NotImplemented

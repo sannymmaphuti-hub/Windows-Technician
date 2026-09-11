@@ -1,12 +1,17 @@
 from types import SimpleNamespace
 
 from PySide6.QtCore import Qt
-
+from PySide6.QtWidgets import QLabel
+from PySide6.QtWidgets import QPushButton
+from PySide6.QtWidgets import QLabel, QPushButton
 from application.app import TechnicianApp
 from application.diagnostic_view import DiagnosticView
 from application.dashboard_view_model import DashboardViewModel
-
+from engine.remediation_operation import RemediationOperation
+from application.app import TechnicianApp
 from gui.dashboard import DashboardWidget
+
+
 
 
 def test_dashboard_widget_can_be_created(qtbot):
@@ -1401,4 +1406,1227 @@ def test_dashboard_diagnostic_worker_is_created(
             or not dashboard._diagnostic_thread.isRunning()
         ),
         timeout=2000,
+    )
+
+def test_dashboard_displays_remediation_action(
+    qtbot,
+    dashboard_view_model,
+):
+    app = TechnicianApp()
+
+    dashboard = DashboardWidget(app)
+
+    qtbot.addWidget(dashboard)
+
+    action = app.technician.remediation_action_planner.create_action(
+        {
+            "category": "MEMORY",
+            "severity": "WARNING",
+            "recommendation": (
+                "Review memory-intensive processes."
+            ),
+        }
+    )
+
+    dashboard_view_model.remediation_actions = [action]
+
+    dashboard.set_view_model(dashboard_view_model)
+
+    assert hasattr(dashboard, "remediation_actions")
+    assert len(dashboard.remediation_actions) == 1
+
+def test_dashboard_remediation_action_preserves_lifecycle_state(
+    qtbot,
+    dashboard_view_model,
+):
+    app = TechnicianApp()
+
+    dashboard = DashboardWidget(app)
+
+    qtbot.addWidget(dashboard)
+
+    action = app.technician.remediation_action_planner.create_action(
+        {
+            "category": "MEMORY",
+            "severity": "WARNING",
+            "recommendation": (
+                "Review memory-intensive processes."
+            ),
+        }
+    )
+
+    dashboard_view_model.remediation_actions = [action]
+
+    dashboard.set_view_model(dashboard_view_model)
+
+    displayed_action = dashboard.remediation_actions[0]
+
+    assert displayed_action.authorization_status == "UNAUTHORIZED"
+    assert displayed_action.execution_status == "NOT_EXECUTED"
+
+def test_dashboard_has_remediation_actions_container(qtbot):
+    app = TechnicianApp()
+
+    dashboard = DashboardWidget(app)
+
+    qtbot.addWidget(dashboard)
+
+    assert hasattr(
+        dashboard,
+        "remediation_actions_container",
+    )
+    assert dashboard.remediation_actions_container is not None
+
+def test_dashboard_layout_contains_remediation_actions_container(
+    qtbot,
+):
+    app = TechnicianApp()
+
+    dashboard = DashboardWidget(app)
+
+    qtbot.addWidget(dashboard)
+
+    layout = dashboard.layout()
+
+    widgets = [
+        layout.itemAt(index).widget()
+        for index in range(layout.count())
+        if layout.itemAt(index).widget() is not None
+    ]
+
+    assert (
+        dashboard.remediation_actions_container
+        in widgets
+    )
+
+def test_dashboard_displays_remediation_action_description(
+    qtbot,
+    dashboard_view_model,
+):
+    app = TechnicianApp()
+
+    dashboard = DashboardWidget(app)
+
+    qtbot.addWidget(dashboard)
+
+    action = app.technician.remediation_action_planner.create_action(
+        {
+            "category": "MEMORY",
+            "severity": "WARNING",
+            "recommendation": (
+                "Review memory-intensive processes."
+            ),
+        }
+    )
+
+    dashboard_view_model.remediation_actions = [action]
+
+    dashboard.set_view_model(dashboard_view_model)
+
+    labels = (
+        dashboard.remediation_actions_container.findChildren(
+            QLabel
+        )
+    )
+
+    assert any(
+        label.text()
+        == "Review memory-intensive processes."
+        for label in labels
+    )
+
+def test_dashboard_refreshing_remediation_actions_does_not_duplicate(
+    qtbot,
+    dashboard_view_model,
+):
+    app = TechnicianApp()
+
+    dashboard = DashboardWidget(app)
+
+    qtbot.addWidget(dashboard)
+
+    action = app.technician.remediation_action_planner.create_action(
+        {
+            "category": "MEMORY",
+            "severity": "WARNING",
+            "recommendation": (
+                "Review memory-intensive processes."
+            ),
+        }
+    )
+
+    dashboard_view_model.remediation_actions = [action]
+
+    dashboard.set_view_model(dashboard_view_model)
+    dashboard.set_view_model(dashboard_view_model)
+
+    labels = (
+        dashboard.remediation_actions_container.findChildren(
+            QLabel
+        )
+    )
+
+    matching_labels = [
+        label
+        for label in labels
+        if label.text()
+        == "Review memory-intensive processes."
+    ]
+
+    assert len(matching_labels) == 1
+
+def test_dashboard_displays_remediation_action_authorization_state(
+    qtbot,
+    dashboard_view_model,
+):
+    app = TechnicianApp()
+
+    dashboard = DashboardWidget(app)
+
+    qtbot.addWidget(dashboard)
+
+    action = app.technician.remediation_action_planner.create_action(
+        {
+            "category": "MEMORY",
+            "severity": "WARNING",
+            "recommendation": (
+                "Review memory-intensive processes."
+            ),
+        }
+    )
+
+    dashboard_view_model.remediation_actions = [action]
+
+    dashboard.set_view_model(dashboard_view_model)
+
+    labels = (
+        dashboard.remediation_actions_container.findChildren(
+            QLabel
+        )
+    )
+
+    assert any(
+        "UNAUTHORIZED" in label.text()
+        for label in labels
+    )
+
+def test_dashboard_displays_remediation_action_execution_state(
+    qtbot,
+    dashboard_view_model,
+):
+    app = TechnicianApp()
+
+    dashboard = DashboardWidget(app)
+
+    qtbot.addWidget(dashboard)
+
+    action = app.technician.remediation_action_planner.create_action(
+        {
+            "category": "MEMORY",
+            "severity": "WARNING",
+            "recommendation": (
+                "Review memory-intensive processes."
+            ),
+        }
+    )
+
+    action.authorize()
+
+    dashboard_view_model.remediation_actions = [action]
+
+    dashboard.set_view_model(dashboard_view_model)
+
+    labels = (
+        dashboard.remediation_actions_container.findChildren(
+            QLabel
+        )
+    )
+
+    assert any(
+        "NOT_EXECUTED" in label.text()
+        for label in labels
+    )
+
+def test_dashboard_remediation_authorize_control_does_not_auto_authorize(
+    qtbot,
+    dashboard_view_model,
+):
+    app = TechnicianApp()
+
+    dashboard = DashboardWidget(app)
+
+    qtbot.addWidget(dashboard)
+
+    action = app.technician.remediation_action_planner.create_action(
+        {
+            "category": "MEMORY",
+            "severity": "WARNING",
+            "recommendation": (
+                "Review memory-intensive processes."
+            ),
+        }
+    )
+
+    dashboard_view_model.remediation_actions = [action]
+
+    dashboard.set_view_model(dashboard_view_model)
+
+    assert action.authorization_status == "UNAUTHORIZED"
+
+def test_dashboard_displays_remediation_authorize_control(
+    qtbot,
+    dashboard_view_model,
+):
+    app = TechnicianApp()
+
+    dashboard = DashboardWidget(app)
+
+    qtbot.addWidget(dashboard)
+
+    action = app.technician.remediation_action_planner.create_action(
+        {
+            "category": "MEMORY",
+            "severity": "WARNING",
+            "recommendation": (
+                "Review memory-intensive processes."
+            ),
+        }
+    )
+
+    dashboard_view_model.remediation_actions = [action]
+
+    dashboard.set_view_model(dashboard_view_model)
+
+    buttons = (
+        dashboard.remediation_actions_container.findChildren(
+            QPushButton
+        )
+    )
+
+    assert any(
+        "Authorize" in button.text()
+        for button in buttons
+    )
+
+def test_dashboard_remediation_authorize_control_authorizes_action(
+    qtbot,
+    dashboard_view_model,
+):
+    app = TechnicianApp()
+
+    dashboard = DashboardWidget(app)
+
+    qtbot.addWidget(dashboard)
+
+    action = app.technician.remediation_action_planner.create_action(
+        {
+            "category": "MEMORY",
+            "severity": "WARNING",
+            "recommendation": (
+                "Review memory-intensive processes."
+            ),
+        }
+    )
+
+    dashboard_view_model.remediation_actions = [action]
+
+    dashboard.set_view_model(dashboard_view_model)
+
+    buttons = (
+        dashboard.remediation_actions_container.findChildren(
+            QPushButton
+        )
+    )
+
+    authorize_button = next(
+        button
+        for button in buttons
+        if "Authorize" in button.text()
+    )
+
+    qtbot.mouseClick(
+        authorize_button,
+        Qt.MouseButton.LeftButton,
+    )
+
+    assert action.authorization_status == "AUTHORIZED"
+
+def test_dashboard_remediation_authorize_control_updates_displayed_state(
+    qtbot,
+    dashboard_view_model,
+):
+    app = TechnicianApp()
+
+    dashboard = DashboardWidget(app)
+
+    qtbot.addWidget(dashboard)
+
+    action = app.technician.remediation_action_planner.create_action(
+        {
+            "category": "MEMORY",
+            "severity": "WARNING",
+            "recommendation": (
+                "Review memory-intensive processes."
+            ),
+        }
+    )
+
+    dashboard_view_model.remediation_actions = [action]
+
+    dashboard.set_view_model(dashboard_view_model)
+
+    buttons = (
+        dashboard.remediation_actions_container.findChildren(
+            QPushButton
+        )
+    )
+
+    authorize_button = next(
+        button
+        for button in buttons
+        if "Authorize" in button.text()
+    )
+
+    qtbot.mouseClick(
+        authorize_button,
+        Qt.MouseButton.LeftButton,
+    )
+
+    labels = (
+        dashboard.remediation_actions_container.findChildren(
+            QLabel
+        )
+    )
+
+    assert any(
+        "Authorization: AUTHORIZED" in label.text()
+        for label in labels
+    )
+
+def test_dashboard_authorize_does_not_execute_remediation_action(
+    qtbot,
+    dashboard_view_model,
+):
+    app = TechnicianApp()
+
+    dashboard = DashboardWidget(app)
+
+    qtbot.addWidget(dashboard)
+
+    action = app.technician.remediation_action_planner.create_action(
+        {
+            "category": "MEMORY",
+            "severity": "WARNING",
+            "recommendation": (
+                "Review memory-intensive processes."
+            ),
+        }
+    )
+
+    dashboard_view_model.remediation_actions = [action]
+
+    dashboard.set_view_model(dashboard_view_model)
+
+    buttons = (
+        dashboard.remediation_actions_container.findChildren(
+            QPushButton
+        )
+    )
+
+    authorize_button = next(
+        button
+        for button in buttons
+        if "Authorize" in button.text()
+    )
+
+    qtbot.mouseClick(
+        authorize_button,
+        Qt.MouseButton.LeftButton,
+    )
+
+    assert action.authorization_status == "AUTHORIZED"
+    assert action.execution_status == "NOT_EXECUTED"
+
+def test_dashboard_displays_remediation_execute_control_when_authorized(
+    qtbot,
+    dashboard_view_model,
+):
+    app = TechnicianApp()
+
+    dashboard = DashboardWidget(app)
+
+    qtbot.addWidget(dashboard)
+
+    action = app.technician.remediation_action_planner.create_action(
+        {
+            "category": "MEMORY",
+            "severity": "WARNING",
+            "recommendation": (
+                "Review memory-intensive processes."
+            ),
+        }
+    )
+
+    action.authorize()
+
+    dashboard_view_model.remediation_actions = [action]
+
+    dashboard.set_view_model(dashboard_view_model)
+
+    buttons = (
+        dashboard.remediation_actions_container.findChildren(
+            QPushButton
+        )
+    )
+
+    assert any(
+        "Execute" in button.text()
+        for button in buttons
+    )
+
+def test_dashboard_remediation_execute_control_executes_authorized_action(
+    qtbot,
+    dashboard_view_model,
+):
+    app = TechnicianApp()
+
+    dashboard = DashboardWidget(app)
+
+    qtbot.addWidget(dashboard)
+
+    action = app.technician.remediation_action_planner.create_action(
+        {
+            "category": "MEMORY",
+            "severity": "WARNING",
+            "recommendation": (
+                "Review memory-intensive processes."
+            ),
+        }
+    )
+
+    action.authorize()
+
+    dashboard_view_model.remediation_actions = [action]
+
+    dashboard.set_view_model(dashboard_view_model)
+
+    buttons = (
+        dashboard.remediation_actions_container.findChildren(
+            QPushButton
+        )
+    )
+
+    execute_button = next(
+        button
+        for button in buttons
+        if "Execute" in button.text()
+    )
+
+    qtbot.mouseClick(
+        execute_button,
+        Qt.MouseButton.LeftButton,
+    )
+
+    assert action.execution_status == "EXECUTED"
+
+def test_dashboard_disables_execute_control_after_successful_execution(
+    qtbot,
+    dashboard_view_model,
+):
+    app = TechnicianApp()
+
+    dashboard = DashboardWidget(app)
+
+    qtbot.addWidget(dashboard)
+
+    action = app.technician.remediation_action_planner.create_action(
+        {
+            "category": "MEMORY",
+            "severity": "WARNING",
+            "recommendation": (
+                "Review memory-intensive processes."
+            ),
+        }
+    )
+
+    action.authorize()
+
+    dashboard_view_model.remediation_actions = [action]
+
+    dashboard.set_view_model(dashboard_view_model)
+
+    execute_button = next(
+        button
+        for button in (
+            dashboard.remediation_actions_container.findChildren(
+                QPushButton
+            )
+        )
+        if "Execute" in button.text()
+    )
+
+    qtbot.mouseClick(
+        execute_button,
+        Qt.MouseButton.LeftButton,
+    )
+
+    assert action.execution_status == "EXECUTED"
+    assert execute_button.isEnabled() is False
+
+def test_dashboard_displays_remediation_failure_reason(
+    qtbot,
+    dashboard_view_model,
+):
+    app = TechnicianApp()
+
+    dashboard = DashboardWidget(app)
+
+    qtbot.addWidget(dashboard)
+
+    action = app.technician.remediation_action_planner.create_action(
+        {
+            "category": "MEMORY",
+            "severity": "WARNING",
+            "recommendation": (
+                "Review memory-intensive processes."
+            ),
+        }
+    )
+
+    action.authorize()
+
+    def failing_operation():
+        raise RuntimeError(
+            "Memory remediation failed."
+        )
+
+    app.technician.remediation_operation_registry._operations[
+        "memory_review"
+    ] = RemediationOperation(
+        operation_id="memory_review",
+        description="Failing memory remediation.",
+        handler=failing_operation,
+    )
+
+    dashboard_view_model.remediation_actions = [action]
+
+    dashboard.set_view_model(dashboard_view_model)
+
+    execute_button = next(
+        button
+        for button in (
+            dashboard.remediation_actions_container.findChildren(
+                QPushButton
+            )
+        )
+        if "Execute" in button.text()
+    )
+
+    qtbot.mouseClick(
+        execute_button,
+        Qt.MouseButton.LeftButton,
+    )
+
+    assert action.execution_status == "FAILED"
+
+    labels = dashboard.remediation_actions_container.findChildren(
+        QLabel
+    )
+
+    assert any(
+        "Memory remediation failed." in label.text()
+        for label in labels
+    )
+
+def test_dashboard_denied_remediation_cannot_be_executed(
+    qtbot,
+    dashboard_view_model,
+):
+    app = TechnicianApp()
+
+    dashboard = DashboardWidget(app)
+
+    qtbot.addWidget(dashboard)
+
+    action = app.technician.remediation_action_planner.create_action(
+        {
+            "category": "MEMORY",
+            "severity": "WARNING",
+            "recommendation": (
+                "Review memory-intensive processes."
+            ),
+        }
+    )
+
+    action.deny()
+
+    dashboard_view_model.remediation_actions = [action]
+
+    dashboard.set_view_model(dashboard_view_model)
+
+    execute_button = next(
+        button
+        for button in (
+            dashboard.remediation_actions_container.findChildren(
+                QPushButton
+            )
+        )
+        if "Execute" in button.text()
+    )
+
+    assert action.authorization_status == "DENIED"
+    assert execute_button.isEnabled() is False
+
+    qtbot.mouseClick(
+        execute_button,
+        Qt.MouseButton.LeftButton,
+    )
+
+    assert action.execution_status == "NOT_EXECUTED"
+
+def test_dashboard_unauthorized_remediation_cannot_be_executed(
+    qtbot,
+    dashboard_view_model,
+):
+    app = TechnicianApp()
+
+    dashboard = DashboardWidget(app)
+
+    qtbot.addWidget(dashboard)
+
+    action = app.technician.remediation_action_planner.create_action(
+        {
+            "category": "MEMORY",
+            "severity": "WARNING",
+            "recommendation": (
+                "Review memory-intensive processes."
+            ),
+        }
+    )
+
+    dashboard_view_model.remediation_actions = [action]
+
+    dashboard.set_view_model(dashboard_view_model)
+
+    execute_button = next(
+        button
+        for button in (
+            dashboard.remediation_actions_container.findChildren(
+                QPushButton
+            )
+        )
+        if "Execute" in button.text()
+    )
+
+    assert action.authorization_status == "UNAUTHORIZED"
+    assert execute_button.isEnabled() is False
+
+    qtbot.mouseClick(
+        execute_button,
+        Qt.MouseButton.LeftButton,
+    )
+
+    assert action.execution_status == "NOT_EXECUTED"
+
+def test_dashboard_displays_remediation_binding_failure(
+    qtbot,
+    dashboard_view_model,
+):
+    app = TechnicianApp()
+
+    action = app.technician.remediation_action_planner.create_action(
+        {
+            "category": "MEMORY",
+            "severity": "WARNING",
+            "recommendation": "Review memory-intensive processes.",
+        }
+    )
+
+    action.category = "NETWORK"
+    action.authorize()
+
+    dashboard_view_model.remediation_actions = [action]
+
+    dashboard = DashboardWidget(app)
+    qtbot.addWidget(dashboard)
+
+    dashboard.set_view_model(dashboard_view_model)
+
+    execute_button = None
+
+    for index in range(
+        dashboard.remediation_actions_layout.count()
+    ):
+        widget = (
+            dashboard.remediation_actions_layout
+            .itemAt(index)
+            .widget()
+        )
+
+        if (
+            isinstance(widget, QPushButton)
+            and widget.text() == "Execute"
+        ):
+            execute_button = widget
+            break
+
+    assert execute_button is not None
+
+    qtbot.mouseClick(
+        execute_button,
+        Qt.LeftButton,
+    )
+
+    labels = dashboard.remediation_actions_container.findChildren(
+        QLabel
+    )
+
+    assert any(
+        "operation binding failed" in label.text().lower()
+        for label in labels
+    )
+
+    assert action.execution_status == "NOT_EXECUTED"
+
+def test_dashboard_displays_remediation_verification_result(
+    qtbot,
+    dashboard_view_model,
+    monkeypatch,
+):
+    app = TechnicianApp()
+
+    action = app.technician.remediation_action_planner.create_action(
+        {
+            "category": "MEMORY",
+            "severity": "WARNING",
+            "recommendation": "Review memory-intensive processes.",
+        }
+    )
+
+    action.authorize()
+
+    dashboard_view_model.remediation_actions = [action]
+
+    verification_result = {
+        "verified": True,
+        "action_id": action.action_id,
+        "expected": {"status": "NORMAL"},
+        "observed": {"status": "NORMAL"},
+        "reason": "Observed state matches expected state.",
+    }
+
+    class FakeRemediationResult:
+        def __init__(self):
+            self.execution_status = "EXECUTED"
+            self.verification_result = verification_result
+
+    def fake_remediate(current_action):
+        current_action.execution_status = "EXECUTED"
+        return FakeRemediationResult()
+
+    monkeypatch.setattr(
+        app.technician,
+        "remediate",
+        fake_remediate,
+    )
+
+    dashboard = DashboardWidget(app)
+    qtbot.addWidget(dashboard)
+
+    dashboard.set_view_model(dashboard_view_model)
+
+    execute_button = None
+
+    for index in range(
+        dashboard.remediation_actions_layout.count()
+    ):
+        widget = (
+            dashboard.remediation_actions_layout
+            .itemAt(index)
+            .widget()
+        )
+
+        if (
+            isinstance(widget, QPushButton)
+            and widget.text() == "Execute"
+        ):
+            execute_button = widget
+            break
+
+    assert execute_button is not None
+
+    qtbot.mouseClick(
+        execute_button,
+        Qt.LeftButton,
+    )
+
+    labels = dashboard.remediation_actions_container.findChildren(
+        QLabel
+    )
+
+    assert any(
+        "verification" in label.text().lower()
+        for label in labels
+    )
+
+    assert any(
+        "passed" in label.text().lower()
+        for label in labels
+    )
+
+def test_dashboard_displays_remediation_verification_failure(
+    qtbot,
+    dashboard_view_model,
+    monkeypatch,
+):
+    app = TechnicianApp()
+
+    action = app.technician.remediation_action_planner.create_action(
+        {
+            "category": "MEMORY",
+            "severity": "WARNING",
+            "recommendation": "Review memory-intensive processes.",
+        }
+    )
+
+    action.authorize()
+
+    dashboard_view_model.remediation_actions = [action]
+
+    verification_result = {
+        "verified": False,
+        "action_id": action.action_id,
+        "expected": {"status": "NORMAL"},
+        "observed": {"status": "WARNING"},
+        "reason": "Observed state does not match expected state.",
+    }
+
+    class FakeRemediationResult:
+        def __init__(self):
+            self.execution_status = "EXECUTED"
+            self.verification_result = verification_result
+
+    def fake_remediate(current_action):
+        current_action.execution_status = "EXECUTED"
+        return FakeRemediationResult()
+
+    monkeypatch.setattr(
+        app.technician,
+        "remediate",
+        fake_remediate,
+    )
+
+    dashboard = DashboardWidget(app)
+    qtbot.addWidget(dashboard)
+
+    dashboard.set_view_model(dashboard_view_model)
+
+    execute_button = None
+
+    for index in range(
+        dashboard.remediation_actions_layout.count()
+    ):
+        widget = (
+            dashboard.remediation_actions_layout
+            .itemAt(index)
+            .widget()
+        )
+
+        if (
+            isinstance(widget, QPushButton)
+            and widget.text() == "Execute"
+        ):
+            execute_button = widget
+            break
+
+    assert execute_button is not None
+
+    qtbot.mouseClick(
+        execute_button,
+        Qt.LeftButton,
+    )
+
+    labels = dashboard.remediation_actions_container.findChildren(
+        QLabel
+    )
+
+    assert any(
+        "verification" in label.text().lower()
+        for label in labels
+    )
+
+    assert any(
+        "failed" in label.text().lower()
+        for label in labels
+    )
+
+def test_dashboard_refresh_preserves_remediation_lifecycle_state(
+    qtbot,
+    dashboard_view_model,
+):
+    app = TechnicianApp()
+
+    action = app.technician.remediation_action_planner.create_action(
+        {
+            "category": "MEMORY",
+            "severity": "WARNING",
+            "recommendation": "Review memory-intensive processes.",
+        }
+    )
+
+    dashboard_view_model.remediation_actions = [action]
+
+    dashboard = DashboardWidget(app)
+    qtbot.addWidget(dashboard)
+
+    dashboard.set_view_model(dashboard_view_model)
+
+    action.authorize()
+
+    dashboard_view_model.remediation_actions = [action]
+
+    dashboard.set_view_model(dashboard_view_model)
+
+    labels = dashboard.remediation_actions_container.findChildren(
+        QLabel
+    )
+
+    assert any(
+        "authorization: authorized" in label.text().lower()
+        for label in labels
+    )
+
+    assert action.authorization_status == "AUTHORIZED"
+    assert action.execution_status == "NOT_EXECUTED"
+
+def test_dashboard_refresh_preserves_executed_remediation_state(
+    qtbot,
+    dashboard_view_model,
+):
+    app = TechnicianApp()
+
+    action = app.technician.remediation_action_planner.create_action(
+        {
+            "category": "MEMORY",
+            "severity": "WARNING",
+            "recommendation": "Review memory-intensive processes.",
+        }
+    )
+
+    action.authorize()
+
+    dashboard_view_model.remediation_actions = [action]
+
+    dashboard = DashboardWidget(app)
+    qtbot.addWidget(dashboard)
+
+    dashboard.set_view_model(dashboard_view_model)
+
+    app.technician.bind_remediation_operation(action)
+
+    result = app.technician.remediate(action)
+
+    assert result.execution_status == "EXECUTED"
+    assert action.execution_status == "EXECUTED"
+
+    dashboard_view_model.remediation_actions = [action]
+
+    dashboard.set_view_model(dashboard_view_model)
+
+    labels = dashboard.remediation_actions_container.findChildren(
+        QLabel
+    )
+
+    assert any(
+        "execution: executed" in label.text().lower()
+        for label in labels
+    )
+
+    assert action.execution_status == "EXECUTED"
+
+def test_dashboard_multiple_remediation_actions_keep_controls_bound_to_correct_actions(
+    qtbot,
+    dashboard_view_model,
+):
+    app = TechnicianApp()
+
+    first_action = (
+        app.technician.remediation_action_planner.create_action(
+            {
+                "category": "MEMORY",
+                "severity": "WARNING",
+                "recommendation": "Review memory-intensive processes.",
+            }
+        )
+    )
+
+    second_action = (
+        app.technician.remediation_action_planner.create_action(
+            {
+                "category": "MEMORY",
+                "severity": "CRITICAL",
+                "recommendation": "Investigate critical memory pressure.",
+            }
+        )
+    )
+
+    dashboard_view_model.remediation_actions = [
+        first_action,
+        second_action,
+    ]
+
+    dashboard = DashboardWidget(app)
+    qtbot.addWidget(dashboard)
+
+    dashboard.set_view_model(dashboard_view_model)
+
+    authorize_buttons = [
+        widget
+        for index in range(
+            dashboard.remediation_actions_layout.count()
+        )
+        if (
+            widget := (
+                dashboard.remediation_actions_layout
+                .itemAt(index)
+                .widget()
+            )
+        )
+        and isinstance(widget, QPushButton)
+        and widget.text() == "Authorize"
+    ]
+
+    assert len(authorize_buttons) == 2
+
+    qtbot.mouseClick(
+        authorize_buttons[0],
+        Qt.LeftButton,
+    )
+
+    assert first_action.authorization_status == "AUTHORIZED"
+    assert second_action.authorization_status == "UNAUTHORIZED"
+
+def test_dashboard_multiple_remediation_actions_authorize_correct_execute_control(
+    qtbot,
+    dashboard_view_model,
+):
+    app = TechnicianApp()
+
+    first_action = (
+        app.technician.remediation_action_planner.create_action(
+            {
+                "category": "MEMORY",
+                "severity": "WARNING",
+                "recommendation": "Review memory-intensive processes.",
+            }
+        )
+    )
+
+    second_action = (
+        app.technician.remediation_action_planner.create_action(
+            {
+                "category": "MEMORY",
+                "severity": "CRITICAL",
+                "recommendation": "Investigate critical memory pressure.",
+            }
+        )
+    )
+
+    dashboard_view_model.remediation_actions = [
+        first_action,
+        second_action,
+    ]
+
+    dashboard = DashboardWidget(app)
+    qtbot.addWidget(dashboard)
+
+    dashboard.set_view_model(dashboard_view_model)
+
+    authorize_buttons = []
+    execute_buttons = []
+
+    for index in range(
+        dashboard.remediation_actions_layout.count()
+    ):
+        widget = (
+            dashboard.remediation_actions_layout
+            .itemAt(index)
+            .widget()
+        )
+
+        if isinstance(widget, QPushButton):
+            if widget.text() == "Authorize":
+                authorize_buttons.append(widget)
+
+            elif widget.text() == "Execute":
+                execute_buttons.append(widget)
+
+    assert len(authorize_buttons) == 2
+    assert len(execute_buttons) == 2
+
+    assert not execute_buttons[0].isEnabled()
+    assert not execute_buttons[1].isEnabled()
+
+    qtbot.mouseClick(
+        authorize_buttons[0],
+        Qt.LeftButton,
+    )
+
+    assert first_action.authorization_status == "AUTHORIZED"
+    assert second_action.authorization_status == "UNAUTHORIZED"
+
+    assert execute_buttons[0].isEnabled()
+    assert not execute_buttons[1].isEnabled()
+
+def test_dashboard_displays_remediation_audit(
+    qtbot,
+):
+    dashboard = DashboardWidget(
+        TechnicianApp()
+    )
+
+    qtbot.addWidget(dashboard)
+
+    result = {
+        "diagnosis": {
+            "status": "NORMAL",
+            "total_findings": 0,
+            "findings": [],
+            "correlations": [],
+            "root_causes": [],
+            "recommendations": [],
+        },
+        "diagnostic_case": {
+            "root_cause_candidates": [],
+            "primary_root_cause": None,
+        },
+        "case_decision": {},
+        "remediation_actions": [],
+        "remediation_audit": [
+            {
+                "action_id": "action_001",
+                "execution_status": "EXECUTED",
+                "reason": None,
+                "verification_result": None,
+            }
+        ],
+    }
+
+    diagnostic_view = DiagnosticView(result)
+
+    view_model = DashboardViewModel(
+        diagnostic_view,
+        execution_state="COMPLETED",
+    )
+
+    dashboard.set_view_model(view_model)
+
+    audit_labels = (
+        dashboard.remediation_audit_container
+        .findChildren(QLabel)
+    )
+
+    assert any(
+        "action_001" in label.text()
+        for label in audit_labels
     )

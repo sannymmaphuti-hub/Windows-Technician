@@ -7,6 +7,7 @@ from application.diagnostic_view import DiagnosticView
 from application.dashboard_view_model import DashboardViewModel
 
 
+
 def make_dashboard_result():
     return {
         "evidence": {
@@ -348,12 +349,6 @@ def test_dashboard_view_model_handles_no_storage_devices():
     assert model.storage_capacity_display == "N/A"
     assert model.storage_free_display == "N/A"
 
-def test_dashboard_view_model_exposes_execution_state():
-    view = DiagnosticView(make_dashboard_result())
-    model = DashboardViewModel(view)
-
-    assert model.execution_state == "READY"
-
 
 def test_dashboard_view_model_exposes_execution_label():
     view = DiagnosticView(make_dashboard_result())
@@ -361,32 +356,6 @@ def test_dashboard_view_model_exposes_execution_label():
 
     assert model.execution_label == "Ready"
 
-
-def test_dashboard_view_model_maps_running_execution_state():
-    view = DiagnosticView(make_dashboard_result())
-    model = DashboardViewModel(view)
-
-    model.execution_state = "RUNNING"
-
-    assert model.execution_label == "Analyzing..."
-
-
-def test_dashboard_view_model_maps_completed_execution_state():
-    view = DiagnosticView(make_dashboard_result())
-    model = DashboardViewModel(view)
-
-    model.execution_state = "COMPLETED"
-
-    assert model.execution_label == "Diagnostics Complete"
-
-
-def test_dashboard_view_model_maps_error_execution_state():
-    view = DiagnosticView(make_dashboard_result())
-    model = DashboardViewModel(view)
-
-    model.execution_state = "ERROR"
-
-    assert model.execution_label == "Diagnostic Failed"
 
 def test_dashboard_view_model_exposes_execution_state():
     view = DiagnosticView(make_dashboard_result())
@@ -440,3 +409,111 @@ def test_dashboard_view_model_maps_error_execution_state():
 
     assert model.execution_label == "Diagnostic Failed"
     assert model.execution_severity == "critical"
+
+def test_dashboard_view_model_exposes_remediation_audit():
+    result = {
+        "diagnosis": {
+            "status": "NORMAL",
+            "total_findings": 0,
+            "findings": [],
+            "correlations": [],
+            "root_causes": [],
+            "recommendations": [],
+        },
+        "diagnostic_case": {
+            "root_cause_candidates": [],
+            "primary_root_cause": None,
+        },
+        "case_decision": {},
+        "remediation_audit": [
+            {
+                "action_id": "action_001",
+                "execution_status": "EXECUTED",
+                "reason": None,
+                "verification_result": None,
+            }
+        ],
+    }
+
+    diagnostic_view = DiagnosticView(result)
+
+    dashboard_view_model = DashboardViewModel(
+        diagnostic_view,
+        execution_state="COMPLETED",
+    )
+
+    assert dashboard_view_model.remediation_audit == [
+        {
+            "action_id": "action_001",
+            "execution_status": "EXECUTED",
+            "reason": None,
+            "verification_result": None,
+        }
+    ]
+
+def test_dashboard_view_model_starts_with_empty_remediation_audit():
+    result = {
+        "diagnosis": {
+            "status": "NORMAL",
+            "total_findings": 0,
+            "findings": [],
+            "correlations": [],
+            "root_causes": [],
+            "recommendations": [],
+        },
+        "diagnostic_case": {
+            "root_cause_candidates": [],
+            "primary_root_cause": None,
+        },
+        "case_decision": {},
+    }
+
+    diagnostic_view = DiagnosticView(result)
+
+    dashboard_view_model = DashboardViewModel(
+        diagnostic_view,
+        execution_state="COMPLETED",
+    )
+
+    assert dashboard_view_model.remediation_audit == []
+
+def test_dashboard_view_model_exposes_diagnostic_view_remediation_audit():
+    result = {
+        "diagnosis": {
+            "status": "NORMAL",
+            "total_findings": 0,
+            "findings": [],
+            "correlations": [],
+            "root_causes": [],
+            "recommendations": [],
+        },
+        "diagnostic_case": {
+            "root_cause_candidates": [],
+            "primary_root_cause": None,
+        },
+        "case_decision": {},
+        "remediation_audit": [
+            {
+                "action_id": "action_001",
+                "execution_status": "EXECUTED",
+                "reason": None,
+                "verification_result": None,
+            }
+        ],
+    }
+
+    diagnostic_view = DiagnosticView(result)
+
+    dashboard_view_model = DashboardViewModel(
+        diagnostic_view,
+        execution_state="COMPLETED",
+    )
+
+    assert dashboard_view_model.remediation_audit == [
+        {
+            "action_id": "action_001",
+            "execution_status": "EXECUTED",
+            "reason": None,
+            "verification_result": None,
+        }
+    ]

@@ -21,6 +21,7 @@ class DashboardWidget(QWidget):
 
         self.technician_app = technician_app
         self.view_model = None
+        self.remediation_actions = []
 
         # Diagnostic Thread State
         self._diagnostic_thread = None
@@ -196,6 +197,38 @@ class DashboardWidget(QWidget):
             recommendation_font
         )
 
+        # Remediation Actions Area
+        self.remediation_actions_container = QFrame()
+
+        self.remediation_actions_layout = QVBoxLayout(
+            self.remediation_actions_container
+        )
+
+        self.remediation_actions_layout.setContentsMargins(
+            0,
+            0,
+            0,
+            0,
+        )
+
+        self.remediation_actions_layout.setSpacing(12)
+
+        # Remediation Audit Area
+        self.remediation_audit_container = QFrame()
+
+        self.remediation_audit_layout = QVBoxLayout(
+            self.remediation_audit_container
+        )
+
+        self.remediation_audit_layout.setContentsMargins(
+            0,
+            0,
+            0,
+            0,
+        )
+
+        self.remediation_audit_layout.setSpacing(8)
+
         # Diagnostic Content Area
         self.content_area = QFrame()
         self.content_area.setObjectName("DiagnosticContent")
@@ -279,7 +312,17 @@ class DashboardWidget(QWidget):
         main_layout.addWidget(self.header)
         main_layout.addWidget(self.health_summary)
         main_layout.addLayout(metrics_layout)
-        main_layout.addWidget(self.content_area)
+        main_layout.addWidget(
+            self.remediation_actions_container
+        )
+
+        main_layout.addWidget(
+            self.remediation_audit_container
+        )
+
+        main_layout.addWidget(
+            self.content_area
+        )
 
         self.setLayout(main_layout)
 
@@ -394,6 +437,253 @@ class DashboardWidget(QWidget):
     def set_view_model(self, view_model):
         self.view_model = view_model
 
+        self.remediation_actions = list(
+            getattr(
+                view_model,
+                "remediation_actions",
+                [],
+            )
+        )
+
+        while self.remediation_actions_layout.count():
+            item = self.remediation_actions_layout.takeAt(0)
+
+            widget = item.widget()
+
+            if widget is not None:
+                widget.setParent(None)
+                widget.deleteLater()
+
+        for action in self.remediation_actions:
+            description_label = QLabel(action.description)
+
+            authorization_label = QLabel(
+                f"Authorization: {action.authorization_status}"
+            )
+
+            authorization_label.setObjectName(
+                "remediation_authorization_label"
+            )
+
+            execution_label = QLabel(
+                f"Execution: {action.execution_status}"
+            )
+
+            authorize_button = QPushButton("Authorize")
+
+            execute_button = QPushButton("Execute")
+            execute_button.setEnabled(
+                action.authorization_status == "AUTHORIZED"
+            )
+
+            def authorize_action(
+                checked=False,
+                current_action=action,
+                current_label=authorization_label,
+                current_execute_button=execute_button,
+            ):
+                current_action.authorize()
+
+                current_label.setText(
+                    f"Authorization: "
+                    f"{current_action.authorization_status}"
+                )
+
+                current_execute_button.setEnabled(
+                    current_action.authorization_status == "AUTHORIZED"
+                )
+
+            def execute_action(
+                checked=False,
+                current_action=action,
+                current_label=execution_label,
+                current_execute_button=execute_button,
+            ):
+                try:
+                    bound_action = (
+                        self.technician_app.technician
+                        .bind_remediation_operation(
+                            current_action
+                        )
+                    )
+
+                    if bound_action is None:
+                        binding_failure_label = QLabel(
+                            "Operation binding failed: "
+                            "No remediation operation is available."
+                        )
+
+                        self.remediation_actions_layout.addWidget(
+                            binding_failure_label
+                        )
+
+                        return
+
+                except Exception as error:
+                    binding_failure_label = QLabel(
+                        f"Operation binding failed: {error}"
+                    )
+
+                    self.remediation_actions_layout.addWidget(
+                        binding_failure_label
+                    )
+
+                    return
+
+                remediation_result = (
+                    self.technician_app.technician.remediate(
+                        current_action
+                    )
+                )
+
+                if remediation_result.verification_result is not None:
+                    verification = (
+                        remediation_result.verification_result
+                    )
+
+                    verification_label = QLabel(
+                        "Verification: "
+                        + (
+                            "PASSED"
+                            if verification.get("verified")
+                            else "FAILED"
+                        )
+                    )
+
+                    self.remediation_actions_layout.addWidget(
+                        verification_label
+                    )
+
+                current_label.setText(
+                    f"Execution: "
+                    f"{current_action.execution_status}"
+                )
+
+                if current_action.execution_status == "EXECUTED":
+                    current_execute_button.setEnabled(False)
+
+                if current_action.execution_status == "FAILED":
+                    failure_reason = getattr(
+                        current_action,
+                        "failure_reason",
+                        None,
+                    )
+
+                    if failure_reason:
+                        failure_label = QLabel(
+                            f"Failure reason: {failure_reason}"
+                        )
+
+                        self.remediation_actions_layout.addWidget(
+                            failure_label
+                        )
+
+            authorize_button.clicked.connect(
+                authorize_action
+            )
+
+            execute_button.clicked.connect(
+                execute_action
+            )
+
+            self.remediation_actions_layout.addWidget(
+                description_label
+            )
+
+            self.remediation_actions_layout.addWidget(
+                authorization_label
+            )
+
+            self.remediation_actions_layout.addWidget(
+                execution_label
+            )
+
+            self.remediation_actions_layout.addWidget(
+                authorize_button
+            )
+
+            self.remediation_actions_layout.addWidget(
+                execute_button
+            )
+
+        # ----------------------------------------------------------
+        # Remediation Audit
+        # ----------------------------------------------------------
+
+        remediation_audit = list(
+            getattr(
+                view_model,
+                "remediation_audit",
+                [],
+            )
+        )
+
+        while self.remediation_audit_layout.count():
+            item = self.remediation_audit_layout.takeAt(0)
+
+            widget = item.widget()
+
+            if widget is not None:
+                widget.setParent(None)
+                widget.deleteLater()
+
+        if remediation_audit:
+            self.remediation_audit_container.show()
+
+            audit_title = QLabel("Remediation Audit")
+            self.remediation_audit_layout.addWidget(
+                audit_title
+            )
+
+            for record in remediation_audit:
+                action_id_label = QLabel(
+                    f"Action: {record.get('action_id')}"
+                )
+
+                execution_status_label = QLabel(
+                    f"Execution: "
+                    f"{record.get('execution_status')}"
+                )
+
+                reason_label = QLabel(
+                    f"Reason: "
+                    f"{record.get('reason') or '?'}"
+                )
+
+                verification_result = record.get(
+                    "verification_result"
+                )
+
+                verification_label = QLabel(
+                    "Verification: "
+                    + (
+                        "PASSED"
+                        if verification_result
+                        and verification_result.get("verified")
+                        else "FAILED"
+                        if verification_result
+                        else "?"
+                    )
+                )
+
+                self.remediation_audit_layout.addWidget(
+                    action_id_label
+                )
+
+                self.remediation_audit_layout.addWidget(
+                    execution_status_label
+                )
+
+                self.remediation_audit_layout.addWidget(
+                    reason_label
+                )
+
+                self.remediation_audit_layout.addWidget(
+                    verification_label
+                )
+        else:
+            self.remediation_audit_container.hide()
+
         # Execution State
         self.execution_state = view_model.execution_state
         self.execution_label = view_model.execution_label
@@ -461,100 +751,100 @@ class DashboardWidget(QWidget):
 
         # Diagnostic Insight
         if view_model.primary_insight is None:
-            self.diagnostic_insight_card.content.setText(
-                "No significant diagnostic issue detected."
-            )
+                self.diagnostic_insight_card.content.setText(
+                    "No significant diagnostic issue detected."
+                )
 
-            self.diagnostic_insight_card.set_status_severity(
-                "info"
-            )
+                self.diagnostic_insight_card.set_status_severity(
+                    "info"
+                )
 
         else:
-            insight = view_model.primary_insight
+                insight = view_model.primary_insight
 
-            self.diagnostic_insight_card.content.setText(
-                insight.get(
-                    "issue",
+                self.diagnostic_insight_card.content.setText(
                     insight.get(
-                        "message",
-                        "",
-                    ),
+                        "issue",
+                        insight.get(
+                            "message",
+                            "",
+                        ),
+                    )
                 )
-            )
 
-            self.diagnostic_insight_card.set_status_severity(
-                insight.get(
-                    "severity",
-                    view_model.health_severity,
-                ).lower()
-            )
+                self.diagnostic_insight_card.set_status_severity(
+                    insight.get(
+                        "severity",
+                        view_model.health_severity,
+                    ).lower()
+                )
 
         # Root Cause
         if view_model.primary_root_cause is None:
-            self.root_cause_card.content.setText(
-                "No primary root cause identified."
-            )
+                self.root_cause_card.content.setText(
+                    "No primary root cause identified."
+                )
 
-            self.root_cause_card.set_status_severity(
-                "info"
-            )
+                self.root_cause_card.set_status_severity(
+                    "info"
+                )
 
         else:
-            root_cause = (
-                view_model.primary_root_cause
-            )
-
-            self.root_cause_card.content.setText(
-                root_cause.get(
-                    "root_cause",
-                    root_cause.get(
-                        "cause",
-                        root_cause.get(
-                            "description",
-                            "",
-                        ),
-                    ),
+                root_cause = (
+                    view_model.primary_root_cause
                 )
-            )
 
-            self.root_cause_card.set_status_severity(
-                root_cause.get(
-                    "severity",
-                    view_model.health_severity,
-                ).lower()
-            )
+                self.root_cause_card.content.setText(
+                    root_cause.get(
+                        "root_cause",
+                        root_cause.get(
+                            "cause",
+                            root_cause.get(
+                                "description",
+                                "",
+                            ),
+                        ),
+                    )
+                )
+
+                self.root_cause_card.set_status_severity(
+                    root_cause.get(
+                        "severity",
+                        view_model.health_severity,
+                    ).lower()
+                )
 
         # Recommendation
         if view_model.primary_recommendation is None:
-            self.recommendation_card.content.setText(
-                "No recommendation available."
-            )
+                self.recommendation_card.content.setText(
+                    "No recommendation available."
+                )
 
-            self.recommendation_card.set_status_severity(
-                "info"
-            )
+                self.recommendation_card.set_status_severity(
+                    "info"
+                )
 
         else:
-            recommendation = (
-                view_model.primary_recommendation
-            )
-
-            self.recommendation_card.content.setText(
-                recommendation.get(
-                    "recommendation",
-                    recommendation.get(
-                        "action",
-                        recommendation.get(
-                            "description",
-                            "",
-                        ),
-                    ),
+                recommendation = (
+                    view_model.primary_recommendation
                 )
-            )
 
-            self.recommendation_card.set_status_severity(
-                recommendation.get(
-                    "severity",
-                    view_model.health_severity,
-                ).lower()
-            )
+                self.recommendation_card.content.setText(
+                    recommendation.get(
+                        "recommendation",
+                        recommendation.get(
+                            "action",
+                            recommendation.get(
+                                "description",
+                                "",
+                            ),
+                        ),
+                    )
+                )
+
+                self.recommendation_card.set_status_severity(
+                    recommendation.get(
+                        "severity",
+                        view_model.health_severity,
+                    ).lower()
+                )

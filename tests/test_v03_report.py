@@ -5,6 +5,9 @@
 
 from engine.diagnostic_case import DiagnosticCase
 from engine.report import generate_case_report
+from engine.remediation_audit import RemediationAudit
+from application.app import TechnicianApp
+from engine.remediation_action import RemediationAction
 
 
 def create_test_case():
@@ -164,3 +167,94 @@ def test_case_report_does_not_mutate_case():
     after = case.__dict__.copy()
 
     assert after == before
+
+def test_case_report_contains_remediation_audit():
+    case = create_test_case()
+
+    case.remediation_audit = [
+        {
+            "action_id": "memory_review",
+            "execution_status": "EXECUTED",
+            "reason": None,
+            "verification_result": {
+                "verified": True
+            },
+        }
+    ]
+
+    report = generate_case_report(case)
+
+    assert "REMEDIATION AUDIT" in report
+    assert "memory_review" in report
+    assert "EXECUTED" in report
+    assert "verified" in report
+
+def test_case_report_contains_real_remediation_audit():
+    case = create_test_case()
+
+    audit = RemediationAudit()
+
+    audit.record(
+        action_id="memory_review",
+        execution_status="EXECUTED",
+        reason=None,
+        verification_result={
+            "verified": True
+        },
+    )
+
+    case.remediation_audit = audit.get_records()
+
+    report = generate_case_report(case)
+
+    assert "REMEDIATION AUDIT" in report
+    assert "memory_review" in report
+    assert "EXECUTED" in report
+    assert "verified" in report
+
+def test_case_report_contains_remediation_authorization():
+    case = create_test_case()
+
+    case.remediation_audit = [
+        {
+            "action_id": "memory_review",
+            "description": "Review memory-intensive processes.",
+            "authorization_status": "AUTHORIZED",
+            "execution_status": "EXECUTED",
+            "reason": None,
+            "verification_result": {
+                "verified": True
+            },
+        }
+    ]
+
+    report = generate_case_report(case)
+
+    assert "memory_review" in report
+    assert "Review memory-intensive processes." in report
+    assert "AUTHORIZED" in report
+    assert "EXECUTED" in report
+
+def test_technician_report_contains_real_remediation_audit():
+    technician_app = TechnicianApp()
+
+    technician = technician_app.technician
+
+    action = RemediationAction(
+        action_id="memory_review",
+        description="Review memory-intensive processes.",
+        category="MEMORY",
+        severity="WARNING",
+    )
+
+    technician.bind_remediation_operation(action)
+
+    action.authorize()
+
+    technician.remediate(action)
+
+    report = technician.get_report()
+
+    assert "REMEDIATION AUDIT" in report
+    assert "memory_review" in report
+    assert "Execution : EXECUTED" in report

@@ -44,6 +44,14 @@ class DiagnosticView:
             self.result.get("case_decision", {})
         )
 
+        self.remediation_actions = deepcopy(
+        self.result.get("remediation_actions", [])
+        )
+
+        self.remediation_audit = deepcopy(
+        self.result.get("remediation_audit", [])
+        )
+
         self.process_intelligence = deepcopy(
             diagnostic_case.get("process_intelligence")
         )

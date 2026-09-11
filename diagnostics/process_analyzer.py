@@ -86,32 +86,77 @@ def get_process_cpu_history(
     sample_count=5,
     interval=1
 ):
-
     history = {}
+
+    processes = []
+
+    # ------------------------------------------------------
+    # Initialize CPU counters once
+    # ------------------------------------------------------
+
+    for process in psutil.process_iter(
+        [
+            "pid",
+            "name"
+        ]
+    ):
+        try:
+
+            if process.info["name"] == "System Idle Process":
+                continue
+
+            process.cpu_percent(None)
+
+            processes.append(process)
+
+        except (
+            psutil.NoSuchProcess,
+            psutil.AccessDenied,
+            psutil.ZombieProcess
+        ):
+            continue
+
+    # ------------------------------------------------------
+    # Collect CPU history samples
+    # ------------------------------------------------------
 
     for sample_number in range(sample_count):
 
-        snapshot = get_process_snapshot()
+        if sample_number == 0:
 
-        for process in snapshot:
+            time.sleep(1)
 
-            pid = process["pid"]
-
-            if pid not in history:
-
-                history[pid] = {
-                    "pid": pid,
-                    "name": process["name"],
-                    "samples": []
-                }
-
-            history[pid]["samples"].append(
-                process["cpu_percent"]
-            )
-
-        if sample_number < sample_count - 1:
+        elif interval > 0:
 
             time.sleep(interval)
+
+        for process in processes:
+
+            try:
+
+                cpu_percent = process.cpu_percent(None)
+
+                pid = process.info["pid"]
+                name = process.info["name"]
+
+                if pid not in history:
+
+                    history[pid] = {
+                        "pid": pid,
+                        "name": name,
+                        "samples": []
+                    }
+
+                history[pid]["samples"].append(
+                    cpu_percent
+                )
+
+            except (
+                psutil.NoSuchProcess,
+                psutil.AccessDenied,
+                psutil.ZombieProcess
+            ):
+                continue
 
     return list(history.values())
 

@@ -256,6 +256,10 @@ class Technician:
 
         case = self.diagnostic_orchestrator.get_case()
 
+        case.remediation_audit = (
+            self.get_remediation_audit()
+        )
+
         return generate_case_report(case)
 
     def select_remediation_operation(self, action):
@@ -282,3 +286,6 @@ class Technician:
         )
     def authorize_remediation(self, action):
         action.authorize()
+
+    def get_remediation_audit(self):
+        return self.remediation_coordinator.audit.get_records()

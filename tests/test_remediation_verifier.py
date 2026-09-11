@@ -96,3 +96,28 @@ def test_verification_result_contains_failure_reason():
     assert result["reason"] == (
         "Observed condition does not match expected condition."
     )
+
+def test_verification_can_compare_non_boolean_values():
+    verifier = RemediationVerifier()
+
+    result = verifier.verify(
+        expected="DNS_OK",
+        observed="DNS_OK",
+    )
+
+    assert result["verified"] is True
+    assert result["expected"] == "DNS_OK"
+    assert result["observed"] == "DNS_OK"
+
+
+def test_verification_detects_different_non_boolean_values():
+    verifier = RemediationVerifier()
+
+    result = verifier.verify(
+        expected="DNS_OK",
+        observed="DNS_FAILED",
+    )
+
+    assert result["verified"] is False
+    assert result["expected"] == "DNS_OK"
+    assert result["observed"] == "DNS_FAILED"

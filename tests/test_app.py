@@ -9,6 +9,7 @@ from copy import deepcopy
 from pathlib import Path
 import pytest
 from engine.remediation_action import RemediationAction
+from engine.remediation_operation import RemediationOperation
 
 
 def test_application_can_be_created():
@@ -636,9 +637,35 @@ def test_application_diagnosis_results_do_not_share_case_data():
 
     assert second_case["evidence"] == original_second_evidence
 
-def test_application_diagnosis_results_do_not_share_case_decision():
+def test_application_diagnosis_results_do_not_share_case_decision(
+    monkeypatch
+):
 
     app = TechnicianApp()
+
+    diagnostic_result = {
+        "diagnostic_case": {
+            "primary_root_cause": {
+                "cause": "TEST_CAUSE"
+            },
+            "evidence": {}
+        },
+        "case_decision": {
+            "action": "TEST_ACTION",
+            "priority": "HIGH",
+            "recommendation": "TEST_RECOMMENDATION",
+            "explanation": "TEST_EXPLANATION"
+        }
+    }
+
+    def fake_diagnose():
+        return diagnostic_result
+
+    monkeypatch.setattr(
+        app.technician,
+        "diagnose",
+        fake_diagnose
+    )
 
     first_result = app.run_diagnostics()
     second_result = app.run_diagnostics()
@@ -646,8 +673,7 @@ def test_application_diagnosis_results_do_not_share_case_decision():
     first_decision = first_result["case_decision"]
     second_decision = second_result["case_decision"]
 
-    if not first_decision or not second_decision:
-        return
+    assert first_decision is not second_decision
 
     original_second_action = second_decision["action"]
 
@@ -882,6 +908,22 @@ def test_technician_app_dashboard_view_model_contains_diagnostic_status():
     model = app.get_dashboard_view_model()
 
     assert model.status == app.get_status()
+
+def test_technician_app_dashboard_view_model_contains_remediation_actions():
+    app = TechnicianApp()
+
+    app.run_diagnostics()
+
+    model = app.get_dashboard_view_model()
+
+    assert hasattr(model, "remediation_actions")
+    assert isinstance(model.remediation_actions, list)
+
+    expected_actions = app.technician.last_result[
+        "remediation_actions"
+    ]
+
+    assert model.remediation_actions == expected_actions
 
 def test_diagnose_includes_remediation_actions():
     technician = Technician()
@@ -1800,6 +1842,23 @@ def test_technician_does_not_bind_unsupported_remediation_operation():
 
     assert action.operation is None
 
+def test_technician_unsupported_binding_preserves_lifecycle_state():
+    technician = Technician()
+
+    action = RemediationAction(
+        action_id="action_unsupported",
+        description="Investigate CPU usage.",
+        category="CPU",
+        severity="WARNING",
+    )
+
+    action.deny()
+
+    technician.bind_remediation_operation(action)
+
+    assert action.operation is None
+    assert action.authorization_status == "DENIED"
+    assert action.execution_status == "NOT_EXECUTED"
 
 def test_technician_binding_does_not_execute_or_authorize():
     technician = Technician()
@@ -2080,3 +2139,512 @@ def test_technician_does_not_auto_bind_catalog_operation():
         assert action.operation is None
         assert action.authorization_status == "UNAUTHORIZED"
         assert action.execution_status == "NOT_EXECUTED"
+
+
+
+def test_technician_app_dashboard_view_model_remediation_actions_are_isolated():
+    app = TechnicianApp()
+
+    app.run_diagnostics()
+
+    model = app.get_dashboard_view_model()
+    original_actions = app.technician.last_result[
+        "remediation_actions"
+    ]
+
+    assert model.remediation_actions
+
+    model.remediation_actions[0].authorization_status = "AUTHORIZED"
+
+    assert (
+        original_actions[0].authorization_status
+        == "UNAUTHORIZED"
+    )
+
+def test_technician_app_dashboard_view_model_remediation_actions_expose_lifecycle_state():
+    app = TechnicianApp()
+
+    app.run_diagnostics()
+
+    model = app.get_dashboard_view_model()
+
+    for action in model.remediation_actions:
+        assert hasattr(action, "authorization_status")
+        assert hasattr(action, "execution_status")
+
+        assert action.authorization_status == "UNAUTHORIZED"
+        assert action.execution_status == "NOT_EXECUTED"
+
+def test_technician_app_can_bind_remediation_operation():
+    app = TechnicianApp()
+
+    action = (
+        app.technician.remediation_action_planner.create_action(
+            {
+                "category": "MEMORY",
+                "severity": "WARNING",
+                "recommendation": "Review memory-intensive processes.",
+            }
+        )
+    )
+
+    assert action is not None
+    assert action.operation is None
+
+    bound_action = (
+        app.technician.bind_remediation_operation(action)
+    )
+
+    assert bound_action is action
+    assert action.operation is not None
+    assert action.operation.operation_id == "memory_review"
+
+def test_technician_app_can_authorize_remediation_without_executing():
+    app = TechnicianApp()
+
+    action = (
+        app.technician.remediation_action_planner.create_action(
+            {
+                "category": "MEMORY",
+                "severity": "WARNING",
+                "recommendation": "Review memory-intensive processes.",
+            }
+        )
+    )
+
+    assert action.authorization_status == "UNAUTHORIZED"
+    assert action.execution_status == "NOT_EXECUTED"
+
+    app.technician.bind_remediation_operation(action)
+
+    app.technician.authorize_remediation(action)
+
+    assert action.authorization_status == "AUTHORIZED"
+    assert action.execution_status == "NOT_EXECUTED"
+
+def test_technician_app_can_execute_authorized_remediation():
+    app = TechnicianApp()
+
+    action = (
+        app.technician.remediation_action_planner.create_action(
+            {
+                "category": "MEMORY",
+                "severity": "WARNING",
+                "recommendation": "Review memory-intensive processes.",
+            }
+        )
+    )
+
+    app.technician.bind_remediation_operation(action)
+
+    assert action.authorization_status == "UNAUTHORIZED"
+    assert action.execution_status == "NOT_EXECUTED"
+
+    app.technician.authorize_remediation(action)
+
+    result = app.technician.remediate(action)
+
+    assert result is not None
+    assert result.action_id == action.action_id
+    assert result.execution_status == "EXECUTED"
+
+    assert action.authorization_status == "AUTHORIZED"
+    assert action.execution_status == "EXECUTED"
+
+def test_technician_app_surfaces_remediation_failure():
+    app = TechnicianApp()
+
+    action = (
+        app.technician.remediation_action_planner.create_action(
+            {
+                "category": "MEMORY",
+                "severity": "WARNING",
+                "recommendation": "Review memory-intensive processes.",
+            }
+        )
+    )
+
+    def failing_operation():
+        raise RuntimeError("Remediation operation failed.")
+
+    app.technician.remediation_operation_registry._operations[
+        "memory_review"
+    ] = RemediationOperation(
+        operation_id="memory_review",
+        description="Failing memory remediation.",
+        handler=failing_operation,
+    )
+
+    app.technician.bind_remediation_operation(action)
+    app.technician.authorize_remediation(action)
+
+    result = app.technician.remediate(action)
+
+    assert result is not None
+    assert result.action_id == action.action_id
+    assert result.execution_status == "FAILED"
+    assert result.reason == "Remediation operation failed."
+
+    assert action.execution_status == "FAILED"
+    assert action.failure_reason == "Remediation operation failed."
+
+def test_technician_app_returns_remediation_verification_result():
+    app = TechnicianApp()
+
+    action = (
+        app.technician.remediation_action_planner.create_action(
+            {
+                "category": "MEMORY",
+                "severity": "WARNING",
+                "recommendation": "Review memory-intensive processes.",
+            }
+        )
+    )
+
+    app.technician.bind_remediation_operation(action)
+    app.technician.authorize_remediation(action)
+
+    result = app.technician.remediate(
+        action,
+        expected={"memory_usage": "LOW"},
+        observed={"memory_usage": "LOW"},
+    )
+
+    assert result is not None
+    assert result.execution_status == "EXECUTED"
+
+    assert result.verification_result is not None
+    assert result.verification_result["verified"] is True
+    assert result.verification_result["action_id"] == action.action_id
+    assert result.verification_result["expected"] == {
+        "memory_usage": "LOW"
+    }
+    assert result.verification_result["observed"] == {
+        "memory_usage": "LOW"
+    }
+
+def test_technician_app_rejects_unauthorized_remediation():
+    app = TechnicianApp()
+
+    action = (
+        app.technician.remediation_action_planner.create_action(
+            {
+                "category": "MEMORY",
+                "severity": "WARNING",
+                "recommendation": "Review memory-intensive processes.",
+            }
+        )
+    )
+
+    app.technician.bind_remediation_operation(action)
+
+    assert action.authorization_status == "UNAUTHORIZED"
+    assert action.execution_status == "NOT_EXECUTED"
+
+    result = app.technician.remediate(action)
+
+    assert result is not None
+    assert result.execution_status == "NOT_EXECUTED"
+    assert result.reason == "NOT_AUTHORIZED"
+
+    assert action.authorization_status == "UNAUTHORIZED"
+    assert action.execution_status == "NOT_EXECUTED"
+
+def test_technician_app_rejects_denied_remediation():
+    app = TechnicianApp()
+
+    action = (
+        app.technician.remediation_action_planner.create_action(
+            {
+                "category": "MEMORY",
+                "severity": "WARNING",
+                "recommendation": "Review memory-intensive processes.",
+            }
+        )
+    )
+
+    app.technician.bind_remediation_operation(action)
+
+    action.deny()
+
+    assert action.authorization_status == "DENIED"
+    assert action.execution_status == "NOT_EXECUTED"
+
+    result = app.technician.remediate(action)
+
+    assert result is not None
+    assert result.execution_status == "NOT_EXECUTED"
+    assert result.reason == "DENIED"
+
+    assert action.authorization_status == "DENIED"
+    assert action.execution_status == "NOT_EXECUTED"
+
+def test_technician_app_rejects_unavailable_remediation_operation():
+    app = TechnicianApp()
+
+    action = (
+        app.technician.remediation_action_planner.create_action(
+            {
+                "category": "NETWORK",
+                "severity": "WARNING",
+                "recommendation": "Investigate network connectivity.",
+            }
+        )
+    )
+
+    assert action is not None
+    assert action.operation is None
+
+    bound_action = (
+        app.technician.bind_remediation_operation(action)
+    )
+
+    assert bound_action is None
+    assert action.operation is None
+
+    app.technician.authorize_remediation(action)
+
+    result = app.technician.remediate(action)
+
+    assert result is not None
+    assert result.execution_status == "NOT_EXECUTED"
+    assert result.reason == "OPERATION_NOT_BOUND"
+
+    assert action.authorization_status == "AUTHORIZED"
+    assert action.execution_status == "NOT_EXECUTED"
+
+def test_technician_app_cannot_authorize_denied_remediation():
+    app = TechnicianApp()
+
+    action = (
+        app.technician.remediation_action_planner.create_action(
+            {
+                "category": "MEMORY",
+                "severity": "WARNING",
+                "recommendation": "Review memory-intensive processes.",
+            }
+        )
+    )
+
+    app.technician.bind_remediation_operation(action)
+
+    action.deny()
+
+    assert action.authorization_status == "DENIED"
+
+    app.technician.authorize_remediation(action)
+
+    assert action.authorization_status == "DENIED"
+    assert action.execution_status == "NOT_EXECUTED"
+
+def test_technician_app_cannot_execute_completed_remediation_again():
+    app = TechnicianApp()
+
+    action = (
+        app.technician.remediation_action_planner.create_action(
+            {
+                "category": "MEMORY",
+                "severity": "WARNING",
+                "recommendation": "Review memory-intensive processes.",
+            }
+        )
+    )
+
+    app.technician.bind_remediation_operation(action)
+    app.technician.authorize_remediation(action)
+
+    first_result = app.technician.remediate(action)
+
+    assert first_result.execution_status == "EXECUTED"
+    assert action.execution_status == "EXECUTED"
+
+    second_result = app.technician.remediate(action)
+
+    assert second_result is not None
+    assert second_result.action_id == action.action_id
+    assert second_result.execution_status == "EXECUTED"
+
+    assert action.execution_status == "EXECUTED"
+
+def test_technician_app_cannot_execute_failed_remediation_again():
+    app = TechnicianApp()
+
+    action = (
+        app.technician.remediation_action_planner.create_action(
+            {
+                "category": "MEMORY",
+                "severity": "WARNING",
+                "recommendation": "Review memory-intensive processes.",
+            }
+        )
+    )
+
+    def failing_operation():
+        raise RuntimeError("Remediation operation failed.")
+
+    app.technician.remediation_operation_registry._operations[
+        "memory_review"
+    ] = RemediationOperation(
+        operation_id="memory_review",
+        description="Failing memory remediation.",
+        handler=failing_operation,
+    )
+
+    app.technician.bind_remediation_operation(action)
+    app.technician.authorize_remediation(action)
+
+    first_result = app.technician.remediate(action)
+
+    assert first_result.execution_status == "FAILED"
+    assert first_result.reason == "Remediation operation failed."
+    assert action.execution_status == "FAILED"
+
+    second_result = app.technician.remediate(action)
+
+    assert second_result is not None
+    assert second_result.action_id == action.action_id
+    assert second_result.execution_status == "FAILED"
+
+    assert action.execution_status == "FAILED"
+    assert action.failure_reason == "Remediation operation failed."
+
+def test_technician_app_returns_failed_remediation_verification():
+    app = TechnicianApp()
+
+    action = (
+        app.technician.remediation_action_planner.create_action(
+            {
+                "category": "MEMORY",
+                "severity": "WARNING",
+                "recommendation": "Review memory-intensive processes.",
+            }
+        )
+    )
+
+    app.technician.bind_remediation_operation(action)
+    app.technician.authorize_remediation(action)
+
+    result = app.technician.remediate(
+        action,
+        expected={"memory_usage": "LOW"},
+        observed={"memory_usage": "HIGH"},
+    )
+
+    assert result is not None
+    assert result.execution_status == "EXECUTED"
+
+    assert result.verification_result is not None
+    assert result.verification_result["verified"] is False
+    assert result.verification_result["action_id"] == action.action_id
+    assert result.verification_result["expected"] == {
+        "memory_usage": "LOW"
+    }
+    assert result.verification_result["observed"] == {
+        "memory_usage": "HIGH"
+    }
+
+def test_technician_can_get_remediation_audit():
+    technician = Technician()
+
+    audit = technician.get_remediation_audit()
+
+    assert audit == []
+
+def test_technician_remediation_updates_audit_history():
+    technician = Technician()
+
+    action = RemediationAction(
+        action_id="memory_review",
+        description="Review memory-intensive processes.",
+        category="MEMORY",
+        severity="WARNING",
+    )
+
+    technician.bind_remediation_operation(action)
+    technician.authorize_remediation(action)
+
+    result = technician.remediate(action)
+
+    audit = technician.get_remediation_audit()
+
+    assert result.execution_status == "EXECUTED"
+    assert len(audit) == 1
+    assert audit[0]["action_id"] == action.action_id
+    assert audit[0]["execution_status"] == "EXECUTED"
+
+def test_technician_app_can_get_remediation_audit():
+    app = TechnicianApp()
+
+    audit = app.technician.get_remediation_audit()
+
+    assert audit == []
+
+def test_technician_app_dashboard_view_model_exposes_remediation_audit(
+    monkeypatch
+):
+    app = TechnicianApp()
+
+    action = RemediationAction(
+        action_id="memory_review",
+        description="Review memory-intensive processes.",
+        category="MEMORY",
+        severity="WARNING",
+        operation=lambda: None,
+    )
+
+    diagnostic_result = {
+        "diagnosis": {
+            "status": "WARNING"
+        },
+        "diagnostic_case": {
+            "evidence": {},
+            "findings": [],
+            "correlations": [],
+            "root_causes": [],
+            "root_cause_candidates": [],
+            "primary_root_cause": None,
+            "recommendations": [],
+            "status": "WARNING",
+            "process_intelligence": {},
+            "memory_intelligence": {},
+            "memory_history": {},
+            "memory_trend_intelligence": {},
+            "memory_temporal_intelligence": {},
+            "memory_diagnostic_intelligence": {},
+        },
+        "case_decision": {},
+        "remediation_actions": [action],
+    }
+
+    def fake_diagnose():
+        app.technician.last_result = diagnostic_result
+        return app.technician.last_result
+
+    monkeypatch.setattr(
+        app.technician,
+        "diagnose",
+        fake_diagnose
+    )
+
+    app.run_diagnostics()
+
+    action = app.technician.last_result[
+        "remediation_actions"
+    ][0]
+
+    app.technician.authorize_remediation(action)
+
+    app.technician.remediate(action)
+
+    dashboard_view_model = (
+        app.get_dashboard_view_model()
+    )
+
+    assert dashboard_view_model.remediation_audit == [
+        {
+            "action_id": action.action_id,
+            "execution_status": "EXECUTED",
+            "reason": None,
+            "verification_result": None,
+        }
+    ]

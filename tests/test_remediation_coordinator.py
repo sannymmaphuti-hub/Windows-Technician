@@ -130,3 +130,44 @@ def test_coordinator_returns_complete_remediation_result():
     assert result.verification_result is not None
     assert result.verification_result["action_id"] == "memory_review"
     assert result.verification_result["verified"] is True
+
+def test_coordinator_does_not_verify_when_expected_is_missing():
+    coordinator = RemediationCoordinator()
+
+    action = RemediationAction(
+        action_id="memory_review",
+        description="Review memory-intensive processes.",
+        operation=lambda: None,
+    )
+
+    action.authorize()
+
+    result = coordinator.execute(
+        action,
+        expected=None,
+        observed="healthy",
+    )
+
+    assert result.execution_status == "EXECUTED"
+    assert result.verification_result is None
+
+
+def test_coordinator_does_not_verify_when_observed_is_missing():
+    coordinator = RemediationCoordinator()
+
+    action = RemediationAction(
+        action_id="memory_review",
+        description="Review memory-intensive processes.",
+        operation=lambda: None,
+    )
+
+    action.authorize()
+
+    result = coordinator.execute(
+        action,
+        expected="healthy",
+        observed=None,
+    )
+
+    assert result.execution_status == "EXECUTED"
+    assert result.verification_result is None

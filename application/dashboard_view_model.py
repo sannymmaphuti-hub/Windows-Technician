@@ -11,7 +11,6 @@ class DashboardViewModel:
 
         self.status = diagnostic_view.status
         self.execution_state = execution_state
-
         execution_state_map = {
             "READY": {
                 "label": "Ready",
@@ -70,16 +69,22 @@ class DashboardViewModel:
         self.correlations = deepcopy(diagnostic_view.correlations)
 
     
-        self.correlations = deepcopy(
-            diagnostic_view.correlations
-        )
 
         self.root_causes = deepcopy(
             diagnostic_view.root_causes
         )
 
-        self.recommendations = deepcopy(diagnostic_view.recommendations)
+        self.remediation_actions = deepcopy(
+            diagnostic_view.remediation_actions
+        )
 
+        self.remediation_audit = deepcopy(
+            diagnostic_view.remediation_audit
+        )
+
+        self.recommendations = deepcopy(
+            diagnostic_view.recommendations
+        )
         if self.recommendations:
             priority_order = {
                 "CRITICAL": 3,

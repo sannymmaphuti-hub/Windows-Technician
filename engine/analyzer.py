@@ -267,7 +267,7 @@ class Analyzer:
                 process_cpu_history = (
                     process_collector.collect_cpu_history(
                         sample_count=5,
-                        interval=1
+                        interval=0
                     )
                 )
 
