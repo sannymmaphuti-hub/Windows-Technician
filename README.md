@@ -531,7 +531,7 @@ See `SECURITY.md` for the project's security policy.
 
 ## Project Status
 
-**Windows Technician v0.5 — Release Preparation**
+**Windows Technician v0.5 — Released**
 
 The v0.5 implementation and validation work includes:
 
