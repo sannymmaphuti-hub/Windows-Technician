@@ -1,5 +1,5 @@
 # ==========================================
-# WINDOWS TECHNICIAN v0.4
+# Windows Technician v0.5
 # DIAGNOSTIC VIEW TESTS
 # ==========================================
 
@@ -300,3 +300,71 @@ def test_diagnostic_view_exposes_evidence():
     view = DiagnosticView(result)
 
     assert view.evidence == result["evidence"]
+
+def test_diagnostic_view_exposes_network_diagnostic_result():
+    result = make_diagnostic_result()
+
+    result["network_diagnostic_case"] = {
+        "observations": [],
+        "signals": [],
+        "findings": [],
+        "correlations": [],
+        "candidates": [],
+        "evaluations": [],
+        "primary_cause": None,
+        "confidences": [],
+        "explanations": [],
+        "recommendations": [],
+    }
+
+    result["network_case_explanation"] = (
+        "network explanation"
+    )
+
+    view = DiagnosticView(result)
+
+    assert view.network_diagnostic_case == (
+        result["network_diagnostic_case"]
+    )
+
+    assert view.network_case_explanation == (
+        result["network_case_explanation"]
+    )
+
+def test_diagnostic_view_isolates_network_diagnostic_result():
+    result = make_diagnostic_result()
+
+    result["network_diagnostic_case"] = {
+        "observations": ["observation"],
+        "signals": ["signal"],
+        "findings": ["finding"],
+        "correlations": [],
+        "candidates": [],
+        "evaluations": [],
+        "primary_cause": None,
+        "confidences": [],
+        "explanations": [],
+        "recommendations": [],
+    }
+
+    result["network_case_explanation"] = {
+        "summary": "Network explanation"
+    }
+
+    view = DiagnosticView(result)
+
+    view.network_diagnostic_case[
+        "observations"
+    ].append("changed")
+
+    view.network_case_explanation[
+        "summary"
+    ] = "changed"
+
+    assert result[
+        "network_diagnostic_case"
+    ]["observations"] == ["observation"]
+
+    assert result[
+        "network_case_explanation"
+    ]["summary"] == "Network explanation"

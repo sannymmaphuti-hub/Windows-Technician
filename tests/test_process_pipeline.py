@@ -1,5 +1,5 @@
 # ==========================================
-# Windows Technician v0.3
+# Windows Technician v0.5
 # PROCESS INTELLIGENCE PIPELINE TESTS
 # ==========================================
 
@@ -158,3 +158,4 @@ def test_process_pipeline_handles_missing_processes():
     assert result["intelligence"] is None
 
     assert result["finding"] is None
+

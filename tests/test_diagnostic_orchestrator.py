@@ -1,5 +1,5 @@
 # ==========================================
-# WINDOWS TECHNICIAN v0.3
+# Windows Technician v0.5
 # DIAGNOSTIC ORCHESTRATOR TESTS
 # ==========================================
 
@@ -1348,3 +1348,4 @@ def test_orchestrator_failed_run_records_failure_state():
     assert current_case.correlations == previous_case.correlations
     assert current_case.root_causes == previous_case.root_causes
     assert current_case.recommendations == previous_case.recommendations
+

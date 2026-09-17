@@ -1,5 +1,5 @@
 # ==========================================
-# Windows Technician v0.3
+# Windows Technician v0.5
 # MEMORY INTELLIGENCE TESTS
 # ==========================================
 
@@ -135,3 +135,4 @@ def test_memory_intelligence_builds_message():
 
     assert "chrome.exe" in result["message"]
     assert "2000.00" in result["message"]
+

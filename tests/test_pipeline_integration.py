@@ -3,7 +3,7 @@ from engine.diagnostic_case import DiagnosticCase
 from engine.report import generate_case_report
 
 
-def test_v03_complete_diagnostic_pipeline_produces_complete_case():
+def test_complete_diagnostic_pipeline_produces_complete_case():
 
     orchestrator = DiagnosticOrchestrator()
 
@@ -21,7 +21,7 @@ def test_v03_complete_diagnostic_pipeline_produces_complete_case():
     assert case.root_causes is not None
     assert case.recommendations is not None
 
-def test_v03_pipeline_data_flows_into_diagnostic_case():
+def test_pipeline_data_flows_into_diagnostic_case():
 
     orchestrator = DiagnosticOrchestrator()
 
@@ -36,7 +36,7 @@ def test_v03_pipeline_data_flows_into_diagnostic_case():
     assert case.status == result["diagnosis"]["status"]
 
 
-def test_v03_pipeline_intelligence_flows_into_diagnostic_case():
+def test_pipeline_intelligence_flows_into_diagnostic_case():
 
     orchestrator = DiagnosticOrchestrator()
 
@@ -76,7 +76,7 @@ def test_v03_pipeline_intelligence_flows_into_diagnostic_case():
     ]
 
 
-def test_v03_case_does_not_share_intelligence_data_with_result():
+def test_case_does_not_share_intelligence_data_with_result():
 
     orchestrator = DiagnosticOrchestrator()
 
@@ -149,7 +149,7 @@ def test_v03_case_does_not_share_intelligence_data_with_result():
             not in result["primary_root_cause"]
         )
 
-def test_v03_memory_intelligence_flows_into_diagnostic_case():
+def test_memory_intelligence_flows_into_diagnostic_case():
 
     orchestrator = DiagnosticOrchestrator()
 
@@ -161,7 +161,7 @@ def test_v03_memory_intelligence_flows_into_diagnostic_case():
     ]
 
 
-def test_v03_memory_history_flows_into_diagnostic_case():
+def test_memory_history_flows_into_diagnostic_case():
 
     orchestrator = DiagnosticOrchestrator()
 
@@ -173,7 +173,7 @@ def test_v03_memory_history_flows_into_diagnostic_case():
     ]
 
 
-def test_v03_memory_trend_intelligence_flows_into_diagnostic_case():
+def test_memory_trend_intelligence_flows_into_diagnostic_case():
 
     orchestrator = DiagnosticOrchestrator()
 
@@ -184,7 +184,7 @@ def test_v03_memory_trend_intelligence_flows_into_diagnostic_case():
         "memory_trend_intelligence"
     ]
 
-def test_v03_memory_temporal_intelligence_flows_into_diagnostic_case():
+def test_memory_temporal_intelligence_flows_into_diagnostic_case():
 
     orchestrator = DiagnosticOrchestrator()
 
@@ -196,7 +196,7 @@ def test_v03_memory_temporal_intelligence_flows_into_diagnostic_case():
     ]
 
 
-def test_v03_memory_diagnostic_intelligence_flows_into_diagnostic_case():
+def test_memory_diagnostic_intelligence_flows_into_diagnostic_case():
 
     orchestrator = DiagnosticOrchestrator()
 
@@ -208,7 +208,7 @@ def test_v03_memory_diagnostic_intelligence_flows_into_diagnostic_case():
     ]
 
 
-def test_v03_root_cause_candidates_flow_into_diagnostic_case():
+def test_root_cause_candidates_flow_into_diagnostic_case():
 
     orchestrator = DiagnosticOrchestrator()
 
@@ -220,7 +220,7 @@ def test_v03_root_cause_candidates_flow_into_diagnostic_case():
     ]
 
 
-def test_v03_primary_root_cause_flows_into_diagnostic_case():
+def test_primary_root_cause_flows_into_diagnostic_case():
 
     orchestrator = DiagnosticOrchestrator()
 
@@ -231,7 +231,7 @@ def test_v03_primary_root_cause_flows_into_diagnostic_case():
         "primary_root_cause"
     ]
 
-def test_v03_recommendations_flow_into_diagnostic_case():
+def test_recommendations_flow_into_diagnostic_case():
 
     orchestrator = DiagnosticOrchestrator()
 
@@ -243,7 +243,7 @@ def test_v03_recommendations_flow_into_diagnostic_case():
     ]["recommendations"]
 
 
-def test_v03_status_flows_into_diagnostic_case():
+def test_status_flows_into_diagnostic_case():
 
     orchestrator = DiagnosticOrchestrator()
 
@@ -254,7 +254,7 @@ def test_v03_status_flows_into_diagnostic_case():
         "diagnosis"
     ]["status"]
 
-def test_v03_complete_pipeline_can_generate_report_from_case():
+def test_complete_pipeline_can_generate_report_from_case():
 
     orchestrator = DiagnosticOrchestrator()
 
@@ -269,8 +269,9 @@ def test_v03_complete_pipeline_can_generate_report_from_case():
     assert isinstance(report, str)
     assert len(report) > 0
 
-    assert "WINDOWS TECHNICIAN v0.3" in report
+    assert "Windows Technician v0.5" in report
     assert "DIAGNOSTIC STATUS" in report
     assert "DIAGNOSTIC FINDINGS" in report
     assert "ROOT-CAUSE ANALYSIS" in report
     assert "SYSTEM RECOMMENDATIONS" in report
+

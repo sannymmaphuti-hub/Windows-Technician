@@ -1,5 +1,5 @@
 # ==========================================
-# Windows Technician v0.3
+# Windows Technician v0.5
 # MEMORY TREND INTELLIGENCE TESTS
 # ==========================================
 
@@ -115,3 +115,4 @@ def test_memory_trend_handles_empty_history():
     assert result["trend"] == "UNKNOWN"
     assert result["change_percent"] == 0.0
     assert result["is_significant_trend"] is False
+

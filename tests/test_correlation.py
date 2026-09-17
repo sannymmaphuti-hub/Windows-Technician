@@ -1,110 +1,114 @@
-from diagnostics.correlation_analyzer import (
-    correlate_memory_and_cpu_behavior
-)
+import pytest
+
+from engine.correlation import Correlation
+from engine.finding import Finding
 
 
-def test_no_correlation():
-    memory_diagnostics = {
-        "status": "NORMAL",
-        "findings": []
-    }
-
-    process_behavior_findings = []
-
-    result = correlate_memory_and_cpu_behavior(
-        memory_diagnostics,
-        process_behavior_findings
+def create_finding(finding_type="MEMORY_PRESSURE"):
+    return Finding(
+        finding_type=finding_type,
+        category="MEMORY",
+        severity="HIGH",
+        description="System memory pressure is high.",
     )
 
-    assert isinstance(result, list)
 
-    assert len(result) == 0
+def test_correlation_can_be_created():
+    finding = create_finding()
 
-
-def test_memory_cpu_correlation():
-    memory_diagnostics = {
-        "status": "HIGH MEMORY PRESSURE",
-        "findings": [
-            {
-                "severity": "WARNING",
-                "category": "MEMORY",
-                "message": "High memory pressure detected."
-            }
-        ]
-    }
-
-    process_behavior_findings = [
-        {
-            "name": "MemCompression",
-            "severity": "INFO",
-            "category": "PROCESS CPU BEHAVIOR",
-            "classification": "CPU SPIKE",
-            "message": (
-                "MemCompression experienced "
-                "temporary high CPU activity."
-            )
-        }
-    ]
-
-    result = correlate_memory_and_cpu_behavior(
-        memory_diagnostics,
-        process_behavior_findings
+    correlation = Correlation(
+        correlation_type="RESOURCE_CONTENTION",
+        findings=[finding],
+        strength="MEDIUM",
+        explanation="The findings may be related.",
     )
 
-    assert isinstance(result, list)
+    assert correlation.correlation_type == "RESOURCE_CONTENTION"
+    assert correlation.findings == [finding]
+    assert correlation.strength == "MEDIUM"
+    assert correlation.explanation == "The findings may be related."
 
-    assert len(result) == 1
 
-    assert result[0]["severity"] == "INFO"
+def test_correlation_requires_correlation_type():
+    with pytest.raises(ValueError):
+        Correlation(
+            correlation_type="",
+            findings=[create_finding()],
+            strength="MEDIUM",
+            explanation="The findings may be related.",
+        )
 
-    assert result[0]["category"] == (
-        "CROSS-DIAGNOSTIC CORRELATION"
+
+def test_correlation_requires_findings():
+    with pytest.raises(ValueError):
+        Correlation(
+            correlation_type="RESOURCE_CONTENTION",
+            findings=[],
+            strength="MEDIUM",
+            explanation="The findings may be related.",
+        )
+
+
+def test_correlation_requires_valid_strength():
+    with pytest.raises(ValueError):
+        Correlation(
+            correlation_type="RESOURCE_CONTENTION",
+            findings=[create_finding()],
+            strength="INVALID",
+            explanation="The findings may be related.",
+        )
+
+
+def test_correlation_requires_explanation():
+    with pytest.raises(ValueError):
+        Correlation(
+            correlation_type="RESOURCE_CONTENTION",
+            findings=[create_finding()],
+            strength="MEDIUM",
+            explanation="",
+        )
+
+
+def test_correlation_preserves_finding_objects():
+    finding = create_finding()
+
+    correlation = Correlation(
+        correlation_type="RESOURCE_CONTENTION",
+        findings=[finding],
+        strength="HIGH",
+        explanation="The findings may be related.",
     )
 
-    assert result[0]["relationship"] == (
-        "MEMORY PRESSURE + CPU SPIKE"
+    assert correlation.findings[0] is finding
+
+
+def test_correlation_exports_evidence():
+    finding = create_finding()
+
+    correlation = Correlation(
+        correlation_type="RESOURCE_CONTENTION",
+        findings=[finding],
+        strength="MEDIUM",
+        explanation="The findings may be related.",
     )
 
-    assert result[0]["process"] == "MemCompression"
+    evidence = correlation.to_evidence()
+
+    assert evidence["correlation_type"] == "RESOURCE_CONTENTION"
+    assert evidence["findings"] == [finding]
+    assert evidence["strength"] == "MEDIUM"
+    assert evidence["explanation"] == "The findings may be related."
 
 
-def test_correlation_structure():
-    memory_diagnostics = {
-        "status": "WARNING",
-        "findings": [
-            {
-                "severity": "WARNING",
-                "category": "MEMORY",
-                "message": "Memory usage is high."
-            }
-        ]
-    }
+def test_correlation_strength_is_independent_of_finding_severity():
+    finding = create_finding()
 
-    process_behavior_findings = [
-        {
-            "name": "MemCompression",
-            "severity": "INFO",
-            "category": "PROCESS CPU BEHAVIOR",
-            "classification": "CPU SPIKE",
-            "message": (
-                "Temporary CPU activity detected."
-            )
-        }
-    ]
-
-    result = correlate_memory_and_cpu_behavior(
-        memory_diagnostics,
-        process_behavior_findings
+    correlation = Correlation(
+        correlation_type="RESOURCE_CONTENTION",
+        findings=[finding],
+        strength="LOW",
+        explanation="The findings may be related.",
     )
 
-    assert isinstance(result, list)
-
-    assert len(result) == 1
-
-    finding = result[0]
-
-    assert "severity" in finding
-    assert "category" in finding
-    assert "relationship" in finding
-    assert "process" in finding
-    assert "message" in finding
+    assert finding.severity == "HIGH"
+    assert correlation.strength == "LOW"

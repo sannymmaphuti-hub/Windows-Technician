@@ -1,5 +1,5 @@
 # ==========================================
-# WINDOWS TECHNICIAN v0.3
+# WINDOWS TECHNICIAN v0.5
 # APPLICATION ENTRY POINT
 # ==========================================
 from copy import deepcopy
@@ -314,7 +314,7 @@ def main():
     app = TechnicianApp()
 
     print("==========================================")
-    print("       WINDOWS TECHNICIAN v0.3")
+    print("       WINDOWS TECHNICIAN v0.5")
     print("       INTELLIGENT DIAGNOSTICS")
     print("==========================================")
     print()

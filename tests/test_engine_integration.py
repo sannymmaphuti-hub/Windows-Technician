@@ -1,5 +1,5 @@
 # ==========================================
-# Windows Technician v0.3
+# Windows Technician v0.5
 # ENGINE INTEGRATION TEST
 # ==========================================
 
@@ -75,3 +75,4 @@ def test_production_engine_info_finding_does_not_produce_info_status():
     )
 
     assert status == "NORMAL"
+

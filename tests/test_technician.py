@@ -232,7 +232,7 @@ def test_technician_case_decision_contains_explanation(
 
     assert "explanation" in case_decision
 
-def test_technician_report_is_v03_case_report():
+def test_technician_report_is_case_report():
 
     technician = Technician()
 
@@ -240,7 +240,7 @@ def test_technician_report_is_v03_case_report():
 
     report = technician.get_report()
 
-    assert "WINDOWS TECHNICIAN v0.3" in report
+    assert "Windows Technician v0.5" in report
     assert "DIAGNOSTIC CASE" in report
 
 def test_technician_diagnostic_case_is_saved_with_result(
@@ -533,7 +533,7 @@ def test_technician_report_uses_current_diagnostic_case(
 
         captured_case["case"] = received_case
 
-        return "WINDOWS TECHNICIAN v0.3\nDIAGNOSTIC CASE"
+        return "Windows Technician v0.5\nDIAGNOSTIC CASE"
 
     monkeypatch.setattr(
         "application.technician.generate_case_report",
@@ -543,7 +543,7 @@ def test_technician_report_uses_current_diagnostic_case(
     report = technician.get_report()
 
     assert report == (
-        "WINDOWS TECHNICIAN v0.3\n"
+        "Windows Technician v0.5\n"
         "DIAGNOSTIC CASE"
     )
 
@@ -595,7 +595,7 @@ def test_technician_get_report_reuses_existing_diagnosis(
     technician = Technician()
 
     technician.last_result = {
-        "evidence": [],
+        "evidence": {},
         "diagnosis": {
             "status": "NORMAL",
             "total_findings": 0,
@@ -632,7 +632,7 @@ def test_technician_case_decision_is_empty_without_primary_root_cause(
         technician.diagnostic_orchestrator,
         "run",
         lambda: {
-            "evidence": [],
+            "evidence": {},
             "diagnosis": {
                 "status": "NORMAL",
                 "total_findings": 0,
@@ -672,7 +672,7 @@ def test_technician_case_decision_reflects_current_root_cause(
         technician.diagnostic_orchestrator,
         "run",
         lambda: {
-            "evidence": [],
+            "evidence": {},
             "diagnosis": {
                 "status": "WARNING",
                 "total_findings": 1,
@@ -697,3 +697,5 @@ def test_technician_case_decision_reflects_current_root_cause(
     assert decision["confidence"] == 0.7
     assert decision["action"] == "REVIEW_RECOMMENDED"
     assert decision["priority"] == "REVIEW"
+
+

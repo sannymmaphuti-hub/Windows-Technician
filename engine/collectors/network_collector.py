@@ -1,5 +1,5 @@
 # ==========================================
-# Windows Technician v0.3
+# Windows Technician v0.5
 # NETWORK EVIDENCE COLLECTOR
 # ==========================================
 
@@ -31,3 +31,4 @@ class NetworkCollector:
         return {
             "adapters": adapters
         }
+

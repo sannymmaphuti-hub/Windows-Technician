@@ -1,5 +1,5 @@
 # ==========================================
-# Windows Technician v0.3
+# Windows Technician v0.5
 # PROCESS FINDING TESTS
 # ==========================================
 
@@ -152,3 +152,4 @@ def test_process_finding_rejects_missing_intelligence():
         assert False
     except ValueError:
         assert True
+

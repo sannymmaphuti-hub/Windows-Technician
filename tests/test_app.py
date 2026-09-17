@@ -1,5 +1,5 @@
 # ==========================================
-# Windows Technician v0.3
+# Windows Technician v0.5
 # APPLICATION TEST
 # ==========================================
 
@@ -10,6 +10,7 @@ from pathlib import Path
 import pytest
 from engine.remediation_action import RemediationAction
 from engine.remediation_operation import RemediationOperation
+from engine.remediation_operation_binder import RemediationOperationBinder
 
 
 def test_application_can_be_created():
@@ -143,7 +144,7 @@ def test_application_save_report_creates_file():
 
     assert Path(path).exists()
 
-def test_application_diagnostics_contains_v03_diagnostic_case():
+def test_application_diagnostics_contains_diagnostic_case():
 
     app = TechnicianApp()
 
@@ -152,7 +153,7 @@ def test_application_diagnostics_contains_v03_diagnostic_case():
     assert "diagnostic_case" in result
 
 
-def test_application_diagnostic_case_contains_v03_sections():
+def test_application_diagnostic_case_contains_sections():
 
     app = TechnicianApp()
 
@@ -169,7 +170,7 @@ def test_application_diagnostic_case_contains_v03_sections():
     assert "status" in case
 
 
-def test_application_exposes_v03_primary_root_cause():
+def test_application_exposes_primary_root_cause():
 
     app = TechnicianApp()
 
@@ -180,7 +181,7 @@ def test_application_exposes_v03_primary_root_cause():
     assert "primary_root_cause" in case
 
 
-def test_application_exposes_v03_recommendations():
+def test_application_exposes_recommendations():
 
     app = TechnicianApp()
 
@@ -193,7 +194,7 @@ def test_application_exposes_v03_recommendations():
         list
     )
 
-def test_application_report_is_v03_case_report():
+def test_application_report_is_case_report():
 
     app = TechnicianApp()
 
@@ -201,11 +202,11 @@ def test_application_report_is_v03_case_report():
 
     report = app.get_report()
 
-    assert "WINDOWS TECHNICIAN v0.3" in report
+    assert "Windows Technician v0.5" in report
     assert "DIAGNOSTIC CASE" in report
 
 
-def test_application_save_report_saves_current_v03_report():
+def test_application_save_report_saves_current_report():
 
     app = TechnicianApp()
 
@@ -219,7 +220,7 @@ def test_application_save_report_saves_current_v03_report():
         encoding="utf-8"
     )
 
-    assert "WINDOWS TECHNICIAN v0.3" in report
+    assert "Windows Technician v0.5" in report
     assert "DIAGNOSTIC CASE" in report
 
 def test_application_save_report_matches_current_report(
@@ -230,7 +231,7 @@ def test_application_save_report_matches_current_report(
     app = TechnicianApp()
 
     expected_report = (
-        "WINDOWS TECHNICIAN v0.3\n"
+        "Windows Technician v0.5\n"
         "DIAGNOSTIC CASE\n"
         "TEST REPORT"
     )
@@ -692,7 +693,7 @@ def test_application_report_matches_current_diagnostic_state():
     assert isinstance(report, str)
     assert len(report) > 0
 
-    assert "WINDOWS TECHNICIAN v0.3" in report
+    assert "Windows Technician v0.5" in report
     assert "DIAGNOSTIC CASE" in report
 
     case = result["diagnostic_case"]
@@ -753,7 +754,7 @@ def test_application_save_report_matches_current_diagnostic_state():
 
     assert saved_report == current_report
 
-    assert "WINDOWS TECHNICIAN v0.3" in saved_report
+    assert "Windows Technician v0.5" in saved_report
     assert "DIAGNOSTIC CASE" in saved_report
 
     assert result["diagnostic_case"] is not None
@@ -2648,3 +2649,145 @@ def test_technician_app_dashboard_view_model_exposes_remediation_audit(
             "verification_result": None,
         }
     ]
+
+def test_technician_app_dashboard_view_model_exposes_network_diagnostic_result():
+    app = TechnicianApp()
+
+    app.run_diagnostics()
+
+    model = app.get_dashboard_view_model()
+
+    assert isinstance(
+        model.network_diagnostic_case,
+        dict,
+    )
+
+    assert (
+        "observations"
+        in model.network_diagnostic_case
+    )
+
+    assert (
+        "signals"
+        in model.network_diagnostic_case
+    )
+
+    assert (
+        "findings"
+        in model.network_diagnostic_case
+    )
+
+    assert (
+        "recommendations"
+        in model.network_diagnostic_case
+    )
+
+    assert model.network_case_explanation is not None
+
+def test_network_diagnosis_does_not_cross_remediation_boundary():
+    technician = Technician()
+
+    result = technician.diagnose()
+
+    assert "network_diagnostic_case" in result
+    assert "network_case_explanation" in result
+
+    remediation_actions = result["remediation_actions"]
+
+    for action in remediation_actions:
+        assert action.authorization_status == "UNAUTHORIZED"
+        assert action.execution_status == "NOT_EXECUTED"
+
+        operation = getattr(
+            action,
+            "operation",
+            None,
+        )
+
+        assert operation is None
+
+def test_network_diagnosis_does_not_invoke_remediation_execution():
+    technician = Technician()
+
+    def fail_if_called(*args, **kwargs):
+        raise AssertionError(
+            "Network diagnosis must not execute remediation."
+        )
+
+    technician.remediation_coordinator.execute = (
+        fail_if_called
+    )
+
+    result = technician.diagnose()
+
+    assert "network_diagnostic_case" in result
+    assert "network_case_explanation" in result
+
+def test_network_diagnosis_does_not_invoke_remediation_authorization():
+    technician = Technician()
+
+    original_authorize = RemediationAction.authorize
+
+    def fail_if_called(self, *args, **kwargs):
+        raise AssertionError(
+            "Network diagnosis must not authorize remediation."
+        )
+
+    RemediationAction.authorize = fail_if_called
+
+    try:
+        result = technician.diagnose()
+    finally:
+        RemediationAction.authorize = original_authorize
+
+    assert "network_diagnostic_case" in result
+    assert "network_case_explanation" in result
+
+def test_network_diagnosis_does_not_invoke_operation_binding():
+    technician = Technician()
+
+    original_bind = RemediationOperationBinder.bind
+
+    def fail_if_called(self, *args, **kwargs):
+        raise AssertionError(
+            "Network diagnosis must not bind remediation operations."
+        )
+
+    RemediationOperationBinder.bind = fail_if_called
+
+    try:
+        result = technician.diagnose()
+    finally:
+        RemediationOperationBinder.bind = original_bind
+
+    assert "network_diagnostic_case" in result
+    assert "network_case_explanation" in result
+
+def test_network_diagnostic_application_path_preserves_case_and_remediation_boundary():
+    technician = Technician()
+
+    result = technician.diagnose()
+
+    network_case = result["network_diagnostic_case"]
+    explanation = result["network_case_explanation"]
+    remediation_actions = result["remediation_actions"]
+
+    assert isinstance(network_case, dict)
+
+    assert "observations" in network_case
+    assert "signals" in network_case
+    assert "findings" in network_case
+    assert "correlations" in network_case
+    assert "candidates" in network_case
+    assert "evaluations" in network_case
+    assert "primary_cause" in network_case
+    assert "confidences" in network_case
+    assert "explanations" in network_case
+    assert "recommendations" in network_case
+
+    assert explanation.subject == "DIAGNOSTIC_CASE"
+
+    for action in remediation_actions:
+        assert action.authorization_status == "UNAUTHORIZED"
+        assert action.execution_status == "NOT_EXECUTED"
+        assert action.operation is None

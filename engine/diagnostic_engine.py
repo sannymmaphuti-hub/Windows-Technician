@@ -1,11 +1,7 @@
-# ==========================================
-# Windows Technician v0.3
-# DIAGNOSTIC ENGINE
-# ==========================================
-
 import copy
-
 from engine.confidence import ConfidenceCalculator
+from engine.legacy_finding_adapter import LegacyFindingAdapter
+
 
 class DiagnosticEngine:
 
@@ -18,7 +14,9 @@ class DiagnosticEngine:
     def __init__(
         self,
         recommendation_engine=None,
-        correlation_engine=None
+        correlation_engine=None,
+        root_cause_reasoning=None,
+        explanation_engine=None,
     ):
 
         self.findings = []
@@ -26,8 +24,15 @@ class DiagnosticEngine:
 
         self.recommendation_engine = recommendation_engine
         self.correlation_engine = correlation_engine
+        self.root_cause_reasoning = root_cause_reasoning
 
         self.confidence_calculator = ConfidenceCalculator()
+        self.legacy_finding_adapter = LegacyFindingAdapter()
+
+        if explanation_engine is None:
+            explanation_engine = None
+
+        self.explanation_engine = explanation_engine
 
     def _validate_finding(self, finding):
 
@@ -161,14 +166,50 @@ class DiagnosticEngine:
         self.run_rules(evidence)
 
         if self.correlation_engine is not None:
-            correlations = self.correlation_engine.analyze(
-                evidence
+
+            correlation_findings = [
+                self.legacy_finding_adapter.convert(finding)
+                for finding in self.findings
+            ]
+
+            correlations = self.correlation_engine.detect(
+                correlation_findings
             )
 
         if additional_findings:
 
             for finding in additional_findings:
                 self.add_finding(finding)
+
+        root_cause_reasoning = None
+
+        if self.root_cause_reasoning is not None:
+
+            reasoning_findings = [
+                self.legacy_finding_adapter.convert(finding)
+                for finding in self.findings
+            ]
+
+            root_cause_reasoning = (
+                self.root_cause_reasoning.analyze(
+                    reasoning_findings
+                )
+            )
+
+        explanations = []
+
+        if self.explanation_engine is not None:
+
+            for finding in self.findings:
+
+                finding_explanations = (
+                    self.explanation_engine.evaluate(
+                        self.legacy_finding_adapter.convert(finding),
+                        [],
+                    )
+                )
+
+                explanations.extend(finding_explanations)
 
         recommendations = []
 
@@ -178,8 +219,7 @@ class DiagnosticEngine:
                 self.recommendation_engine
                 .get_recommendations(self.findings)
             )
-
-        return {
+        result = {
             "evidence": copy.deepcopy(evidence),
             "status": self.get_overall_status(),
             "total_findings": len(self.findings),
@@ -188,6 +228,38 @@ class DiagnosticEngine:
             "root_causes": copy.deepcopy(root_causes),
             "recommendations": copy.deepcopy(recommendations)
         }
+
+        if self.explanation_engine is not None:
+            result["explanations"] = copy.deepcopy(
+                explanations
+            )
+
+        if root_cause_reasoning is not None:
+            result["root_cause_reasoning"] = (
+                copy.deepcopy(root_cause_reasoning)
+            )
+
+        if self.explanation_engine is not None:
+            explanations = []
+
+            for finding in self.findings:
+                finding_object = (
+                    self.legacy_finding_adapter.convert(finding)
+                )
+
+                finding_explanations = (
+                    self.explanation_engine.evaluate(
+                        finding_object,
+                        [],
+                    )
+                )
+
+                explanations.extend(finding_explanations)
+
+            result["explanations"] = explanations
+
+        return result
+
     def get_findings(self):
 
         return self.findings

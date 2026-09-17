@@ -1,5 +1,5 @@
 # ==========================================
-# Windows Technician v0.3
+# Windows Technician v0.5
 # MEMORY FINDING BUILDER
 # ==========================================
 
@@ -43,3 +43,4 @@ class MemoryFindingBuilder:
             )
 
         return finding
+

@@ -1,5 +1,5 @@
 # ==========================================
-# WINDOWS TECHNICIAN v0.4
+# Windows Technician v0.5
 # DASHBOARD VIEW MODEL TESTS
 # ==========================================
 
@@ -517,3 +517,105 @@ def test_dashboard_view_model_exposes_diagnostic_view_remediation_audit():
             "verification_result": None,
         }
     ]
+
+def test_dashboard_view_model_exposes_network_diagnostic_result():
+    result = {
+        "diagnosis": {
+            "status": "NORMAL",
+            "total_findings": 0,
+            "findings": [],
+            "correlations": [],
+            "root_causes": [],
+            "recommendations": [],
+        },
+        "diagnostic_case": {
+            "root_cause_candidates": [],
+            "primary_root_cause": None,
+        },
+        "case_decision": {},
+        "network_diagnostic_case": {
+            "observations": ["observation"],
+            "signals": ["signal"],
+            "findings": ["finding"],
+            "correlations": [],
+            "candidates": [],
+            "evaluations": [],
+            "primary_cause": None,
+            "confidences": [],
+            "explanations": [],
+            "recommendations": [],
+        },
+        "network_case_explanation": {
+            "summary": "Network explanation"
+        },
+    }
+
+    diagnostic_view = DiagnosticView(result)
+
+    dashboard_view_model = DashboardViewModel(
+        diagnostic_view,
+        execution_state="COMPLETED",
+    )
+
+    assert dashboard_view_model.network_diagnostic_case == (
+        result["network_diagnostic_case"]
+    )
+
+    assert dashboard_view_model.network_case_explanation == (
+        result["network_case_explanation"]
+    )
+
+def test_dashboard_view_model_isolates_network_diagnostic_result():
+    result = {
+        "diagnosis": {
+            "status": "NORMAL",
+            "total_findings": 0,
+            "findings": [],
+            "correlations": [],
+            "root_causes": [],
+            "recommendations": [],
+        },
+        "diagnostic_case": {
+            "root_cause_candidates": [],
+            "primary_root_cause": None,
+        },
+        "case_decision": {},
+        "network_diagnostic_case": {
+            "observations": ["observation"],
+            "signals": ["signal"],
+            "findings": [],
+            "correlations": [],
+            "candidates": [],
+            "evaluations": [],
+            "primary_cause": None,
+            "confidences": [],
+            "explanations": [],
+            "recommendations": [],
+        },
+        "network_case_explanation": {
+            "summary": "Network explanation"
+        },
+    }
+
+    diagnostic_view = DiagnosticView(result)
+
+    dashboard_view_model = DashboardViewModel(
+        diagnostic_view,
+        execution_state="COMPLETED",
+    )
+
+    dashboard_view_model.network_diagnostic_case[
+        "observations"
+    ].append("changed")
+
+    dashboard_view_model.network_case_explanation[
+        "summary"
+    ] = "changed"
+
+    assert diagnostic_view.network_diagnostic_case[
+        "observations"
+    ] == ["observation"]
+
+    assert diagnostic_view.network_case_explanation[
+        "summary"
+    ] == "Network explanation"

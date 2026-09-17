@@ -1,5 +1,5 @@
 # ==========================================
-# Windows Technician v0.3
+# Windows Technician v0.5
 # DIAGNOSTIC ENGINE FACTORY
 # ==========================================
 
@@ -47,3 +47,4 @@ def create_diagnostic_engine():
         recommendation_engine=RecommendationEngine(),
         process_collector=process_collector
     )
+

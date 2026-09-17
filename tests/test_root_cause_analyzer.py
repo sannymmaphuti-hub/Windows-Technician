@@ -1,5 +1,5 @@
 # ==========================================
-# Windows Technician v0.3
+# Windows Technician v0.5
 # ROOT CAUSE ANALYZER TESTS
 # ==========================================
 
@@ -198,3 +198,4 @@ def test_candidate_evidence_is_preserved():
     assert "Relationship detected." in (
         candidate["evidence"]
     )
+

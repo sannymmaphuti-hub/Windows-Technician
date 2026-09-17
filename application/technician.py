@@ -1,5 +1,5 @@
 # ==========================================
-# WINDOWS TECHNICIAN v0.3
+# Windows Technician v0.5
 # APPLICATION SERVICE
 # ==========================================
 
@@ -22,13 +22,25 @@ from engine.remediation_operation_selector import (
 from engine.remediation_operation_catalog import (
     RemediationOperationCatalog,
 )
+from engine.network_diagnostic_pipeline import (
+    NetworkDiagnosticPipeline,
+)
+from engine.network_diagnostic_case_synthesis import (
+    NetworkDiagnosticCaseSynthesizer,
+)
+from engine.network_diagnostic_case_adapter import (
+    NetworkDiagnosticCaseAdapter,
+)
+from engine.case_explanation import (
+    CaseExplanation,
+)
 
 class Technician:
 
     def __init__(self):
         self.remediation_action_planner = (
-        RemediationActionPlanner()
-    )
+            RemediationActionPlanner()
+        )
 
         self.remediation_coordinator = (
             RemediationCoordinator()
@@ -37,9 +49,29 @@ class Technician:
         self.diagnostic_orchestrator = (
             DiagnosticOrchestrator()
         )
+
+        self.network_diagnostic_pipeline = (
+            NetworkDiagnosticPipeline()
+        )
+
+        self.network_case_synthesizer = (
+            NetworkDiagnosticCaseSynthesizer(
+                self.network_diagnostic_pipeline
+            )
+        )
+
+        self.network_case_adapter = (
+            NetworkDiagnosticCaseAdapter()
+        )
+
+        self.network_case_explanation = (
+        CaseExplanation()
+        )
+
         self.remediation_operation_registry = (
             RemediationOperationRegistry()
         )
+
         self.remediation_operation_catalog = (
             RemediationOperationCatalog()
         )
@@ -76,9 +108,10 @@ class Technician:
         result = self.diagnostic_orchestrator.run()
 
         case = self.diagnostic_orchestrator.get_case()
+
         remediation_actions = (
-        self.remediation_action_planner
-        .create_actions_from_case(case)
+            self.remediation_action_planner
+            .create_actions_from_case(case)
         )
 
         case_decision = CaseDecision(case).evaluate()
@@ -152,11 +185,84 @@ class Technician:
         ] = deepcopy(case_decision)
 
         self.last_result[
-        "remediation_actions"
+            "remediation_actions"
         ] = remediation_actions
 
+        network_evidence = (
+            result.get(
+                "evidence",
+                {}
+            ).get(
+                "NETWORK",
+                {}
+            )
+        )
+
+        if isinstance(network_evidence, dict):
+            network_case = (
+                self.network_case_synthesizer
+                .synthesize(
+                    network_evidence
+                )
+            )
+
+            network_result = (
+                self.network_case_adapter
+                .to_application_result(
+                    network_case
+                )
+            )
+
+            network_explanation = (
+                self.network_case_explanation
+                .explain(
+                    network_case,
+                    "USER",
+                )
+            )
+
+            self.last_result.update(
+                network_result
+            )
+
+            self.last_result[
+                "network_case_explanation"
+            ] = network_explanation
         return self.last_result
 
+    def get_network_case_explanation(
+        self,
+        audience,
+    ):
+        if self.last_result is None:
+            self.diagnose()
+
+        network_evidence = (
+            self.last_result
+            .get("evidence", {})
+            .get("NETWORK", {})
+        )
+
+        if not isinstance(
+            network_evidence,
+            dict,
+        ):
+            return None
+
+        network_case = (
+            self.network_case_synthesizer
+            .synthesize(
+                network_evidence
+            )
+        )
+
+        return (
+            self.network_case_explanation
+            .explain(
+                network_case,
+                audience,
+            )
+        )
     def get_status(self):
 
         if self.last_result is None:
@@ -284,6 +390,7 @@ class Technician:
             expected=expected,
             observed=observed,
         )
+
     def authorize_remediation(self, action):
         action.authorize()
 

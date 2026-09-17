@@ -1134,17 +1134,27 @@ def test_engine_analyze_preserves_correlations_and_root_causes():
 def test_engine_diagnose_automatically_generates_correlations():
 
     from engine.correlation_engine import CorrelationEngine
+    from engine.resource_contention_rule import ResourceContentionRule
+
+    correlation_engine = CorrelationEngine()
+
+    correlation_engine.register_rule(
+        ResourceContentionRule()
+    )
 
     engine = DiagnosticEngine(
-        correlation_engine=CorrelationEngine()
+        correlation_engine=correlation_engine
     )
+
+    engine.add_rule(CPUUsageRule())
+    engine.add_rule(MemoryUsageRule())
 
     evidence = {
         "CPU": {
             "usage_percent": 92
         },
 
-        "Memory": {
+        "MEMORY": {
             "usage_percent": 88
         }
     }
@@ -1153,12 +1163,14 @@ def test_engine_diagnose_automatically_generates_correlations():
 
     assert len(result["correlations"]) == 1
 
+    correlation = result["correlations"][0]
+
     assert (
-        result["correlations"][0]["type"]
-        == "CPU_MEMORY"
+        correlation.correlation_type
+        == "RESOURCE_CONTENTION"
     )
 
     assert (
-        result["correlations"][0]["strength"]
-        == "HIGH"
+        correlation.strength
+        == "MEDIUM"
     )

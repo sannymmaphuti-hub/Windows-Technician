@@ -1,6 +1,6 @@
 
 # ==========================================
-# Windows Technician v0.3
+# Windows Technician v0.5
 # DIAGNOSTIC ANALYZER
 # ==========================================
 
@@ -56,10 +56,6 @@ from diagnostics.correlation_analyzer import (
     correlate_memory_and_cpu_behavior
 )
 
-from engine.correlation_adapter import (
-    build_process_cpu_behavior_findings
-)
-
 
 class Analyzer:
 
@@ -101,7 +97,7 @@ class Analyzer:
                 intelligence=self.intelligence,
                 finding_builder=self.process_finding_builder
             )
-)
+        )
 
         # ==========================================
         # DIAGNOSTIC ENGINE
@@ -110,6 +106,8 @@ class Analyzer:
         self.engine = DiagnosticEngine(
             recommendation_engine=recommendation_engine
         )
+
+        self.recommendation_engine = recommendation_engine
 
         # ==========================================
         # MEMORY INTELLIGENCE
@@ -1061,6 +1059,24 @@ class Analyzer:
         )
 
         # ------------------------------------------
+        # Generate recommendations from the final
+        # set of diagnostic findings.
+        # ------------------------------------------
+
+        recommendations = []
+
+        if self.recommendation_engine is not None:
+
+            recommendations = (
+                self.recommendation_engine
+                .get_recommendations(
+                    diagnosis_findings
+                )
+            )
+
+        diagnosis["recommendations"] = recommendations
+
+        # ------------------------------------------
         # 9. CORRELATIONS
         # ------------------------------------------
 
@@ -1146,3 +1162,5 @@ class Analyzer:
             "diagnosis":
                 diagnosis
         }
+
+

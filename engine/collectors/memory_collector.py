@@ -1,5 +1,5 @@
 # ==========================================
-# Windows Technician v0.3
+# Windows Technician v0.5
 # MEMORY COLLECTOR
 # ==========================================
 
@@ -21,3 +21,4 @@ class MemoryCollector:
             "available_gb": memory.available / (1024 ** 3),
             "usage_percent": memory.percent
         }
+

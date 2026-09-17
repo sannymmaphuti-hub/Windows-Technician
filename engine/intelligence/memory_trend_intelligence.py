@@ -1,5 +1,5 @@
 # ==========================================
-# Windows Technician v0.3
+# Windows Technician v0.5
 # MEMORY TREND INTELLIGENCE
 # ==========================================
 
@@ -76,3 +76,4 @@ class MemoryTrendIntelligence:
             "change_percent": change_percent,
             "is_significant_trend": is_significant_trend
         }
+

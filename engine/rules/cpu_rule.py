@@ -1,5 +1,5 @@
 # ==========================================
-# Windows Technician v0.3
+# Windows Technician v0.5
 # CPU DIAGNOSTIC RULE
 # ==========================================
 
@@ -41,3 +41,4 @@ class CPUUsageRule(BaseRule):
             }
 
         return None
+

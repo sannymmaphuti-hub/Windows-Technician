@@ -1,5 +1,5 @@
 # ==========================================================
-# Windows Technician v0.3
+# Windows Technician v0.5
 # SYSTEM HEALTH ANALYZER
 # ==========================================================
 
@@ -967,3 +967,4 @@ if __name__ == "__main__":
     for recommendation in recommendations:
 
         print(f"- {recommendation}")
+

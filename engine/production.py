@@ -1,5 +1,5 @@
 # ==========================================
-# Windows Technician v0.3
+# Windows Technician v0.5
 # PRODUCTION DIAGNOSTIC ENGINE
 # ==========================================
 
@@ -11,3 +11,4 @@ def run_diagnostics():
     analyzer = create_diagnostic_engine()
 
     return analyzer.analyze()
+

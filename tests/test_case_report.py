@@ -1,5 +1,5 @@
 # ==========================================
-# WINDOWS TECHNICIAN v0.3
+# Windows Technician v0.5
 # REPORT BOUNDARY TESTS
 # ==========================================
 
@@ -16,7 +16,7 @@ def create_test_case():
 
     case.set_evidence({
         "system": {
-            "computer_name": "V03-TEST-PC"
+            "computer_name": "TEST-PC"
         }
     })
 
@@ -108,7 +108,7 @@ def test_case_report_can_be_generated():
     assert len(report) > 0
 
 
-def test_case_report_contains_v03_status():
+def test_case_report_contains_status():
 
     case = create_test_case()
 
@@ -258,3 +258,4 @@ def test_technician_report_contains_real_remediation_audit():
     assert "REMEDIATION AUDIT" in report
     assert "memory_review" in report
     assert "Execution : EXECUTED" in report
+

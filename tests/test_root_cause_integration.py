@@ -1,5 +1,5 @@
 # ==========================================
-# Windows Technician v0.3
+# Windows Technician v0.5
 # ROOT CAUSE INTEGRATION TEST
 # ==========================================
 
@@ -102,3 +102,4 @@ def test_analyzer_returns_primary_root_cause():
     result = analyzer.analyze()
 
     assert "primary_root_cause" in result
+

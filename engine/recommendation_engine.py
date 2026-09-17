@@ -1,12 +1,11 @@
-# ==========================================
-# Windows Technician v0.3
-# RECOMMENDATION ENGINE
-# ==========================================
+from engine.recommendation_rule import RecommendationRule
+from engine.finding import Finding
+from engine.legacy_finding_adapter import LegacyFindingAdapter
 
 
 class RecommendationEngine:
 
-    RECOMMENDATIONS = {
+    LEGACY_RECOMMENDATIONS = {
 
         "CPU": {
             "WARNING": (
@@ -45,36 +44,92 @@ class RecommendationEngine:
         }
     }
 
-    def get_recommendation(self, finding):
-
-        category = finding.get("category")
-        severity = finding.get("severity")
-
-        category_recommendations = self.RECOMMENDATIONS.get(
-            category,
-            {}
+    def __init__(self, adapter=None):
+        self._rules = []
+        self._legacy_finding_adapter = (
+            adapter if adapter is not None
+            else LegacyFindingAdapter()
         )
 
-        return category_recommendations.get(
-            severity
-        )
+    def register_rule(self, rule):
+        if not isinstance(rule, RecommendationRule):
+            raise ValueError("rule must be a RecommendationRule.")
+
+        self._rules.append(rule)
+
+    def evaluate(self, finding):
+        recommendations = []
+
+        for rule in self._rules:
+            if rule.matches(finding):
+                recommendations.append(
+                    rule.create_recommendation(finding)
+                )
+
+        return recommendations
 
     def get_recommendations(self, findings):
-
         recommendations = []
 
         for finding in findings:
 
-            recommendation = self.get_recommendation(
-                finding
-            )
+            if isinstance(finding, Finding):
+                recommendations.extend(
+                    self.evaluate(finding)
+                )
+                continue
 
-            if recommendation is not None:
+            if isinstance(finding, dict):
 
-                recommendations.append({
-                    "category": finding["category"],
-                    "severity": finding["severity"],
-                    "recommendation": recommendation
-                })
+                if self._rules:
+                    finding_object = (
+                        self._convert_legacy_finding(finding)
+                    )
+
+                    if finding_object is not None:
+                        recommendations.extend(
+                            self.evaluate(finding_object)
+                        )
+
+                    continue
+
+                recommendation = (
+                    self._get_legacy_recommendation(
+                        finding
+                    )
+                )
+
+                if recommendation is not None:
+                    recommendations.append(
+                        recommendation
+                    )
 
         return recommendations
+
+    def _convert_legacy_finding(self, finding):
+        return self._legacy_finding_adapter.convert(finding)
+
+    def _get_legacy_recommendation(self, finding):
+
+        category = finding.get("category")
+        severity = finding.get("severity")
+
+        category_recommendations = (
+            self.LEGACY_RECOMMENDATIONS.get(
+                category,
+                {}
+            )
+        )
+
+        recommendation = category_recommendations.get(
+            severity
+        )
+
+        if recommendation is None:
+            return None
+
+        return {
+            "category": category,
+            "severity": severity,
+            "recommendation": recommendation,
+        }

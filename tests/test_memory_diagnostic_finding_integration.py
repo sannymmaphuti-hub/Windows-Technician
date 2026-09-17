@@ -1,5 +1,5 @@
 # ==========================================
-# Windows Technician v0.3
+# Windows Technician v0.5
 # MEMORY DIAGNOSTIC FINDING INTEGRATION TESTS
 # ==========================================
 
@@ -138,3 +138,4 @@ def test_memory_diagnostic_finding_enters_diagnosis():
     diagnosis = result["diagnosis"]
 
     assert diagnosis is not None
+

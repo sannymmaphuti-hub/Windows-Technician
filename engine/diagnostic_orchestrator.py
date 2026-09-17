@@ -1,5 +1,5 @@
 # ==========================================
-# WINDOWS TECHNICIAN v0.3
+# Windows Technician v0.5
 # DIAGNOSTIC ORCHESTRATOR
 # ==========================================
 
@@ -67,7 +67,7 @@ class DiagnosticOrchestrator:
             # --------------------------------------------------
             # Support both:
             #
-            # 1. Current v0.3 top-level sections
+            # 1. Current v0.5 top-level sections
             #
             # 2. Older nested "diagnosis" sections
             #
@@ -153,7 +153,7 @@ class DiagnosticOrchestrator:
             )
 
             # --------------------------------------------------
-            # v0.3 INTELLIGENCE DATA
+            # v0.5 INTELLIGENCE DATA
             # --------------------------------------------------
 
             new_case.set_process_intelligence(
@@ -225,7 +225,7 @@ class DiagnosticOrchestrator:
             # --------------------------------------------------
             # Status
             #
-            # Current v0.3:
+            # Current v0.5:
             #     result["status"]
             #
             # Older nested structure:
@@ -294,3 +294,4 @@ class DiagnosticOrchestrator:
             }
 
             raise
+

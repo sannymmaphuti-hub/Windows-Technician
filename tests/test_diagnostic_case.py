@@ -1,5 +1,5 @@
 # ==========================================
-# WINDOWS TECHNICIAN v0.3
+# Windows Technician v0.5
 # DIAGNOSTIC CASE TESTS
 # ==========================================
 
@@ -249,3 +249,4 @@ def test_diagnostic_case_status_defaults_to_normal():
     case = DiagnosticCase()
 
     assert case.status == "NORMAL"
+

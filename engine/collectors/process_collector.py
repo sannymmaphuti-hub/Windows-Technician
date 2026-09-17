@@ -1,5 +1,5 @@
 # ==========================================
-# Windows Technician v0.3
+# Windows Technician v0.5
 # PROCESS COLLECTOR
 # ==========================================
 
@@ -31,3 +31,4 @@ class ProcessCollector:
             sample_count=sample_count,
             interval=interval
         )
+

@@ -1,5 +1,5 @@
 # ==========================================
-# WINDOWS TECHNICIAN v0.4
+# Windows Technician v0.5
 # DIAGNOSTIC VIEW
 # ==========================================
 
@@ -17,6 +17,23 @@ class DiagnosticView:
 
         diagnosis = self.result.get("diagnosis", {})
         diagnostic_case = self.result.get("diagnostic_case", {})
+
+        network_diagnostic_case = (
+            self.result.get(
+                "network_diagnostic_case",
+                {}
+            )
+        )
+
+        self.network_diagnostic_case = deepcopy(
+            network_diagnostic_case
+        )
+
+        self.network_case_explanation = deepcopy(
+            self.result.get(
+                "network_case_explanation"
+            )
+        )
 
         self.status = diagnosis.get("status")
         self.total_findings = diagnosis.get("total_findings", 0)

@@ -1,5 +1,5 @@
 # ==========================================
-# Windows Technician v0.3
+# Windows Technician v0.5
 # EVIDENCE BUILDER
 # ==========================================
 
@@ -31,3 +31,4 @@ class EvidenceBuilder:
     def build(self):
 
         return self.evidence
+

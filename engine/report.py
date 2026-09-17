@@ -1,5 +1,5 @@
 # ==========================================
-# WINDOWS TECHNICIAN v0.3
+# Windows Technician v0.5
 # DIAGNOSTIC CASE REPORT
 # ==========================================
 
@@ -13,7 +13,7 @@ def generate_case_report(case):
     # ==========================================
 
     report.append("==========================================")
-    report.append("       WINDOWS TECHNICIAN v0.3")
+    report.append("       Windows Technician v0.5")
     report.append("          DIAGNOSTIC REPORT")
     report.append("==========================================")
     report.append("")
@@ -477,7 +477,7 @@ def generate_case_report(case):
     # ==========================================
 
     report.append("==========================================")
-    report.append("END OF WINDOWS TECHNICIAN v0.3 REPORT")
+    report.append("END OF Windows Technician v0.5 REPORT")
     report.append("==========================================")
 
     return "\n".join(report)
@@ -530,3 +530,4 @@ def _append_value(report, value, prefix="    "):
         report.append(
             f"{prefix}{value}"
         )
+

@@ -1,6 +1,6 @@
 
 # ==========================================
-# WINDOWS TECHNICIAN v0.3
+# Windows Technician v0.5
 # DIAGNOSTIC CASE
 # ==========================================
 
@@ -215,3 +215,4 @@ class DiagnosticCase:
     ):
 
         self.status = status
+

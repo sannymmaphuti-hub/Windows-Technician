@@ -1,5 +1,5 @@
 # ==========================================
-# Windows Technician v0.3
+# Windows Technician v0.5
 # MEMORY DIAGNOSTIC FINDING TESTS
 # ==========================================
 
@@ -140,3 +140,4 @@ def test_memory_diagnostic_finding_handles_missing_intelligence():
         assert False
     except ValueError:
         assert True
+

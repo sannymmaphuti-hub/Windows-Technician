@@ -1,5 +1,5 @@
 # ==========================================
-# Windows Technician v0.3
+# Windows Technician v0.5
 # DIAGNOSTIC EVIDENCE
 # ==========================================
 
@@ -64,3 +64,4 @@ class DiagnosticEvidence:
     def get_all(self):
 
         return self.data
+

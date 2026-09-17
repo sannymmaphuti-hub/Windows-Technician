@@ -1,5 +1,5 @@
 # ==========================================
-# WINDOWS TECHNICIAN v0.4
+# WINDOWS TECHNICIAN v0.5
 # DASHBOARD VIEW MODEL
 # ==========================================
 
@@ -85,6 +85,14 @@ class DashboardViewModel:
         self.recommendations = deepcopy(
             diagnostic_view.recommendations
         )
+        self.network_diagnostic_case = deepcopy(
+            diagnostic_view.network_diagnostic_case
+        )
+
+        self.network_case_explanation = deepcopy(
+            diagnostic_view.network_case_explanation
+        )
+
         if self.recommendations:
             priority_order = {
                 "CRITICAL": 3,

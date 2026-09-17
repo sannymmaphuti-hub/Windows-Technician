@@ -1,5 +1,5 @@
 # ==========================================
-# Windows Technician v0.3
+# Windows Technician v0.5
 # PROCESS INTELLIGENCE INTEGRATION TESTS
 # ==========================================
 
@@ -187,3 +187,4 @@ def test_process_finding_affects_overall_status():
     result = analyzer.analyze()
 
     assert result["diagnosis"]["status"] == "CRITICAL"
+

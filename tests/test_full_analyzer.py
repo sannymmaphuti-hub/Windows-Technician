@@ -1,5 +1,5 @@
 # ==========================================
-# Windows Technician v0.3
+# Windows Technician v0.5
 # FULL ANALYZER INTEGRATION TEST
 # ==========================================
 
@@ -79,3 +79,4 @@ def test_full_analyzer_returns_diagnosis():
     assert "total_findings" in diagnosis
     assert "findings" in diagnosis
     assert "recommendations" in diagnosis
+

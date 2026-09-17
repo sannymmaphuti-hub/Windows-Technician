@@ -2630,3 +2630,305 @@ def test_dashboard_displays_remediation_audit(
         "action_001" in label.text()
         for label in audit_labels
     )
+
+def test_dashboard_consumes_network_diagnostic_result(
+    qtbot,
+):
+    dashboard = DashboardWidget(
+        TechnicianApp()
+    )
+
+    qtbot.addWidget(dashboard)
+
+    result = {
+        "diagnosis": {
+            "status": "NORMAL",
+            "total_findings": 0,
+            "findings": [],
+            "correlations": [],
+            "root_causes": [],
+            "recommendations": [],
+        },
+        "diagnostic_case": {
+            "root_cause_candidates": [],
+            "primary_root_cause": None,
+        },
+        "case_decision": {},
+        "remediation_actions": [],
+        "remediation_audit": [],
+        "network_diagnostic_case": {
+            "observations": ["observation"],
+            "signals": ["signal"],
+            "findings": ["finding"],
+            "correlations": [],
+            "candidates": [],
+            "evaluations": [],
+            "primary_cause": None,
+            "confidences": [],
+            "explanations": [],
+            "recommendations": [],
+        },
+        "network_case_explanation": {
+            "summary": "Network explanation"
+        },
+    }
+
+    diagnostic_view = DiagnosticView(result)
+
+    view_model = DashboardViewModel(
+        diagnostic_view,
+        execution_state="COMPLETED",
+    )
+
+    dashboard.set_view_model(view_model)
+
+    assert dashboard.network_diagnostic_case == (
+        view_model.network_diagnostic_case
+    )
+
+    assert dashboard.network_case_explanation == (
+        view_model.network_case_explanation
+    )
+
+def test_dashboard_isolates_network_diagnostic_result(
+    qtbot,
+):
+    dashboard = DashboardWidget(
+        TechnicianApp()
+    )
+
+    qtbot.addWidget(dashboard)
+
+    result = {
+        "diagnosis": {
+            "status": "NORMAL",
+            "total_findings": 0,
+            "findings": [],
+            "correlations": [],
+            "root_causes": [],
+            "recommendations": [],
+        },
+        "diagnostic_case": {
+            "root_cause_candidates": [],
+            "primary_root_cause": None,
+        },
+        "case_decision": {},
+        "remediation_actions": [],
+        "remediation_audit": [],
+        "network_diagnostic_case": {
+            "observations": ["observation"],
+            "signals": ["signal"],
+            "findings": [],
+            "correlations": [],
+            "candidates": [],
+            "evaluations": [],
+            "primary_cause": None,
+            "confidences": [],
+            "explanations": [],
+            "recommendations": [],
+        },
+        "network_case_explanation": {
+            "summary": "Network explanation"
+        },
+    }
+
+    diagnostic_view = DiagnosticView(result)
+
+    view_model = DashboardViewModel(
+        diagnostic_view,
+        execution_state="COMPLETED",
+    )
+
+    dashboard.set_view_model(view_model)
+
+    dashboard.network_diagnostic_case[
+        "observations"
+    ].append("changed")
+
+    dashboard.network_case_explanation[
+        "summary"
+    ] = "changed"
+
+    assert view_model.network_diagnostic_case[
+        "observations"
+    ] == ["observation"]
+
+    assert view_model.network_case_explanation[
+        "summary"
+    ] == "Network explanation"
+
+def test_dashboard_displays_network_case_explanation(
+    qtbot,
+):
+    dashboard = DashboardWidget(
+        TechnicianApp()
+    )
+
+    qtbot.addWidget(dashboard)
+
+    result = {
+        "diagnosis": {
+            "status": "NORMAL",
+            "total_findings": 0,
+            "findings": [],
+            "correlations": [],
+            "root_causes": [],
+            "recommendations": [],
+        },
+        "diagnostic_case": {
+            "root_cause_candidates": [],
+            "primary_root_cause": None,
+        },
+        "case_decision": {},
+        "remediation_actions": [],
+        "remediation_audit": [],
+        "network_diagnostic_case": {
+            "observations": [],
+            "signals": [],
+            "findings": [],
+            "correlations": [],
+            "candidates": [],
+            "evaluations": [],
+            "primary_cause": None,
+            "confidences": [],
+            "explanations": [],
+            "recommendations": [],
+        },
+        "network_case_explanation": {
+            "subject": "DIAGNOSTIC_CASE",
+            "summary": "Your computer is connected to the network, but internet access is unavailable.",
+            "details": "The network connection requires further investigation.",
+            "confidence": "HIGH",
+        },
+    }
+
+    diagnostic_view = DiagnosticView(result)
+
+    view_model = DashboardViewModel(
+        diagnostic_view,
+        execution_state="COMPLETED",
+    )
+
+    dashboard.set_view_model(view_model)
+
+    assert dashboard.network_case_explanation_card is not None
+
+    assert (
+        dashboard.network_case_explanation_card.content.text()
+        == (
+            "Your computer is connected to the network, "
+            "but internet access is unavailable."
+        )
+    )
+
+def test_dashboard_network_case_explanation_presentation_is_isolated(
+    qtbot,
+):
+    dashboard = DashboardWidget(
+        TechnicianApp()
+    )
+
+    qtbot.addWidget(dashboard)
+
+    result = {
+        "diagnosis": {
+            "status": "NORMAL",
+            "total_findings": 0,
+            "findings": [],
+            "correlations": [],
+            "root_causes": [],
+            "recommendations": [],
+        },
+        "diagnostic_case": {
+            "root_cause_candidates": [],
+            "primary_root_cause": None,
+        },
+        "case_decision": {},
+        "remediation_actions": [],
+        "remediation_audit": [],
+        "network_diagnostic_case": {
+            "observations": [],
+            "signals": [],
+            "findings": [],
+            "correlations": [],
+            "candidates": [],
+            "evaluations": [],
+            "primary_cause": None,
+            "confidences": [],
+            "explanations": [],
+            "recommendations": [],
+        },
+        "network_case_explanation": {
+            "subject": "DIAGNOSTIC_CASE",
+            "summary": "Network explanation",
+            "details": "Network details",
+            "confidence": "HIGH",
+        },
+    }
+
+    diagnostic_view = DiagnosticView(result)
+
+    view_model = DashboardViewModel(
+        diagnostic_view,
+        execution_state="COMPLETED",
+    )
+
+    dashboard.set_view_model(view_model)
+
+    dashboard.network_case_explanation_card.content.setText(
+        "Changed by GUI"
+    )
+
+    assert (
+        view_model.network_case_explanation["summary"]
+        == "Network explanation"
+    )
+
+    assert (
+        view_model.network_case_explanation["details"]
+        == "Network details"
+    )
+
+    assert (
+        view_model.network_case_explanation["confidence"]
+        == "HIGH"
+    )
+
+def test_dashboard_displays_network_explanation_from_real_application(
+    qtbot,
+):
+    app = TechnicianApp()
+
+    dashboard = DashboardWidget(app)
+
+    qtbot.addWidget(dashboard)
+
+    app.run_diagnostics()
+
+    view_model = app.get_dashboard_view_model()
+
+    dashboard.set_view_model(view_model)
+
+    assert view_model.network_case_explanation is not None
+
+    if isinstance(
+        view_model.network_case_explanation,
+        dict,
+    ):
+        expected_summary = (
+            view_model.network_case_explanation.get(
+                "summary",
+                "",
+            )
+        )
+    else:
+        expected_summary = getattr(
+            view_model.network_case_explanation,
+            "summary",
+            "",
+        )
+
+    assert (
+        dashboard.network_case_explanation_card.content.text()
+        == expected_summary
+    )

@@ -1,5 +1,5 @@
 # ==========================================
-# Windows Technician v0.4
+# Windows Technician v0.5
 # DIAGNOSTIC WORKER TEST
 # ==========================================
 

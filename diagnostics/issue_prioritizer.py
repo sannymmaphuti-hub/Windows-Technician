@@ -1,5 +1,5 @@
 # ==========================================================
-# Windows Technician v0.3
+# Windows Technician v0.5
 # ISSUE PRIORITIZATION ENGINE
 # ==========================================================
 
@@ -246,3 +246,4 @@ if __name__ == "__main__":
     print(
         f"Reason : {primary['reason']}"
     )
+

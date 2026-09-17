@@ -1,3 +1,4 @@
+from copy import deepcopy
 from PySide6.QtCore import QThread, Qt
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (
@@ -21,6 +22,8 @@ class DashboardWidget(QWidget):
 
         self.technician_app = technician_app
         self.view_model = None
+        self.network_diagnostic_case = {}
+        self.network_case_explanation = None
         self.remediation_actions = []
 
         # Diagnostic Thread State
@@ -162,6 +165,12 @@ class DashboardWidget(QWidget):
             severity="info",
         )
 
+        self.network_case_explanation_card = DiagnosticCard(
+            title="Network Diagnostic",
+            content="No network diagnostic explanation available.",
+            severity="info",
+        )
+
         # Existing Dashboard References
         self.primary_insight = (
             self.diagnostic_insight_card.content
@@ -282,7 +291,9 @@ class DashboardWidget(QWidget):
         content_layout.addWidget(
             self.recommendation_card
         )
-
+        content_layout.addWidget(
+            self.network_case_explanation_card
+        )
         # Keep cards at their natural height
         content_layout.addStretch()
 
@@ -436,7 +447,21 @@ class DashboardWidget(QWidget):
 
     def set_view_model(self, view_model):
         self.view_model = view_model
+        self.network_diagnostic_case = deepcopy(
+            getattr(
+                view_model,
+                "network_diagnostic_case",
+                {},
+            )
+        )
 
+        self.network_case_explanation = deepcopy(
+            getattr(
+                view_model,
+                "network_case_explanation",
+                None,
+            )
+        )
         self.remediation_actions = list(
             getattr(
                 view_model,
@@ -848,3 +873,34 @@ class DashboardWidget(QWidget):
                         view_model.health_severity,
                     ).lower()
                 )
+        # Network Diagnostic
+        network_explanation = (
+            self.network_case_explanation
+        )
+
+        if network_explanation is None:
+            self.network_case_explanation_card.content.setText(
+                "No network diagnostic explanation available."
+            )
+            self.network_case_explanation_card.set_status_severity(
+                "info"
+            )
+        else:
+            if isinstance(network_explanation, dict):
+                network_summary = network_explanation.get(
+                    "summary",
+                    "",
+                )
+            else:
+                network_summary = getattr(
+                    network_explanation,
+                    "summary",
+                    "",
+                )
+
+            self.network_case_explanation_card.content.setText(
+                network_summary
+            )
+            self.network_case_explanation_card.set_status_severity(
+                "info"
+            )

@@ -1,5 +1,5 @@
 # ==========================================
-# WINDOWS TECHNICIAN v0.3
+# Windows Technician v0.5
 # CASE DECISION TESTS
 # ==========================================
 
@@ -658,3 +658,4 @@ def test_case_decision_handles_zero_confidence():
         "CPU overload was identified with HIGH severity "
         "and 0% confidence. Review is recommended."
     )
+

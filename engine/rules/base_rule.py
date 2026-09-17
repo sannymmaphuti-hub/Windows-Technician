@@ -1,5 +1,5 @@
 # ==========================================
-# Windows Technician v0.3
+# Windows Technician v0.5
 # BASE DIAGNOSTIC RULE
 # ==========================================
 
@@ -14,3 +14,4 @@ class BaseRule:
         raise NotImplementedError(
             "Diagnostic rules must implement evaluate()."
         )
+

@@ -1,5 +1,5 @@
 # ==========================================
-# Windows Technician v0.3
+# Windows Technician v0.5
 # CENTRAL DIAGNOSTIC RULES
 # ==========================================
 
@@ -62,3 +62,4 @@ def get_storage_status(usage_percent):
 
     else:
         return "HEALTHY"
+

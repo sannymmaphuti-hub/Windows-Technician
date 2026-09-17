@@ -3,7 +3,7 @@ import time
 
 
 # ==========================================================
-# Windows Technician v0.3
+# Windows Technician v0.5
 # PROCESS DIAGNOSTIC ENGINE
 # ==========================================================
 
@@ -552,3 +552,4 @@ if __name__ == "__main__":
                 f"    Classification : "
                 f"{finding['classification']}"
             )
+

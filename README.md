@@ -1,102 +1,235 @@
-# Windows Technician v0.3
+# Windows Technician v0.5
 
-Windows Technician is a Python-based Windows system diagnostic and troubleshooting engine designed to collect system evidence, analyze system health, identify diagnostic findings, evaluate relationships between findings, determine probable root causes, prioritize issues, provide actionable recommendations, and produce structured diagnostic reports.
+Windows Technician is a Python-based Windows system diagnostic and troubleshooting engine designed to help users and technicians understand what is happening inside a Windows system.
 
-Version 0.3 builds on the diagnostic and intelligence foundation established in v0.2 by introducing a structured diagnostic case architecture and orchestration layer.
+The system collects diagnostic evidence, analyzes system behavior, identifies potential problems, determines probable root causes, and provides structured recommendations.
+
+Version 0.5 extends the diagnostic architecture with structured cases, orchestration, application integration, observation pipelines, network diagnostics, diagnostic intelligence, and controlled remediation boundaries.
+
+---
 
 ## Features
 
 ### System Diagnostics
 
-* CPU diagnostics
-* Memory diagnostics
-* GPU diagnostics
-* Network diagnostics
-* Storage diagnostics
-* Process analysis
-* Service and system analysis
+Windows Technician can collect and analyze information relating to:
+
+* CPU
+* Memory
+* GPU
+* Network
+* Storage
+* Processes
+* Services
+* General system information
 
 ### Diagnostic Intelligence
 
+The diagnostic engine supports:
+
 * Process intelligence
-* Process temporal analysis
 * Memory intelligence
-* Memory trend analysis
 * Memory temporal analysis
-* Memory diagnostic intelligence
-* Cross-diagnostic correlation
-* Confidence scoring
-* Root-cause analysis
-* Root-cause candidate evaluation
+* Memory trend analysis
+* Diagnostic findings
+* Finding relationships
+* Correlation analysis
+* Confidence evaluation
+* Root-cause candidate detection
+* Root-cause evaluation
 * Primary root-cause selection
 * Issue prioritization
-* Recommendation generation
+* Recommendations
+* Audience-aware explanations and recommendations
 
-### v0.3 Diagnostic Architecture
+### Diagnostic Architecture
 
-* Structured diagnostic cases
+The diagnostic architecture provides structured processing through:
+
+* Diagnostic evidence
+* Observations
+* Signals
+* Findings
+* Correlations
+* Root-cause candidates
+* Root-cause analysis
+* Confidence evaluation
+* Recommendations
+* Diagnostic cases
+* Case decisions
 * Diagnostic orchestration
-* Case decision evaluation
-* Evidence management
-* Finding management
-* Correlation management
-* Root-cause candidate management
-* Recommendation management
-* Diagnostic status tracking
-* Application-layer integration
-* Structured case reporting
+* Application integration
+* Reporting
 
-### Engineering
+### Remediation Architecture
 
-* Automated test suite
-* Production diagnostic pipeline
-* Diagnostic logging
-* Modular architecture
-* Separation between diagnostic collection, analysis, intelligence, orchestration, and application layers
+Remediation is deliberately separated from diagnosis.
 
-## Diagnostic Architecture
+The remediation architecture provides:
 
-Windows Technician v0.3 uses a layered diagnostic architecture in which the existing diagnostic systems feed into a structured diagnostic case.
+* Remediation action planning
+* Authorization boundaries
+* Eligibility checks
+* Operation catalog
+* Operation selection
+* Operation binding
+* Execution state
+* Failure handling
+* Remediation results
+* Verification
+* Audit trails
+* Separation between diagnostic discovery and system modification
+
+Diagnostic discovery does not automatically cause system changes.
+
+---
+
+## Architecture
+
+The high-level diagnostic flow is:
 
 ```text
-System
-   |
+Windows System
+      ↓
 Collectors
-   |
+      ↓
 Diagnostic Pipelines
-   |
+      ↓
 Rules
-   |
+      ↓
+Observations
+      ↓
+Signals
+      ↓
 Evidence
-   |
+      ↓
+Findings
+      ↓
 Intelligence
-   |
-Analysis
-   |
-Confidence
-   |
+      ↓
 Correlation
-   |
+      ↓
 Root-Cause Analysis
-   |
+      ↓
+Confidence
+      ↓
 Case Decision
-   |
+      ↓
 DiagnosticCase
-   |
+      ↓
 DiagnosticOrchestrator
-   |
+      ↓
 Technician
-   |
+      ↓
 TechnicianApp
-   |
+      ↓
 Diagnostic Report
 ```
 
-## v0.3 Diagnostic Case Architecture
+The remediation boundary is:
 
-The central architectural addition in v0.3 is the `DiagnosticCase`.
+```text
+Diagnosis
+    ↓
+Diagnostic Case
+    ↓
+Remediation Actions
+    ↓
+Authorization
+    ↓
+Operation Selection
+    ↓
+Operation Binding
+    ↓
+Execution
+    ↓
+Verification
+    ↓
+Result / Audit Trail
+```
 
-A diagnostic case provides a structured representation of the information produced during a diagnostic run.
+---
+
+## Project Structure
+
+```text
+Windows Technician v0.5/
+│
+├── application/
+│   ├── app.py
+│   ├── technician.py
+│   ├── dashboard_view_model.py
+│   └── diagnostic_view.py
+│
+├── gui/
+│   ├── dashboard
+│   ├── diagnostic cards
+│   ├── diagnostic worker
+│   ├── main window
+│   ├── metric cards
+│   ├── sidebar
+│   └── styles
+│
+├── engine/
+│   ├── diagnostic orchestration
+│   ├── diagnostic cases and decisions
+│   ├── evidence, findings, signals and correlations
+│   ├── root-cause analysis and confidence
+│   ├── recommendations and explanations
+│   ├── observation and signal pipelines
+│   ├── network diagnostic pipeline
+│   ├── remediation architecture
+│   ├── reporting
+│   ├── collectors/
+│   │   ├── CPU
+│   │   ├── GPU
+│   │   ├── memory
+│   │   ├── network
+│   │   ├── process
+│   │   └── storage
+│   ├── intelligence/
+│   │   ├── process intelligence
+│   │   ├── memory intelligence
+│   │   ├── memory temporal/trend intelligence
+│   │   └── diagnostic intelligence
+│   └── rules/
+│       ├── CPU
+│       ├── GPU
+│       ├── memory
+│       ├── network
+│       ├── process
+│       └── storage
+│
+├── diagnostics/
+│   ├── CPU diagnostics
+│   ├── memory diagnostics
+│   ├── GPU diagnostics
+│   ├── network diagnostics
+│   ├── storage diagnostics
+│   ├── process analysis
+│   ├── system analysis
+│   └── legacy diagnostic support
+│
+├── tests/
+│   └── diagnostic, intelligence, network, remediation,
+│       application, integration and regression tests
+│
+├── logs/
+├── reports/
+│
+├── main.py
+├── requirements.txt
+├── requirements-dev.txt
+├── SECURITY.md
+├── README.md
+└── .gitignore
+```
+
+---
+
+## Diagnostic Case Architecture
+
+The `DiagnosticCase` represents the structured result of a diagnostic run.
 
 A case can contain:
 
@@ -115,195 +248,314 @@ A case can contain:
 * Memory temporal intelligence
 * Memory diagnostic intelligence
 
-This provides a consistent structure for passing diagnostic information between the diagnostic engine, orchestration layer, application layer, and reporting system.
+The case provides a stable boundary between diagnostic processing and higher application layers.
+
+---
 
 ## Diagnostic Orchestration
 
-`DiagnosticOrchestrator` coordinates the diagnostic pipeline and converts the resulting diagnostic information into a structured `DiagnosticCase`.
+`DiagnosticOrchestrator` coordinates the diagnostic lifecycle.
 
-The orchestrator provides a boundary between the underlying diagnostic engine and the application layer.
+It provides a boundary between the underlying diagnostic engine and the application layer.
 
-```text
-Diagnostic Engine
-       |
-       v
-DiagnosticOrchestrator
-       |
-       v
-DiagnosticCase
-       |
-       v
-CaseDecision
-       |
-       v
-Technician
-       |
-       v
-TechnicianApp
-```
+The orchestrator:
 
-This allows the diagnostic engine to remain focused on collecting and analyzing system information while the application layer works with a structured diagnostic case.
+1. Runs the diagnostic pipeline.
+2. Receives the diagnostic result.
+3. Constructs the diagnostic case.
+4. Commits the successful result.
+5. Preserves the previous successful case when a new diagnostic run fails.
+6. Records failure state when execution fails.
+
+---
 
 ## Case Decision
 
-`CaseDecision` evaluates the completed diagnostic case and determines the appropriate case-level decision based on the available diagnostic evidence and findings.
+`CaseDecision` evaluates the completed diagnostic case and determines the case-level diagnostic outcome.
 
-The decision layer helps prevent the application from relying only on individual diagnostic results when determining the overall state of a case.
+The decision layer operates on the structured diagnostic case rather than directly controlling system operations.
+
+---
 
 ## Root-Cause Analysis
 
-Windows Technician evaluates relationships between diagnostic findings to produce probable root-cause candidates.
+Root-cause analysis evaluates available diagnostic evidence to determine probable causes.
 
 The system can:
 
-* Identify candidate causes
-* Associate evidence with candidates
-* Assign confidence
-* Assign confidence levels
-* Rank candidates
-* Remove duplicate candidates
-* Select a primary root cause when sufficient evidence exists
+* Identify root-cause candidates.
+* Associate evidence with candidates.
+* Evaluate candidates.
+* Assign confidence.
+* Rank candidates.
+* Remove duplicate candidates.
+* Select a primary root cause when sufficient evidence exists.
+* Avoid unsupported root-cause conclusions when evidence is insufficient.
 
-The system is designed to avoid presenting an unsupported root cause when the available evidence is insufficient.
+---
 
-## Diagnostic Reporting
+## Observation Pipeline
 
-Version 0.3 includes structured diagnostic case reporting.
+The observation pipeline provides a structured path from collected system evidence toward higher-level diagnostic reasoning.
 
-Reports can contain:
+The pipeline supports:
+
+```text
+Evidence
+   ↓
+Observation
+   ↓
+Signal
+   ↓
+Finding
+   ↓
+Correlation
+   ↓
+Root Cause
+   ↓
+Recommendation
+```
+
+Observation builders translate collected system information into structured observations that can be processed by downstream diagnostic intelligence.
+
+---
+
+## Network Diagnostics
+
+Windows Technician v0.5 includes a dedicated network diagnostic architecture.
+
+The network diagnostic pipeline can evaluate conditions such as:
+
+* Network adapter availability
+* Adapter connectivity
+* Gateway reachability
+* DNS resolution
+* Internet connectivity
+* Local network failures
+* Network-related correlations
+* Network root-cause candidates
+* Network recommendations
+* Network diagnostic actions
+
+The network diagnostic architecture maintains explicit boundaries between evidence collection, diagnosis, decision-making, recommendations, and remediation operations.
+
+---
+
+## Remediation Architecture
+
+Remediation is intentionally separated from diagnostic reasoning.
+
+The system follows:
+
+```text
+Diagnostic Result
+      ↓
+Diagnostic Case
+      ↓
+Remediation Action
+      ↓
+Authorization
+      ↓
+Operation Binding
+      ↓
+Execution
+      ↓
+Verification
+      ↓
+Audit Trail
+```
+
+A diagnostic recommendation does not automatically execute a system-changing operation.
+
+The user or authorized technician remains responsible for approving corrective actions.
+
+---
+
+## Reporting
+
+Windows Technician can generate structured diagnostic reports containing information such as:
 
 * Diagnostic status
+* Diagnostic case information
+* Evidence
 * Findings
 * Correlations
 * Root-cause analysis
 * Root-cause candidates
 * Primary root cause
 * Recommendations
-* Diagnostic case information
+* Remediation information
+* Audit information
 
-The application can save the generated diagnostic report to the `reports/` directory.
+The application layer can save diagnostic reports to the `reports/` directory.
+
+Generated reports are treated as runtime artifacts and are excluded from source control.
+
+---
 
 ## Application Layer
 
-The application layer provides a higher-level interface to the diagnostic system.
+The application layer provides the interface between the diagnostic engine and the user-facing application.
+
+Important components include:
 
 ```text
 application/
-â”œâ”€â”€ app.py
-â””â”€â”€ technician.py
+├── app.py
+├── technician.py
+├── dashboard_view_model.py
+└── diagnostic_view.py
 ```
 
-`Technician` provides the application service interface to the diagnostic orchestration system.
+`Technician` acts as the application service responsible for coordinating diagnostic and remediation workflows.
 
-`TechnicianApp` provides the application entry point and exposes operations for:
+The application layer communicates with the underlying diagnostic and remediation architecture without placing diagnostic reasoning inside the user interface.
 
-* Running diagnostics
-* Retrieving diagnostic status
-* Retrieving the primary issue
-* Generating reports
-* Saving reports
+---
 
-## Project Structure
+## GUI Layer
+
+The GUI layer provides the user-facing Windows application interface.
+
+Important components include:
 
 ```text
-Windows Technician v0.3 Project/
-|
-+-- application/
-|   +-- app.py
-|   +-- technician.py
-|
-+-- diagnostics/
-|   +-- CPU diagnostics
-|   +-- Memory diagnostics
-|   +-- GPU diagnostics
-|   +-- Network diagnostics
-|   +-- Storage diagnostics
-|   +-- Process analysis
-|   +-- System analysis
-|   +-- Correlation analysis
-|   +-- Reporting
-|
-+-- engine/
-|   +-- diagnostic_engine.py
-|   +-- diagnostic_orchestrator.py
-|   +-- diagnostic_case.py
-|   +-- case_decision.py
-|   +-- analyzer.py
-|   +-- evidence.py
-|   +-- evidence_builder.py
-|   +-- confidence.py
-|   +-- correlation_engine.py
-|   +-- correlation_adapter.py
-|   +-- root_cause.py
-|   +-- root_cause_analyzer.py
-|   +-- root_cause_engine.py
-|   +-- recommendation_engine.py
-|   +-- report.py
-|   +-- production.py
-|   |
-|   +-- collectors/
-|   +-- intelligence/
-|   +-- rules/
-|
-+-- logs/
-+-- reports/
-+-- tests/
-+-- .gitignore
-+-- requirements.txt
-+-- SECURITY.md
-+-- README.md
+gui/
+├── dashboard.py
+├── diagnostic_card.py
+├── diagnostic_worker.py
+├── main_window.py
+├── metric_card.py
+├── sidebar.py
+└── styles.py
 ```
+
+The GUI presents diagnostic information supplied by the application layer and does not contain the core diagnostic reasoning engine.
+
+---
+
+## Engineering Principles
+
+Windows Technician follows several architectural principles:
+
+### Separation of Responsibilities
+
+System collection, diagnostic reasoning, intelligence, orchestration, application integration, GUI presentation, and remediation execution are separated into distinct layers.
+
+### Evidence-Based Diagnosis
+
+Diagnostic conclusions should be based on collected evidence rather than unsupported assumptions.
+
+### Controlled Remediation
+
+Diagnostic recommendations do not automatically modify the user's system.
+
+### Explicit Authorization
+
+System-changing remediation operations require an explicit authorization boundary.
+
+### Failure Safety
+
+Failures during diagnostic or remediation processing should be represented explicitly and should not silently produce successful results.
+
+### Test-Driven Development
+
+Development follows a deliberate:
+
+```text
+TEST
+  ↓
+FAIL
+  ↓
+IMPLEMENT
+  ↓
+FOCUSED TEST
+  ↓
+PASS
+  ↓
+BROADER REGRESSION
+```
+
+workflow.
+
+---
 
 ## Testing
 
-The project uses Pytest for automated validation.
+The project contains a comprehensive automated test suite covering:
 
-The complete v0.3 test suite covers:
-
-* Diagnostic components
-* Diagnostic collectors
+* Diagnostic collection
 * Diagnostic pipelines
-* Diagnostic rules
-* Evidence construction
-* Confidence evaluation
-* Diagnostic intelligence
-* Temporal intelligence
-* Cross-diagnostic correlations
-* Root-cause analysis
-* Root-cause engine
-* Diagnostic case behavior
+* Diagnostic cases
+* Diagnostic decisions
 * Diagnostic orchestration
-* Case decisions
-* Engine integration
+* CPU diagnostics
+* Memory diagnostics
+* Process intelligence
+* Storage diagnostics
+* Network diagnostics
+* Observation pipelines
+* Signal processing
+* Findings
+* Correlations
+* Root-cause analysis
+* Confidence
+* Recommendations
+* Explanations
+* Remediation
+* Authorization
+* Operation binding
+* Operation execution
+* Audit trails
 * Application integration
-* Diagnostic reporting
-* Production behavior
+* GUI integration
+* Regression testing
 
-The final validated test count will be recorded here after the v0.3 release validation is complete.
+The v0.5 release verification suite currently contains **2337 passing tests**.
 
-## Version 0.2
+---
 
-Version 0.2 established the diagnostic intelligence foundation of Windows Technician.
+## Security
 
-The v0.2 release remains preserved in source control and serves as the foundation from which v0.3 was developed.
+Windows Technician is designed as a diagnostic and troubleshooting system.
 
-Version 0.3 extends that foundation without replacing the underlying diagnostic capabilities.
+The system should not be treated as an unrestricted automated authority over the user's computer.
+
+Diagnostic information should be reviewed before corrective actions are taken.
+
+Remediation operations are separated from diagnostic discovery and are subject to authorization and execution boundaries.
+
+See `SECURITY.md` for the project's security policy.
+
+---
 
 ## Project Status
 
-**Windows Technician v0.3 â€” Release Preparation**
+**Windows Technician v0.5 — Release Preparation**
 
-The v0.3 implementation is feature-complete and is currently undergoing final release cleanup and validation.
-
-The final release process includes:
+The v0.5 implementation and validation work includes:
 
 1. Source and documentation cleanup
 2. Duplicate and obsolete-code review
-3. Test-suite validation
-4. Git history and working-tree review
-5. v0.3 commit creation
-6. v0.3 release tagging
-7. GitHub synchronization
-8. Project directory rename from `Windows Technician V0.2 Project` to `Windows Technician V0.3 Project`
+3. Architecture review
+4. Diagnostic architecture validation
+5. Network diagnostic validation
+6. Remediation boundary validation
+7. Test-suite validation
+8. Repository and working-tree review
+9. Documentation review
+10. Release verification
+11. Final project-directory rename
+12. v0.5 release commit
+13. v0.5 release tagging
+14. GitHub synchronization
 
-No v0.4 development is part of this release process.
+Historical development remains preserved in Git history.
+
+---
+
+## Historical Development
+
+Earlier development stages remain preserved in source control and Git history.
+
+The current product identity is **Windows Technician v0.5**.
