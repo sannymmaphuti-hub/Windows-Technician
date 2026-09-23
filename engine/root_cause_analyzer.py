@@ -1,6 +1,6 @@
 
 # ==========================================
-# Windows Technician v0.5
+# Windows Technician v0.6
 # ROOT CAUSE ANALYZER
 # ==========================================
 
@@ -81,7 +81,7 @@ class RootCauseAnalyzer:
 
 
     # ==========================================
-    # v0.5 STRUCTURED ANALYSIS RESULT
+    # v0.6 STRUCTURED ANALYSIS RESULT
     # ==========================================
 
     def analyze_result(
@@ -476,4 +476,3 @@ class RootCauseAnalyzer:
             key=lambda candidate:
                 candidate["confidence"]
         )
-

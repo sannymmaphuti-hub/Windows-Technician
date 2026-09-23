@@ -1,5 +1,5 @@
 # ==========================================
-# Windows Technician v0.5
+# Windows Technician v0.6
 # DIAGNOSTIC VIEW TESTS
 # ==========================================
 
@@ -368,3 +368,4 @@ def test_diagnostic_view_isolates_network_diagnostic_result():
     assert result[
         "network_case_explanation"
     ]["summary"] == "Network explanation"
+

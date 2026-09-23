@@ -1,5 +1,5 @@
 # ==========================================
-# Windows Technician v0.5
+# Windows Technician v0.6
 # DIAGNOSTIC ORCHESTRATOR
 # ==========================================
 
@@ -67,7 +67,7 @@ class DiagnosticOrchestrator:
             # --------------------------------------------------
             # Support both:
             #
-            # 1. Current v0.5 top-level sections
+            # 1. Current v0.6 top-level sections
             #
             # 2. Older nested "diagnosis" sections
             #
@@ -117,12 +117,15 @@ class DiagnosticOrchestrator:
 
             new_case = DiagnosticCase()
 
-            new_case.set_evidence(
-                get_section(
-                    "evidence",
-                    {}
-                )
+            new_case.set_observations(
+                get_section("observations", [])
             )
+
+            new_case.set_signals(
+                get_section("signals", [])
+            )
+
+            new_case.set_evidence(get_section("evidence", {}))
 
             new_case.set_findings(
                 get_section(
@@ -153,7 +156,7 @@ class DiagnosticOrchestrator:
             )
 
             # --------------------------------------------------
-            # v0.5 INTELLIGENCE DATA
+            # v0.6 INTELLIGENCE DATA
             # --------------------------------------------------
 
             new_case.set_process_intelligence(
@@ -225,7 +228,7 @@ class DiagnosticOrchestrator:
             # --------------------------------------------------
             # Status
             #
-            # Current v0.5:
+            # Current v0.6:
             #     result["status"]
             #
             # Older nested structure:
@@ -294,4 +297,3 @@ class DiagnosticOrchestrator:
             }
 
             raise
-

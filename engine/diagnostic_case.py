@@ -1,10 +1,10 @@
-
 # ==========================================
-# Windows Technician v0.5
+# Windows Technician v0.6
 # DIAGNOSTIC CASE
 # ==========================================
 
 from copy import deepcopy
+from engine.recommendation_intelligence import RecommendationIntelligence
 
 
 class DiagnosticCase:
@@ -12,10 +12,43 @@ class DiagnosticCase:
     def __init__(self):
 
         # ==========================================
+        # V0.6 CASE IDENTITY
+        # ==========================================
+
+        from uuid import uuid4
+
+        self.case_id = str(uuid4())
+
+        # ==========================================
+        # V0.6 CASE LIFECYCLE
+        # ==========================================
+
+        self.lifecycle_state = "OPEN"
+
+        # ==========================================
+        # V0.6 DIAGNOSTIC COMPLETENESS
+        # ==========================================
+
+        self.diagnostic_completeness = "INCOMPLETE"
+
+        # ==========================================
         # CORE DIAGNOSTIC DATA
         # ==========================================
 
         self.evidence = {}
+
+        # ==========================================
+        # V0.6 OBSERVATIONS
+        # ==========================================
+
+        self.observations = []
+
+        # ==========================================
+        # V0.6 SIGNALS
+        # ==========================================
+
+        self.signals = []
+
         self.findings = []
         self.correlations = []
         self.root_causes = []
@@ -70,9 +103,24 @@ class DiagnosticCase:
     # CORE DATA SETTERS
     # ==========================================
 
+
     def set_evidence(self, evidence):
 
         self.evidence = deepcopy(evidence)
+
+
+    def set_observations(self, observations):
+
+        self.observations = deepcopy(
+            observations
+        )
+
+
+    def set_signals(self, signals):
+
+        self.signals = deepcopy(
+            signals
+        )
 
 
     def set_findings(self, findings):
@@ -205,6 +253,8 @@ class DiagnosticCase:
         self.primary_root_cause = deepcopy(
             root_cause
         )
+
+
     # ==========================================
     # DIAGNOSTIC STATUS
     # ==========================================
@@ -216,3 +266,13 @@ class DiagnosticCase:
 
         self.status = status
 
+    def generate_recommendations(self):
+        intelligence = RecommendationIntelligence()
+
+        recommendations = intelligence.generate(
+            findings=self.findings
+        )
+
+        self.recommendations = recommendations
+
+        return recommendations

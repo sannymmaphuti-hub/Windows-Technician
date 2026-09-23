@@ -80,4 +80,3 @@ def generate_storage_diagnostics(storage_data):
         })
 
     return diagnostics
-

@@ -1,5 +1,5 @@
 # ==========================================================
-# Windows Technician v0.5
+# Windows Technician v0.6
 # DIAGNOSTIC LOGGER
 # ==========================================================
 
@@ -58,7 +58,7 @@ def create_log_file():
         )
 
         file.write(
-            "Windows Technician v0.5\n"
+            "Windows Technician v0.6\n"
         )
 
         file.write(
@@ -179,4 +179,3 @@ if __name__ == "__main__":
 
     print()
     print("Logger test completed.")
-

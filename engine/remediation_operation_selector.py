@@ -1,5 +1,5 @@
 # ==========================================
-# Windows Technician v0.5
+# Windows Technician v0.6
 # REMEDIATION OPERATION SELECTOR
 # ==========================================
 
@@ -21,3 +21,4 @@ class RemediationOperationSelector:
         )
 
         return self.OPERATION_MAP.get(key)
+

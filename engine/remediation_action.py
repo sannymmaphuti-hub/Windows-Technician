@@ -1,5 +1,5 @@
 # ==========================================
-# Windows Technician v0.5
+# Windows Technician v0.6
 # REMEDIATION ACTION
 # ==========================================
 
@@ -105,3 +105,4 @@ class RemediationAction:
             and self.execution_status
             == other.execution_status
         )
+

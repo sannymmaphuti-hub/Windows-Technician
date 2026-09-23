@@ -1,4 +1,4 @@
-# Windows Technician v0.5
+# Windows Technician v0.6
 
 Windows Technician is a Python-based Windows system diagnostic and troubleshooting engine designed to help users and technicians understand what is happening inside a Windows system.
 
@@ -153,7 +153,7 @@ Result / Audit Trail
 ## Project Structure
 
 ```text
-Windows Technician v0.5/
+Windows Technician v0.6/
 │
 ├── application/
 │   ├── app.py
@@ -322,7 +322,7 @@ Observation builders translate collected system information into structured obse
 
 ## Network Diagnostics
 
-Windows Technician v0.5 includes a dedicated network diagnostic architecture.
+Windows Technician v0.6 includes a dedicated network diagnostic architecture.
 
 The network diagnostic pipeline can evaluate conditions such as:
 
@@ -531,7 +531,7 @@ See `SECURITY.md` for the project's security policy.
 
 ## Project Status
 
-**Windows Technician v0.5 — Released**
+**Windows Technician v0.6 — Release Candidate**
 
 The v0.5 implementation and validation work includes:
 
@@ -558,4 +558,4 @@ Historical development remains preserved in Git history.
 
 Earlier development stages remain preserved in source control and Git history.
 
-The current product identity is **Windows Technician v0.5**.
+The current product identity is **Windows Technician v0.6**.

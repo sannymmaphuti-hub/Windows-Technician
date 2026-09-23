@@ -71,3 +71,4 @@ class GPUCollector:
         ):
 
             return []
+

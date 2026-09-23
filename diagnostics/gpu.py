@@ -1,6 +1,6 @@
 
 # ==========================================
-# Windows Technician v0.5
+# Windows Technician v0.6
 # GPU DIAGNOSTICS
 # ==========================================
 
@@ -122,4 +122,3 @@ def diagnose_gpu(gpu_info):
             )
 
     return findings, recommendations
-

@@ -1,5 +1,5 @@
 # ==========================================
-# Windows Technician v0.5
+# Windows Technician v0.6
 # PROCESS COLLECTOR TESTS
 # ==========================================
 
@@ -68,4 +68,3 @@ def test_process_collector_can_collect_cpu_history():
         assert "pid" in history[0]
         assert "name" in history[0]
         assert "samples" in history[0]
-

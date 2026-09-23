@@ -1,5 +1,5 @@
 # ==========================================
-# Windows Technician v0.5
+# Windows Technician v0.6
 # PROCESS INTELLIGENCE PIPELINE
 # ==========================================
 
@@ -140,4 +140,3 @@ class ProcessIntelligencePipeline:
             "intelligence": intelligence,
             "finding": finding
         }
-

@@ -1,5 +1,5 @@
 # ==========================================
-# Windows Technician v0.5
+# Windows Technician v0.6
 # REMEDIATION FAILURE MODEL TESTS
 # ==========================================
 
@@ -148,3 +148,4 @@ def test_failed_result_has_no_verification():
     assert result.execution_status == "FAILED"
     assert result.reason is not None
     assert result.verification_result is None
+

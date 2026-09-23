@@ -1,5 +1,5 @@
 # ==========================================
-# Windows Technician v0.5
+# Windows Technician v0.6
 # STORAGE COLLECTOR
 # ==========================================
 
@@ -50,4 +50,3 @@ class StorageCollector:
                 continue
 
         return storage_devices
-

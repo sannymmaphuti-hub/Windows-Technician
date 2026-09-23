@@ -1,5 +1,5 @@
 # ==========================================
-# Windows Technician v0.5
+# Windows Technician v0.6
 # ROOT CAUSE CANDIDATE TESTS
 # ==========================================
 
@@ -111,4 +111,3 @@ def test_invalid_evidence():
             confidence=0.50,
             evidence="not a list"
         )
-

@@ -1,5 +1,5 @@
 # ==========================================
-# Windows Technician v0.5
+# Windows Technician v0.6
 # APPLICATION TEST
 # ==========================================
 
@@ -202,7 +202,7 @@ def test_application_report_is_case_report():
 
     report = app.get_report()
 
-    assert "Windows Technician v0.5" in report
+    assert "Windows Technician v0.6" in report
     assert "DIAGNOSTIC CASE" in report
 
 
@@ -220,7 +220,7 @@ def test_application_save_report_saves_current_report():
         encoding="utf-8"
     )
 
-    assert "Windows Technician v0.5" in report
+    assert "Windows Technician v0.6" in report
     assert "DIAGNOSTIC CASE" in report
 
 def test_application_save_report_matches_current_report(
@@ -231,7 +231,7 @@ def test_application_save_report_matches_current_report(
     app = TechnicianApp()
 
     expected_report = (
-        "Windows Technician v0.5\n"
+        "Windows Technician v0.6\n"
         "DIAGNOSTIC CASE\n"
         "TEST REPORT"
     )
@@ -693,7 +693,7 @@ def test_application_report_matches_current_diagnostic_state():
     assert isinstance(report, str)
     assert len(report) > 0
 
-    assert "Windows Technician v0.5" in report
+    assert "Windows Technician v0.6" in report
     assert "DIAGNOSTIC CASE" in report
 
     case = result["diagnostic_case"]
@@ -754,7 +754,7 @@ def test_application_save_report_matches_current_diagnostic_state():
 
     assert saved_report == current_report
 
-    assert "Windows Technician v0.5" in saved_report
+    assert "Windows Technician v0.6" in saved_report
     assert "DIAGNOSTIC CASE" in saved_report
 
     assert result["diagnostic_case"] is not None

@@ -269,9 +269,8 @@ def test_complete_pipeline_can_generate_report_from_case():
     assert isinstance(report, str)
     assert len(report) > 0
 
-    assert "Windows Technician v0.5" in report
+    assert "Windows Technician v0.6" in report
     assert "DIAGNOSTIC STATUS" in report
     assert "DIAGNOSTIC FINDINGS" in report
     assert "ROOT-CAUSE ANALYSIS" in report
     assert "SYSTEM RECOMMENDATIONS" in report
-

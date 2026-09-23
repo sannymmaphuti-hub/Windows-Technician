@@ -1,5 +1,5 @@
 # ==========================================
-# Windows Technician v0.5
+# Windows Technician v0.6
 # REMEDIATION OPERATION
 # ==========================================
 
@@ -26,3 +26,4 @@ class RemediationOperation:
         self.handler = handler
 
         self.execution_status = "NOT_EXECUTED"
+

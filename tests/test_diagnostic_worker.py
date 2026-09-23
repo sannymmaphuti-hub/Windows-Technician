@@ -1,5 +1,5 @@
 # ==========================================
-# Windows Technician v0.5
+# Windows Technician v0.6
 # DIAGNOSTIC WORKER TEST
 # ==========================================
 
@@ -80,3 +80,4 @@ def test_diagnostic_worker_executes_application_diagnostics(
     worker.run()
 
     assert calls == ["run"]
+

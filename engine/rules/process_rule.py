@@ -1,5 +1,5 @@
 # ==========================================
-# Windows Technician v0.5
+# Windows Technician v0.6
 # PROCESS DIAGNOSTIC RULE
 # ==========================================
 
@@ -86,4 +86,3 @@ class ProcessRule:
                 })
 
         return findings
-

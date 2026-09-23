@@ -1,5 +1,5 @@
 # ==========================================================
-# Windows Technician v0.5
+# Windows Technician v0.6
 # DIAGNOSTIC CORRELATION ENGINE
 # ==========================================================
 
@@ -170,4 +170,3 @@ if __name__ == "__main__":
                 f"Message : "
                 f"{finding['message']}"
             )
-

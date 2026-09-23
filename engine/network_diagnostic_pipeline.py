@@ -548,3 +548,4 @@ class NetworkDiagnosticPipeline:
         raise ValueError(
             "Unsupported diagnostic network observation."
         )
+

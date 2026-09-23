@@ -1,5 +1,5 @@
 # ==========================================
-# Windows Technician v0.5
+# Windows Technician v0.6
 # REPORT BOUNDARY TESTS
 # ==========================================
 
@@ -258,4 +258,3 @@ def test_technician_report_contains_real_remediation_audit():
     assert "REMEDIATION AUDIT" in report
     assert "memory_review" in report
     assert "Execution : EXECUTED" in report
-

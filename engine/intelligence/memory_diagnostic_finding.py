@@ -1,5 +1,5 @@
 # ==========================================
-# Windows Technician v0.5
+# Windows Technician v0.6
 # MEMORY DIAGNOSTIC FINDING BUILDER
 # ==========================================
 
@@ -76,4 +76,3 @@ class MemoryDiagnosticFindingBuilder:
             "change_percent": change_percent,
             "message": message
         }
-

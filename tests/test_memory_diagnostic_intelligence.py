@@ -1,5 +1,5 @@
 # ==========================================
-# Windows Technician v0.5
+# Windows Technician v0.6
 # MEMORY DIAGNOSTIC INTELLIGENCE TESTS
 # ==========================================
 
@@ -168,4 +168,3 @@ def test_memory_diagnostic_handles_missing_temporal_intelligence():
     )
 
     assert result is None
-

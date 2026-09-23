@@ -1,5 +1,5 @@
 # ==========================================
-# Windows Technician v0.5
+# Windows Technician v0.6
 # REMEDIATION RESULT
 # ==========================================
 
@@ -154,3 +154,4 @@ def test_successful_result_can_be_verified_as_false():
 
     assert result.execution_status == "EXECUTED"
     assert result.verification_result["verified"] is False
+

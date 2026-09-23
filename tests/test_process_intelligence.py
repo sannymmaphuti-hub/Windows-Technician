@@ -1,5 +1,5 @@
 # ==========================================
-# Windows Technician v0.5
+# Windows Technician v0.6
 # PROCESS INTELLIGENCE TESTS
 # ==========================================
 
@@ -186,4 +186,3 @@ def test_process_intelligence_returns_process_identity():
 
     assert result["pid"] == 1234
     assert result["name"] == "python.exe"
-

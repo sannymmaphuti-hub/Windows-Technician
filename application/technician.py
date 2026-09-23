@@ -1,5 +1,5 @@
 # ==========================================
-# Windows Technician v0.5
+# Windows Technician v0.6
 # APPLICATION SERVICE
 # ==========================================
 
@@ -396,3 +396,4 @@ class Technician:
 
     def get_remediation_audit(self):
         return self.remediation_coordinator.audit.get_records()
+

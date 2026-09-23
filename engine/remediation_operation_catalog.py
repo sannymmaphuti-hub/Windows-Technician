@@ -1,5 +1,5 @@
 # ==========================================
-# Windows Technician v0.5
+# Windows Technician v0.6
 # REMEDIATION OPERATION CATALOG
 # ==========================================
 
@@ -24,3 +24,4 @@ class RemediationOperationCatalog:
 
     def get_operations(self):
         return self._operations.copy()
+

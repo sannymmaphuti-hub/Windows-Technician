@@ -1,5 +1,5 @@
 # ==========================================
-# Windows Technician v0.5
+# Windows Technician v0.6
 # PRODUCTION ENGINE TEST
 # ==========================================
 
@@ -56,4 +56,3 @@ def test_production_diagnostics_returns_recommendations():
         diagnosis["recommendations"],
         list
     )
-

@@ -1,5 +1,5 @@
 # ==========================================
-# Windows Technician v0.5
+# Windows Technician v0.6
 # MEMORY DIAGNOSTIC ROOT CAUSE TESTS
 # ==========================================
 
@@ -113,4 +113,3 @@ def test_memory_diagnostic_root_cause_preserves_evidence():
     candidate = result[0]
 
     assert diagnostic_message in candidate["evidence"]
-

@@ -1,5 +1,5 @@
 # ==========================================
-# Windows Technician v0.5
+# Windows Technician v0.6
 # MEMORY TEMPORAL INTELLIGENCE
 # ==========================================
 
@@ -121,4 +121,3 @@ class MemoryTemporalIntelligence:
         )
 
         return result
-

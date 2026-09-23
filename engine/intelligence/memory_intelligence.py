@@ -1,5 +1,5 @@
 # ==========================================
-# Windows Technician v0.5
+# Windows Technician v0.6
 # MEMORY INTELLIGENCE
 # ==========================================
 
@@ -84,4 +84,3 @@ class MemoryIntelligence:
         )
 
         return result
-

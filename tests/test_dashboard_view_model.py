@@ -1,5 +1,5 @@
 # ==========================================
-# Windows Technician v0.5
+# Windows Technician v0.6
 # DASHBOARD VIEW MODEL TESTS
 # ==========================================
 
@@ -619,3 +619,4 @@ def test_dashboard_view_model_isolates_network_diagnostic_result():
     assert diagnostic_view.network_case_explanation[
         "summary"
     ] == "Network explanation"
+

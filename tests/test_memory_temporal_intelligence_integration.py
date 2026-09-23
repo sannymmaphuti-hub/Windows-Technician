@@ -1,5 +1,5 @@
 # ==========================================
-# Windows Technician v0.5
+# Windows Technician v0.6
 # MEMORY TEMPORAL INTELLIGENCE INTEGRATION TESTS
 # ==========================================
 
@@ -138,4 +138,3 @@ def test_memory_temporal_finding_enters_diagnosis():
     diagnosis = result["diagnosis"]
 
     assert diagnosis["total_findings"] >= 1
-

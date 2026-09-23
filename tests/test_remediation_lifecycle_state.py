@@ -1,5 +1,5 @@
 # ==========================================
-# Windows Technician v0.5
+# Windows Technician v0.6
 # REMEDIATION LIFECYCLE STATE
 # ==========================================
 
@@ -302,3 +302,4 @@ def test_failed_action_cannot_replace_operation():
 
     assert action.execution_status == "FAILED"
     assert action.operation is failing_operation
+

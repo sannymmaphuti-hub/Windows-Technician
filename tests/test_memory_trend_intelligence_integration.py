@@ -1,5 +1,5 @@
 # ==========================================
-# Windows Technician v0.5
+# Windows Technician v0.6
 # MEMORY TREND INTELLIGENCE INTEGRATION TESTS
 # ==========================================
 
@@ -106,4 +106,3 @@ def test_memory_trend_intelligence_enters_diagnosis():
     diagnosis = result["diagnosis"]
 
     assert "findings" in diagnosis
-

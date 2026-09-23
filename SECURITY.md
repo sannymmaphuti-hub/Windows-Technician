@@ -1,6 +1,6 @@
 # Security Policy
 
-## Windows Technician v0.5
+## Windows Technician v0.6
 
 Windows Technician is a diagnostic and troubleshooting project designed to analyze Windows system information, collect diagnostic evidence, identify potential technical issues, analyze relationships between diagnostic findings, prioritize issues, determine probable root causes, and provide recommendations.
 
@@ -22,11 +22,11 @@ Do not include passwords, private keys, personal information, or other sensitive
 
 | Version | Supported |
 | ------- | --------- |
-| v0.5    | Yes       |
+| v0.6    | Yes       |
 
 ## Security Considerations
 
-Windows Technician v0.5 is intended for diagnostic purposes.
+Windows Technician v0.6 is intended for diagnostic purposes.
 
 The software should be run with appropriate user permissions and should not be granted elevated privileges unless a feature specifically requires them.
 

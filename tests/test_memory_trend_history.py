@@ -1,5 +1,5 @@
 # ==========================================
-# Windows Technician v0.5
+# Windows Technician v0.6
 # MEMORY TREND HISTORY TESTS
 # ==========================================
 
@@ -172,4 +172,3 @@ def test_memory_history_does_not_reset():
     analyzer.analyze()
 
     assert len(analyzer.memory_history) == 3
-

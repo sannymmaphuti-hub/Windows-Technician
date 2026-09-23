@@ -1,5 +1,5 @@
 # ==========================================
-# Windows Technician v0.5
+# Windows Technician v0.6
 # CPU ROOT CAUSE TESTS
 # ==========================================
 
@@ -130,4 +130,3 @@ def test_cpu_root_cause_requires_high_severity():
     )
 
     assert len(result) == 0
-

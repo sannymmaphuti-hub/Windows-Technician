@@ -1,5 +1,5 @@
 # ==========================================
-# Windows Technician v0.5
+# Windows Technician v0.6
 # CPU EVIDENCE COLLECTOR
 # ==========================================
 
@@ -43,3 +43,4 @@ class CPUCollector:
             "status": cpu_info["status"],
             "top_processes": top_processes
         }
+

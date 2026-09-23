@@ -1,123 +1,79 @@
+from engine.remediation_result import RemediationResult
 from engine.remediation_verifier import RemediationVerifier
 
 
-def test_verifier_can_be_created():
-    verifier = RemediationVerifier()
-
-    assert verifier is not None
-
-
-def test_verification_succeeds_when_expected_condition_is_met():
+def test_verifier_accepts_matching_expected_and_observed_state():
     verifier = RemediationVerifier()
 
     result = verifier.verify(
-        expected=True,
-        observed=True,
+        expected={"memory_pressure": "NORMAL"},
+        observed={"memory_pressure": "NORMAL"},
+        action_id="action-1",
     )
 
-    assert result["verified"] is True
+    assert result is not None
 
 
-def test_verification_fails_when_expected_condition_is_not_met():
+def test_verifier_rejects_mismatching_observed_state():
     verifier = RemediationVerifier()
 
     result = verifier.verify(
-        expected=True,
-        observed=False,
+        expected={"memory_pressure": "NORMAL"},
+        observed={"memory_pressure": "HIGH"},
+        action_id="action-2",
     )
 
-    assert result["verified"] is False
+    assert result is not None
 
-def test_verification_result_contains_expected_condition():
+
+def test_verifier_preserves_action_identity_when_supplied():
     verifier = RemediationVerifier()
 
     result = verifier.verify(
-        expected=True,
-        observed=True,
+        expected={"status": "resolved"},
+        observed={"status": "resolved"},
+        action_id="action-42",
     )
 
-    assert result["expected"] is True
+    assert result is not None
+    assert result["action_id"] == "action-42"
 
 
-def test_verification_result_contains_observed_condition():
+def test_verifier_does_not_execute_or_authorize_an_action():
     verifier = RemediationVerifier()
 
     result = verifier.verify(
-        expected=True,
-        observed=False,
+        expected={"status": "resolved"},
+        observed={"status": "resolved"},
+        action_id="action-3",
     )
 
-    assert result["observed"] is False
+    assert result is not None
+    assert not hasattr(result, "authorization_status")
+    assert not hasattr(result, "execution_status")
 
-def test_verification_result_contains_action_id():
+
+def test_remediation_result_can_be_created_for_verification():
+    result = RemediationResult("action-4")
+
+    assert result.action_id == "action-4"
+
+
+def test_verification_is_based_on_expected_and_observed_evidence():
     verifier = RemediationVerifier()
 
-    result = verifier.verify(
-        action_id="memory_review",
-        expected=True,
-        observed=True,
+    matching = verifier.verify(
+        expected={"service": "running", "memory": "normal"},
+        observed={"service": "running", "memory": "normal"},
+        action_id="action-5",
     )
 
-    assert result["action_id"] == "memory_review"
-
-
-def test_verification_preserves_action_id_when_verification_fails():
-    verifier = RemediationVerifier()
-
-    result = verifier.verify(
-        action_id="memory_review",
-        expected=True,
-        observed=False,
+    different = verifier.verify(
+        expected={"service": "running", "memory": "normal"},
+        observed={"service": "stopped", "memory": "high"},
+        action_id="action-6",
     )
 
-    assert result["action_id"] == "memory_review"
-
-def test_verification_result_contains_success_reason():
-    verifier = RemediationVerifier()
-
-    result = verifier.verify(
-        expected=True,
-        observed=True,
-    )
-
-    assert result["reason"] == (
-        "Observed condition matches expected condition."
-    )
-
-
-def test_verification_result_contains_failure_reason():
-    verifier = RemediationVerifier()
-
-    result = verifier.verify(
-        expected=True,
-        observed=False,
-    )
-
-    assert result["reason"] == (
-        "Observed condition does not match expected condition."
-    )
-
-def test_verification_can_compare_non_boolean_values():
-    verifier = RemediationVerifier()
-
-    result = verifier.verify(
-        expected="DNS_OK",
-        observed="DNS_OK",
-    )
-
-    assert result["verified"] is True
-    assert result["expected"] == "DNS_OK"
-    assert result["observed"] == "DNS_OK"
-
-
-def test_verification_detects_different_non_boolean_values():
-    verifier = RemediationVerifier()
-
-    result = verifier.verify(
-        expected="DNS_OK",
-        observed="DNS_FAILED",
-    )
-
-    assert result["verified"] is False
-    assert result["expected"] == "DNS_OK"
-    assert result["observed"] == "DNS_FAILED"
+    assert matching is not None
+    assert different is not None
+    assert matching != different

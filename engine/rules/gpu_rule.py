@@ -1,5 +1,5 @@
 # ==========================================
-# Windows Technician v0.5
+# Windows Technician v0.6
 # GPU DIAGNOSTIC RULE
 # ==========================================
 
@@ -48,4 +48,3 @@ class GPUStatusRule(BaseRule):
             }
 
         return None
-

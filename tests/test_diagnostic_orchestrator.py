@@ -1,9 +1,11 @@
 # ==========================================
-# Windows Technician v0.5
+# Windows Technician v0.6
 # DIAGNOSTIC ORCHESTRATOR TESTS
 # ==========================================
 
 import pytest
+from engine.observation import Observation
+from engine.signal import Signal
 
 from engine.diagnostic_orchestrator import DiagnosticOrchestrator
 
@@ -1349,3 +1351,111 @@ def test_orchestrator_failed_run_records_failure_state():
     assert current_case.root_causes == previous_case.root_causes
     assert current_case.recommendations == previous_case.recommendations
 
+def test_orchestrator_maps_observations_and_signals_into_case():
+
+    observation = Observation(
+        source="memory",
+        subject="system_memory",
+        attribute="usage_percent",
+        value=88,
+    )
+
+    signal = Signal(
+        signal_type="HIGH_MEMORY_USAGE",
+        source="memory",
+        subject="system_memory",
+        attribute="usage_percent",
+        value=88,
+    )
+
+    class DiagnosticPipeline:
+
+        def analyze(self):
+
+            return {
+                "status": "WARNING",
+                "observations": [observation],
+                "signals": [signal],
+                "findings": [],
+                "recommendations": [],
+            }
+
+    orchestrator = DiagnosticOrchestrator(
+        pipeline=DiagnosticPipeline()
+    )
+
+    result = orchestrator.run()
+
+    case = orchestrator.get_case()
+
+    assert len(result["observations"]) == 1
+    assert result["observations"][0].source == "memory"
+    assert result["observations"][0].subject == "system_memory"
+    assert result["observations"][0].attribute == "usage_percent"
+    assert result["observations"][0].value == 88
+
+    assert len(result["signals"]) == 1
+    assert result["signals"][0].signal_type == "HIGH_MEMORY_USAGE"
+    assert result["signals"][0].source == "memory"
+    assert result["signals"][0].subject == "system_memory"
+    assert result["signals"][0].attribute == "usage_percent"
+    assert result["signals"][0].value == 88
+
+    assert len(case.observations) == 1
+    assert case.observations[0].source == "memory"
+    assert case.observations[0].subject == "system_memory"
+    assert case.observations[0].attribute == "usage_percent"
+    assert case.observations[0].value == 88
+
+    assert len(case.signals) == 1
+    assert case.signals[0].signal_type == "HIGH_MEMORY_USAGE"
+    assert case.signals[0].source == "memory"
+    assert case.signals[0].subject == "system_memory"
+    assert case.signals[0].attribute == "usage_percent"
+    assert case.signals[0].value == 88
+
+
+def test_orchestrator_case_does_not_share_observations_or_signals_with_pipeline_result():
+
+    observation = Observation(
+        source="memory",
+        subject="system_memory",
+        attribute="usage_percent",
+        value=88,
+    )
+
+    signal = Signal(
+        signal_type="HIGH_MEMORY_USAGE",
+        source="memory",
+        subject="system_memory",
+        attribute="usage_percent",
+        value=88,
+    )
+
+    pipeline_result = {
+        "status": "WARNING",
+        "observations": [observation],
+        "signals": [signal],
+        "findings": [],
+        "recommendations": [],
+    }
+
+    class DiagnosticPipeline:
+
+        def analyze(self):
+
+            return pipeline_result
+
+    orchestrator = DiagnosticOrchestrator(
+        pipeline=DiagnosticPipeline()
+    )
+
+    orchestrator.run()
+
+    case = orchestrator.get_case()
+
+    assert case.observations[0] is not pipeline_result["observations"][0]
+    assert case.signals[0] is not pipeline_result["signals"][0]
+
+    assert case.observations[0].value == 88
+    assert case.signals[0].value == 88

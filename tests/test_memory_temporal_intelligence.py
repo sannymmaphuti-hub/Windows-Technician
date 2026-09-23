@@ -1,5 +1,5 @@
 # ==========================================
-# Windows Technician v0.5
+# Windows Technician v0.6
 # MEMORY TEMPORAL INTELLIGENCE TESTS
 # ==========================================
 
@@ -161,4 +161,3 @@ def test_memory_temporal_intelligence_handles_empty_history():
     )
 
     assert result["behavior"] == "UNKNOWN"
-

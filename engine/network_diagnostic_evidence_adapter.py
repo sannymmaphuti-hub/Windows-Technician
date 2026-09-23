@@ -8,7 +8,7 @@ from engine.adaptive_diagnostic_result import (
 class NetworkDiagnosticEvidenceAdapter:
     """
     Converts adaptive diagnostic evidence into the evidence
-    contract consumed by the v0.5 network reasoning pipeline.
+    contract consumed by the v0.6 network reasoning pipeline.
 
     This adapter translates evidence only.
 

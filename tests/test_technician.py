@@ -240,7 +240,7 @@ def test_technician_report_is_case_report():
 
     report = technician.get_report()
 
-    assert "Windows Technician v0.5" in report
+    assert "Windows Technician v0.6" in report
     assert "DIAGNOSTIC CASE" in report
 
 def test_technician_diagnostic_case_is_saved_with_result(
@@ -533,7 +533,7 @@ def test_technician_report_uses_current_diagnostic_case(
 
         captured_case["case"] = received_case
 
-        return "Windows Technician v0.5\nDIAGNOSTIC CASE"
+        return "Windows Technician v0.6\nDIAGNOSTIC CASE"
 
     monkeypatch.setattr(
         "application.technician.generate_case_report",
@@ -543,7 +543,7 @@ def test_technician_report_uses_current_diagnostic_case(
     report = technician.get_report()
 
     assert report == (
-        "Windows Technician v0.5\n"
+        "Windows Technician v0.6\n"
         "DIAGNOSTIC CASE"
     )
 
@@ -697,5 +697,3 @@ def test_technician_case_decision_reflects_current_root_cause(
     assert decision["confidence"] == 0.7
     assert decision["action"] == "REVIEW_RECOMMENDED"
     assert decision["priority"] == "REVIEW"
-
-

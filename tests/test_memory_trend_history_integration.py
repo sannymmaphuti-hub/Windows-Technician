@@ -1,5 +1,5 @@
 # ==========================================
-# Windows Technician v0.5
+# Windows Technician v0.6
 # MEMORY TREND HISTORY INTEGRATION TESTS
 # ==========================================
 
@@ -115,4 +115,3 @@ def test_memory_history_feeds_trend_intelligence():
     result = analyzer.analyze()
 
     assert "memory_trend_intelligence" in result
-

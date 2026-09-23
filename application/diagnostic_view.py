@@ -1,5 +1,5 @@
 # ==========================================
-# Windows Technician v0.5
+# Windows Technician v0.6
 # DIAGNOSTIC VIEW
 # ==========================================
 
@@ -87,3 +87,4 @@ class DiagnosticView:
         self.memory_diagnostic_intelligence = deepcopy(
             diagnostic_case.get("memory_diagnostic_intelligence")
         )
+

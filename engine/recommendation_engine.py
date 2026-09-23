@@ -133,3 +133,4 @@ class RecommendationEngine:
             "severity": severity,
             "recommendation": recommendation,
         }
+

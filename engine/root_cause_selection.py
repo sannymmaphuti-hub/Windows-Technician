@@ -31,3 +31,4 @@ class RootCauseSelection:
             return supported[0].candidate
 
         return None
+

@@ -1,5 +1,5 @@
 # ==========================================
-# Windows Technician v0.5
+# Windows Technician v0.6
 # PROCESS FINDING BUILDER
 # ==========================================
 
@@ -47,4 +47,3 @@ class ProcessFindingBuilder:
             )
 
         return finding
-

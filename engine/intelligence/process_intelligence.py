@@ -1,5 +1,5 @@
 # ==========================================
-# Windows Technician v0.5
+# Windows Technician v0.6
 # PROCESS INTELLIGENCE
 # ==========================================
 
@@ -127,4 +127,3 @@ class ProcessIntelligence:
             return "SPIKE", persistence_ratio
 
         return "NORMAL", persistence_ratio
-

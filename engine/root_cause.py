@@ -1,5 +1,5 @@
 # ==========================================
-# Windows Technician v0.5
+# Windows Technician v0.6
 # ROOT CAUSE CANDIDATE
 # ==========================================
 
@@ -89,4 +89,3 @@ class RootCauseCandidate:
             "evidence": self.evidence,
             "reason": self.reason
         }
-

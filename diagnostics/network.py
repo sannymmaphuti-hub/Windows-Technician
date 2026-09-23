@@ -5,7 +5,7 @@ import ipaddress
 
 
 # ==========================================================
-# Windows Technician v0.5
+# Windows Technician v0.6
 # NETWORK DIAGNOSTIC ENGINE
 # ==========================================================
 
@@ -550,7 +550,7 @@ def diagnose_network():
 if __name__ == "__main__":
 
     print("==========================================")
-    print("Windows Technician v0.5")
+    print("Windows Technician v0.6")
     print("NETWORK DIAGNOSTICS")
     print("==========================================")
 
@@ -645,4 +645,3 @@ if __name__ == "__main__":
             f"{finding['category']} : "
             f"{finding['message']}"
         )
-

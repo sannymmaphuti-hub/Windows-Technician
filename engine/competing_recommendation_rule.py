@@ -63,4 +63,3 @@ class CompetingRecommendationRule(RecommendationRule):
                 "and no primary cause has been established."
             ),
         )
-

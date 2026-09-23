@@ -1,5 +1,5 @@
 # ==========================================
-# Windows Technician v0.5
+# Windows Technician v0.6
 # MEMORY INTELLIGENCE INTEGRATION TESTS
 # ==========================================
 
@@ -148,4 +148,3 @@ def test_memory_finding_affects_overall_status():
     result = analyzer.analyze()
 
     assert result["diagnosis"]["status"] == "CRITICAL"
-

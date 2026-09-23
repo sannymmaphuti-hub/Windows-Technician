@@ -1,5 +1,5 @@
 # ==========================================
-# Windows Technician v0.5
+# Windows Technician v0.6
 # CORRELATION ADAPTER
 # ==========================================
 
@@ -58,4 +58,3 @@ def build_process_cpu_behavior_findings(
             )
         }
     ]
-

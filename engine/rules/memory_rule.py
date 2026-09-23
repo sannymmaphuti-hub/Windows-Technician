@@ -1,5 +1,5 @@
 # ==========================================
-# Windows Technician v0.5
+# Windows Technician v0.6
 # MEMORY DIAGNOSTIC RULE
 # ==========================================
 
@@ -41,4 +41,3 @@ class MemoryUsageRule(BaseRule):
             }
 
         return None
-

@@ -1,5 +1,5 @@
 # ==========================================
-# Windows Technician v0.5
+# Windows Technician v0.6
 # REMEDIATION ELIGIBILITY
 # ==========================================
 
@@ -49,3 +49,4 @@ class RemediationEligibility:
             return "ALREADY_EXECUTED"
 
         return "ELIGIBLE"
+

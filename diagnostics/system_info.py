@@ -12,3 +12,4 @@ def get_system_info():
     }
 
     return system_info
+

@@ -1,5 +1,5 @@
 # ==========================================
-# Windows Technician v0.5
+# Windows Technician v0.6
 # MEMORY DIAGNOSTIC INTELLIGENCE
 # ==========================================
 
@@ -130,4 +130,3 @@ class MemoryDiagnosticIntelligence:
             "is_significant_rise": is_significant_rise,
             "message": message
         }
-
