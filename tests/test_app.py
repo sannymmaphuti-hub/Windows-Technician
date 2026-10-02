@@ -3,6 +3,8 @@
 # APPLICATION TEST
 # ==========================================
 
+from unittest import result
+
 from application.app import TechnicianApp
 from application.technician import Technician
 from copy import deepcopy
@@ -11,6 +13,7 @@ import pytest
 from engine.remediation_action import RemediationAction
 from engine.remediation_operation import RemediationOperation
 from engine.remediation_operation_binder import RemediationOperationBinder
+from tests.test_technician_verification import verification
 
 
 def test_application_can_be_created():
@@ -1366,8 +1369,7 @@ def test_technician_can_record_failed_verification_for_bound_remediation():
         observed=state["memory_reviewed"],
         action_id=action.action_id,
     )
-
-    result.verification_result = verification
+    result.verification_result = verification.verification_result
 
     assert result.verification_result is not None
     assert result.verification_result["verified"] is False

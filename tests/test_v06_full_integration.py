@@ -1,9 +1,12 @@
 from engine.diagnostic_case import DiagnosticCase
 from engine.finding import Finding
-from engine.recommendation_intelligence import RecommendationIntelligence
-from engine.recommendation_remediation_adapter import RecommendationRemediationAdapter
+from engine.recommendation_remediation_adapter import (
+    RecommendationRemediationAdapter,
+)
 from engine.remediation_action_planner import RemediationActionPlanner
-from engine.remediation_decision_boundary import RemediationDecisionBoundary
+from engine.remediation_decision_boundary import (
+    RemediationDecisionBoundary,
+)
 from engine.remediation_verifier import RemediationVerifier
 
 
@@ -54,8 +57,8 @@ def test_full_intelligence_to_verification_flow():
         action_id=action.action_id,
     )
 
-    assert verification["verified"] is True
-    assert verification["action_id"] == action.action_id
+    assert verification.verification_result["verified"] is True
+    assert verification.action_id == action.action_id
 
 
 def test_full_flow_blocks_medium_recommendation_before_remediation():
@@ -139,5 +142,5 @@ def test_full_flow_verification_detects_unsuccessful_remediation():
         action_id=action.action_id,
     )
 
-    assert verification["verified"] is False
-    assert verification["action_id"] == action.action_id
+    assert verification.verification_result["verified"] is False
+    assert verification.action_id == action.action_id

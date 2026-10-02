@@ -17,7 +17,9 @@ def _build_findings(count):
     findings = []
 
     for index in range(count):
-        finding_type, description = finding_types[index % len(finding_types)]
+        finding_type, description = finding_types[
+            index % len(finding_types)
+        ]
 
         findings.append(
             Finding(
@@ -39,8 +41,15 @@ def test_recommendation_generation_is_stable_across_repeated_runs():
     first = intelligence.generate(findings=findings)
     second = intelligence.generate(findings=findings)
 
-    first_evidence = [recommendation.to_evidence() for recommendation in first]
-    second_evidence = [recommendation.to_evidence() for recommendation in second]
+    first_evidence = [
+        recommendation.to_evidence()
+        for recommendation in first
+    ]
+
+    second_evidence = [
+        recommendation.to_evidence()
+        for recommendation in second
+    ]
 
     assert first_evidence == second_evidence
 
@@ -67,7 +76,9 @@ def test_duplicate_heavy_input_does_not_create_duplicate_recommendations():
         for recommendation in recommendations
     ]
 
-    assert len(recommendation_types) == len(set(recommendation_types))
+    assert len(recommendation_types) == len(
+        set(recommendation_types)
+    )
 
 
 def test_decision_boundary_is_stable_across_repeated_evaluations():
@@ -113,9 +124,13 @@ def test_verification_is_stable_across_repeated_runs():
         for _ in range(100)
     ]
 
-    assert all(result["verified"] is True for result in results)
     assert all(
-        result["action_id"] == "performance-action"
+        result.verification_result["verified"] is True
+        for result in results
+    )
+
+    assert all(
+        result.action_id == "performance-action"
         for result in results
     )
 
@@ -141,9 +156,9 @@ def test_verification_does_not_leak_state_between_runs():
         action_id="action-success-again",
     )
 
-    assert successful["verified"] is True
-    assert failed["verified"] is False
-    assert successful_again["verified"] is True
+    assert successful.verification_result["verified"] is True
+    assert failed.verification_result["verified"] is False
+    assert successful_again.verification_result["verified"] is True
 
 
 def test_intelligence_pipeline_completes_within_reasonable_time():
@@ -155,7 +170,9 @@ def test_intelligence_pipeline_completes_within_reasonable_time():
 
     start = time.perf_counter()
 
-    recommendations = intelligence.generate(findings=findings)
+    recommendations = intelligence.generate(
+        findings=findings
+    )
 
     decisions = [
         boundary.evaluate(recommendation)
@@ -176,7 +193,11 @@ def test_intelligence_pipeline_completes_within_reasonable_time():
     assert recommendations
     assert decisions
     assert len(verification_results) == 100
-    assert all(result["verified"] is True for result in verification_results)
+
+    assert all(
+        result.verification_result["verified"] is True
+        for result in verification_results
+    )
 
     # This is a stability guard, not a production performance benchmark.
     assert elapsed < 5.0

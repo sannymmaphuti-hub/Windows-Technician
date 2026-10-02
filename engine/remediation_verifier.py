@@ -1,4 +1,8 @@
+from engine.remediation_result import RemediationResult
+
+
 class RemediationVerifier:
+
     def verify(self, expected, observed, action_id=None):
         verified = expected == observed
 
@@ -11,10 +15,14 @@ class RemediationVerifier:
                 "Observed condition does not match expected condition."
             )
 
-        return {
+        result = RemediationResult(action_id)
+
+        result.reason = reason
+        result.verification_result = {
             "action_id": action_id,
             "verified": verified,
             "expected": expected,
             "observed": observed,
-            "reason": reason,
         }
+
+        return result

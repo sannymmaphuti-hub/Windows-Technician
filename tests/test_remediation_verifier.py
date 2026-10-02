@@ -12,6 +12,7 @@ def test_verifier_accepts_matching_expected_and_observed_state():
     )
 
     assert result is not None
+    assert result.verification_result["verified"] is True
 
 
 def test_verifier_rejects_mismatching_observed_state():
@@ -24,6 +25,7 @@ def test_verifier_rejects_mismatching_observed_state():
     )
 
     assert result is not None
+    assert result.verification_result["verified"] is False
 
 
 def test_verifier_preserves_action_identity_when_supplied():
@@ -36,10 +38,10 @@ def test_verifier_preserves_action_identity_when_supplied():
     )
 
     assert result is not None
-    assert result["action_id"] == "action-42"
+    assert result.action_id == "action-42"
 
 
-def test_verifier_does_not_execute_or_authorize_an_action():
+def test_verifier_does_not_authorize_or_execute_an_action():
     verifier = RemediationVerifier()
 
     result = verifier.verify(
@@ -50,13 +52,16 @@ def test_verifier_does_not_execute_or_authorize_an_action():
 
     assert result is not None
     assert not hasattr(result, "authorization_status")
-    assert not hasattr(result, "execution_status")
+    assert result.execution_status == "NOT_EXECUTED"
 
 
 def test_remediation_result_can_be_created_for_verification():
     result = RemediationResult("action-4")
 
     assert result.action_id == "action-4"
+    assert result.execution_status == "NOT_EXECUTED"
+    assert result.reason is None
+    assert result.verification_result is None
 
 
 def test_verification_is_based_on_expected_and_observed_evidence():
@@ -76,4 +81,18 @@ def test_verification_is_based_on_expected_and_observed_evidence():
 
     assert matching is not None
     assert different is not None
+
+    assert matching.verification_result["verified"] is True
+    assert different.verification_result["verified"] is False
+
+    assert (
+        matching.verification_result["expected"]
+        == {"service": "running", "memory": "normal"}
+    )
+
+    assert (
+        different.verification_result["observed"]
+        == {"service": "stopped", "memory": "high"}
+    )
+
     assert matching != different

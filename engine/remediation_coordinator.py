@@ -18,10 +18,14 @@ class RemediationCoordinator:
             and expected is not None
             and observed is not None
         ):
-            result.verification_result = self.verifier.verify(
+            verification_result = self.verifier.verify(
                 expected=expected,
                 observed=observed,
                 action_id=action.action_id,
+            )
+
+            result.verification_result = (
+                verification_result.verification_result
             )
 
         self.audit.record(

@@ -137,8 +137,8 @@ def test_verification_detects_contradictory_observed_state():
         action_id="negative-action-1",
     )
 
-    assert result["verified"] is False
-    assert result["action_id"] == "negative-action-1"
+    assert result.verification_result["verified"] is False
+    assert result.action_id == "negative-action-1"
 
 
 def test_verification_does_not_mutate_expected_or_observed_evidence():
@@ -166,5 +166,5 @@ def test_verification_preserves_failed_verification_boundary():
         action_id="negative-action-3",
     )
 
-    assert result["verified"] is False
-    assert result["action_id"] == "negative-action-3"
+    assert result.verification_result["verified"] is False
+    assert result.action_id == "negative-action-3"
