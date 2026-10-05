@@ -41,3 +41,12 @@ class TechnicianWorkspace:
     @property
     def recommendations(self):
         return list(self.case.recommendations)
+
+    @property
+    def machine_id(self):
+        return self.case.machine_id
+
+
+    @property
+    def hostname(self):
+        return self.case.hostname
