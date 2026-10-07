@@ -1,622 +1,499 @@
-# ==========================================
-# Windows Technician v0.6
-# DASHBOARD VIEW MODEL TESTS
-# ==========================================
+﻿import pytest
 
-from application.diagnostic_view import DiagnosticView
-from application.dashboard_view_model import DashboardViewModel
+from engine.application_bootstrap import (
+    ApplicationBootstrap,
+)
+from engine.dashboard_view_model import (
+    DashboardViewModel,
+)
 
 
+def create_state():
+    bootstrap = ApplicationBootstrap()
+    bootstrap.start()
+    return bootstrap.state
 
-def make_dashboard_result():
-    return {
-        "evidence": {
-            "CPU": {
-                "usage_percent": 6.9,
-                "frequency_mhz": 2208.0,
-                "logical_processors": 4,
-                "physical_cores": 2,
-                "status": "NORMAL",
-                "top_processes": []
+
+def test_dashboard_requires_application_state():
+    with pytest.raises(ValueError):
+        DashboardViewModel(None)
+
+
+def test_dashboard_starts_empty():
+    dashboard = DashboardViewModel(
+        create_state()
+    )
+
+    assert dashboard.intelligence == {}
+    assert dashboard.health() == {}
+    assert dashboard.findings() == []
+    assert dashboard.relationships() == []
+    assert dashboard.root_causes() == []
+    assert dashboard.recommendations() == []
+
+
+def test_dashboard_accepts_intelligence():
+    dashboard = DashboardViewModel(
+        create_state(),
+        {
+            "health": {
+                "status": "HEALTHY",
+                "score": 100,
             },
-            "MEMORY": {
-                "usage_percent": 82.4,
-                "total_gb": 3.87,
-                "used_gb": 3.19,
-                "available_gb": 0.68
-            },
-            "STORAGE": {
-                "devices": [
-                    {
-                        "device": "C:\\",
-                        "usage_percent": 9.1,
-                        "total_gb": 930.61,
-                        "used_gb": 84.60,
-                        "free_gb": 846.01
-                    }
-                ]
-            }
-        },
-        "diagnosis": {
-            "status": "WARNING",
-            "total_findings": 2,
-            "findings": [
+            "system_findings": [
                 {
-                    "category": "MEMORY",
+                    "domain": "MEMORY",
                     "severity": "WARNING",
-                    "issue": "High memory usage"
-                },
-                {
-                    "category": "PROCESS",
-                    "severity": "INFO",
-                    "issue": "Normal process activity"
                 }
             ],
-            "correlations": [],
-            "root_causes": [],
+            "relationships": [
+                {
+                    "type": "RESOURCE_INTERACTION",
+                }
+            ],
+            "root_causes": [
+                {
+                    "cause_type": "PROCESS_RESOURCE_CONSUMPTION",
+                }
+            ],
             "recommendations": [
                 {
-                    "action": "Close unnecessary applications",
-                    "priority": "HIGH"
+                    "priority": "HIGH",
+                }
+            ],
+        },
+    )
+
+    assert dashboard.health() == {
+        "status": "HEALTHY",
+        "score": 100,
+    }
+
+    assert len(
+        dashboard.findings()
+    ) == 1
+
+    assert len(
+        dashboard.relationships()
+    ) == 1
+
+    assert len(
+        dashboard.root_causes()
+    ) == 1
+
+    assert len(
+        dashboard.recommendations()
+    ) == 1
+
+
+def test_update_intelligence():
+    dashboard = DashboardViewModel(
+        create_state()
+    )
+
+    dashboard.update_intelligence(
+        {
+            "health": {
+                "status": "DEGRADED",
+                "score": 70,
+            }
+        }
+    )
+
+    assert dashboard.health() == {
+        "status": "DEGRADED",
+        "score": 70,
+    }
+
+
+def test_update_none_clears_intelligence():
+    dashboard = DashboardViewModel(
+        create_state(),
+        {
+            "health": {
+                "status": "HEALTHY",
+            }
+        },
+    )
+
+    dashboard.update_intelligence(None)
+
+    assert dashboard.intelligence == {}
+
+
+def test_invalid_intelligence_is_rejected():
+    dashboard = DashboardViewModel(
+        create_state()
+    )
+
+    with pytest.raises(ValueError):
+        dashboard.update_intelligence([])
+
+
+def test_health_missing_returns_empty_dict():
+    dashboard = DashboardViewModel(
+        create_state(),
+        {
+            "system_findings": [],
+        },
+    )
+
+    assert dashboard.health() == {}
+
+
+def test_invalid_health_payload_is_ignored():
+    dashboard = DashboardViewModel(
+        create_state(),
+        {
+            "health": "invalid",
+        },
+    )
+
+    assert dashboard.health() == {}
+
+
+def test_invalid_findings_payload_is_ignored():
+    dashboard = DashboardViewModel(
+        create_state(),
+        {
+            "system_findings": {},
+        },
+    )
+
+    assert dashboard.findings() == []
+
+
+def test_invalid_relationships_payload_is_ignored():
+    dashboard = DashboardViewModel(
+        create_state(),
+        {
+            "relationships": {},
+        },
+    )
+
+    assert dashboard.relationships() == []
+
+
+def test_invalid_root_causes_payload_is_ignored():
+    dashboard = DashboardViewModel(
+        create_state(),
+        {
+            "root_causes": {},
+        },
+    )
+
+    assert dashboard.root_causes() == []
+
+
+def test_invalid_recommendations_payload_is_ignored():
+    dashboard = DashboardViewModel(
+        create_state(),
+        {
+            "recommendations": {},
+        },
+    )
+
+    assert dashboard.recommendations() == []
+
+
+def test_dashboard_returns_defensive_health_copy():
+    dashboard = DashboardViewModel(
+        create_state(),
+        {
+            "health": {
+                "status": "HEALTHY",
+                "score": 100,
+            }
+        },
+    )
+
+    health = dashboard.health()
+    health["score"] = 0
+
+    assert dashboard.health()["score"] == 100
+
+
+def test_dashboard_returns_defensive_findings_copy():
+    dashboard = DashboardViewModel(
+        create_state(),
+        {
+            "system_findings": [
+                {
+                    "severity": "HIGH",
                 }
             ]
         },
-        "diagnostic_case": {
-            "root_cause_candidates": [],
-            "primary_root_cause": None,
-            "process_intelligence": {},
-            "memory_intelligence": {},
-            "memory_history": [],
-            "memory_trend_intelligence": {},
-            "memory_temporal_intelligence": {},
-            "memory_diagnostic_intelligence": {}
+    )
+
+    findings = dashboard.findings()
+    findings[0]["severity"] = "LOW"
+
+    assert (
+        dashboard.findings()[0]["severity"]
+        == "HIGH"
+    )
+
+
+def test_dashboard_returns_defensive_relationship_copy():
+    dashboard = DashboardViewModel(
+        create_state(),
+        {
+            "relationships": [
+                {
+                    "type": "RESOURCE_INTERACTION",
+                }
+            ]
         },
-        "case_decision": {}
+    )
+
+    relationships = dashboard.relationships()
+    relationships[0]["type"] = "OTHER"
+
+    assert (
+        dashboard.relationships()[0]["type"]
+        == "RESOURCE_INTERACTION"
+    )
+
+
+def test_dashboard_returns_defensive_root_cause_copy():
+    dashboard = DashboardViewModel(
+        create_state(),
+        {
+            "root_causes": [
+                {
+                    "cause_type": "PROCESS_RESOURCE_CONSUMPTION",
+                }
+            ]
+        },
+    )
+
+    root_causes = dashboard.root_causes()
+    root_causes[0]["cause_type"] = "OTHER"
+
+    assert (
+        dashboard.root_causes()[0]["cause_type"]
+        == "PROCESS_RESOURCE_CONSUMPTION"
+    )
+
+
+def test_dashboard_returns_defensive_recommendation_copy():
+    dashboard = DashboardViewModel(
+        create_state(),
+        {
+            "recommendations": [
+                {
+                    "priority": "HIGH",
+                }
+            ]
+        },
+    )
+
+    recommendations = dashboard.recommendations()
+    recommendations[0]["priority"] = "LOW"
+
+    assert (
+        dashboard.recommendations()[0]["priority"]
+        == "HIGH"
+    )
+
+
+def test_summary_with_no_intelligence():
+    dashboard = DashboardViewModel(
+        create_state()
+    )
+
+    assert dashboard.summary() == {
+        "status": "UNKNOWN",
+        "health_score": None,
+        "finding_count": 0,
+        "relationship_count": 0,
+        "root_cause_count": 0,
+        "recommendation_count": 0,
+        "machine_id": None,
+        "case_id": None,
     }
 
 
-def test_dashboard_view_model_exposes_system_status():
-    view = DiagnosticView(make_dashboard_result())
-    model = DashboardViewModel(view)
-
-    assert model.status == "WARNING"
-
-
-def test_dashboard_view_model_exposes_finding_summary():
-    view = DiagnosticView(make_dashboard_result())
-    model = DashboardViewModel(view)
-
-    assert model.total_findings == 2
-    assert model.warning_count == 1
-    assert model.info_count == 1
-
-
-def test_dashboard_view_model_exposes_cpu_metrics():
-    view = DiagnosticView(make_dashboard_result())
-    model = DashboardViewModel(view)
-
-    assert model.cpu_usage_percent == 6.9
-    assert model.cpu_status == "NORMAL"
-
-
-def test_dashboard_view_model_exposes_memory_metrics():
-    view = DiagnosticView(make_dashboard_result())
-    model = DashboardViewModel(view)
-
-    assert model.memory_usage_percent == 82.4
-    assert model.memory_total_gb == 3.87
-    assert model.memory_used_gb == 3.19
-    assert model.memory_available_gb == 0.68
-
-
-def test_dashboard_view_model_exposes_storage_metrics():
-    view = DiagnosticView(make_dashboard_result())
-    model = DashboardViewModel(view)
-
-    assert model.storage_devices == (
-        make_dashboard_result()["evidence"]["STORAGE"]["devices"]
-    )
-
-
-def test_dashboard_view_model_exposes_diagnostic_information():
-    view = DiagnosticView(make_dashboard_result())
-    model = DashboardViewModel(view)
-
-    assert model.findings == view.findings
-    assert model.correlations == view.correlations
-    assert model.root_causes == view.root_causes
-    assert model.recommendations == view.recommendations
-    assert model.primary_root_cause == view.primary_root_cause
-
-def test_dashboard_view_model_handles_no_findings():
-    result = make_dashboard_result()
-
-    result["diagnosis"]["findings"] = []
-    result["diagnosis"]["total_findings"] = 0
-
-    view = DiagnosticView(result)
-    view_model = DashboardViewModel(view)
-
-    assert view_model.findings == []
-    assert view_model.warning_count == 0
-    assert view_model.info_count == 0
-
-
-def test_dashboard_view_model_handles_empty_evidence():
-    result = make_dashboard_result()
-
-    result["evidence"] = {}
-
-    view = DiagnosticView(result)
-    view_model = DashboardViewModel(view)
-
-    assert view_model.cpu_usage_percent is None
-    assert view_model.cpu_status is None
-    assert view_model.memory_usage_percent is None
-    assert view_model.memory_total_gb is None
-    assert view_model.memory_used_gb is None
-    assert view_model.memory_available_gb is None
-    assert view_model.storage_devices == []
-
-
-def test_dashboard_view_model_handles_missing_diagnostic_information():
-    result = make_dashboard_result()
-
-    result["diagnosis"]["findings"] = []
-    result["diagnosis"]["correlations"] = []
-    result["diagnosis"]["root_causes"] = []
-    result["diagnosis"]["recommendations"] = []
-
-    result["diagnostic_case"]["primary_root_cause"] = None
-
-    view = DiagnosticView(result)
-    view_model = DashboardViewModel(view)
-
-    assert view_model.findings == []
-    assert view_model.correlations == []
-    assert view_model.root_causes == []
-    assert view_model.recommendations == []
-    assert view_model.primary_root_cause is None
-
-def test_dashboard_view_model_exposes_health_status():
-    view = DiagnosticView(make_dashboard_result())
-    model = DashboardViewModel(view)
-
-    assert model.health_status == "WARNING"
-
-
-def test_dashboard_view_model_exposes_health_label():
-    view = DiagnosticView(make_dashboard_result())
-    model = DashboardViewModel(view)
-
-    assert model.health_label == "Needs Attention"
-
-
-def test_dashboard_view_model_exposes_health_severity():
-    view = DiagnosticView(make_dashboard_result())
-    model = DashboardViewModel(view)
-
-    assert model.health_severity == "warning"
-
-
-def test_dashboard_view_model_maps_healthy_status():
-    result = make_dashboard_result()
-    result["diagnosis"]["status"] = "NORMAL"
-
-    view = DiagnosticView(result)
-    model = DashboardViewModel(view)
-
-    assert model.health_status == "NORMAL"
-    assert model.health_label == "Healthy"
-    assert model.health_severity == "healthy"
-
-def test_dashboard_view_model_exposes_primary_insight():
-    view = DiagnosticView(make_dashboard_result())
-    model = DashboardViewModel(view)
-
-    assert model.primary_insight["category"] == "MEMORY"
-    assert model.primary_insight["severity"] == "WARNING"
-    assert model.primary_insight["issue"] == "High memory usage"
-
-
-def test_dashboard_view_model_selects_highest_priority_finding():
-    result = make_dashboard_result()
-
-    result["diagnosis"]["findings"] = [
+def test_summary_reflects_intelligence():
+    dashboard = DashboardViewModel(
+        create_state(),
         {
-            "category": "PROCESS",
-            "severity": "INFO",
-            "issue": "Normal process activity",
-            "priority_score": 10
+            "health": {
+                "status": "DEGRADED",
+                "score": 65,
+            },
+            "system_findings": [
+                {},
+                {},
+            ],
+            "relationships": [
+                {},
+            ],
+            "root_causes": [
+                {},
+            ],
+            "recommendations": [
+                {},
+                {},
+                {},
+            ],
         },
+    )
+
+    summary = dashboard.summary()
+
+    assert summary == {
+        "status": "DEGRADED",
+        "health_score": 65,
+        "finding_count": 2,
+        "relationship_count": 1,
+        "root_cause_count": 1,
+        "recommendation_count": 3,
+        "machine_id": None,
+        "case_id": None,
+    }
+
+
+def test_summary_includes_active_context():
+    state = create_state()
+
+    state.set_active_machine(
+        "machine-01"
+    )
+    state.set_active_case(
+        "case-01"
+    )
+
+    dashboard = DashboardViewModel(
+        state
+    )
+
+    summary = dashboard.summary()
+
+    assert summary["machine_id"] == (
+        "MACHINE-01"
+    )
+    assert summary["case_id"] == (
+        "CASE-01"
+    )
+
+
+def test_dashboard_to_dict():
+    dashboard = DashboardViewModel(
+        create_state(),
         {
-            "category": "MEMORY",
-            "severity": "WARNING",
-            "issue": "High memory usage",
-            "priority_score": 80
-        }
-    ]
-
-    view = DiagnosticView(result)
-    model = DashboardViewModel(view)
-
-    assert model.primary_insight["category"] == "MEMORY"
-    assert model.primary_insight["priority_score"] == 80
-
-
-def test_dashboard_view_model_handles_no_primary_insight():
-    result = make_dashboard_result()
-
-    result["diagnosis"]["findings"] = []
-    result["diagnosis"]["total_findings"] = 0
-
-    view = DiagnosticView(result)
-    model = DashboardViewModel(view)
-
-    assert model.primary_insight is None
-
-def test_dashboard_view_model_exposes_primary_recommendation():
-    view = DiagnosticView(make_dashboard_result())
-    model = DashboardViewModel(view)
-
-    assert model.primary_recommendation["action"] == (
-        "Close unnecessary applications"
-    )
-    assert model.primary_recommendation["priority"] == "HIGH"
-
-
-def test_dashboard_view_model_selects_highest_priority_recommendation():
-    result = make_dashboard_result()
-
-    result["diagnosis"]["recommendations"] = [
-        {
-            "action": "Review running processes",
-            "priority": "LOW"
-        },
-        {
-            "action": "Close unnecessary applications",
-            "priority": "HIGH"
-        }
-    ]
-
-    view = DiagnosticView(result)
-    model = DashboardViewModel(view)
-
-    assert model.primary_recommendation["action"] == (
-        "Close unnecessary applications"
-    )
-    assert model.primary_recommendation["priority"] == "HIGH"
-
-
-def test_dashboard_view_model_handles_no_recommendations():
-    result = make_dashboard_result()
-    result["diagnosis"]["recommendations"] = []
-
-    view = DiagnosticView(result)
-    model = DashboardViewModel(view)
-
-    assert model.primary_recommendation is None
-
-def test_dashboard_view_model_exposes_memory_usage_display():
-    view = DiagnosticView(make_dashboard_result())
-    model = DashboardViewModel(view)
-
-    assert model.memory_usage_display == "82.4%"
-
-
-def test_dashboard_view_model_exposes_memory_capacity_display():
-    view = DiagnosticView(make_dashboard_result())
-    model = DashboardViewModel(view)
-
-    assert model.memory_capacity_display == "3.19 GB / 3.87 GB"
-
-
-def test_dashboard_view_model_exposes_cpu_usage_display():
-    view = DiagnosticView(make_dashboard_result())
-    model = DashboardViewModel(view)
-
-    assert model.cpu_usage_display == "6.9%"
-
-def test_dashboard_view_model_exposes_storage_usage_display():
-    view = DiagnosticView(make_dashboard_result())
-    model = DashboardViewModel(view)
-
-    assert model.storage_usage_display == "9.1%"
-
-
-def test_dashboard_view_model_exposes_storage_capacity_display():
-    view = DiagnosticView(make_dashboard_result())
-    model = DashboardViewModel(view)
-
-    assert model.storage_capacity_display == "84.60 GB / 930.61 GB"
-
-
-def test_dashboard_view_model_exposes_storage_free_display():
-    view = DiagnosticView(make_dashboard_result())
-    model = DashboardViewModel(view)
-
-    assert model.storage_free_display == "846.01 GB free"
-
-
-def test_dashboard_view_model_handles_no_storage_devices():
-    result = make_dashboard_result()
-    result["evidence"]["STORAGE"]["devices"] = []
-
-    view = DiagnosticView(result)
-    model = DashboardViewModel(view)
-
-    assert model.storage_usage_display == "N/A"
-    assert model.storage_capacity_display == "N/A"
-    assert model.storage_free_display == "N/A"
-
-
-def test_dashboard_view_model_exposes_execution_label():
-    view = DiagnosticView(make_dashboard_result())
-    model = DashboardViewModel(view)
-
-    assert model.execution_label == "Ready"
-
-
-def test_dashboard_view_model_exposes_execution_state():
-    view = DiagnosticView(make_dashboard_result())
-    model = DashboardViewModel(
-        view,
-        execution_state="READY"
-    )
-
-    assert model.execution_state == "READY"
-
-
-def test_dashboard_view_model_maps_ready_execution_state():
-    view = DiagnosticView(make_dashboard_result())
-    model = DashboardViewModel(
-        view,
-        execution_state="READY"
-    )
-
-    assert model.execution_label == "Ready"
-    assert model.execution_severity == "info"
-
-
-def test_dashboard_view_model_maps_running_execution_state():
-    view = DiagnosticView(make_dashboard_result())
-    model = DashboardViewModel(
-        view,
-        execution_state="RUNNING"
-    )
-
-    assert model.execution_label == "Analyzing..."
-    assert model.execution_severity == "info"
-
-
-def test_dashboard_view_model_maps_completed_execution_state():
-    view = DiagnosticView(make_dashboard_result())
-    model = DashboardViewModel(
-        view,
-        execution_state="COMPLETED"
-    )
-
-    assert model.execution_label == "Diagnostics Complete"
-    assert model.execution_severity == "healthy"
-
-
-def test_dashboard_view_model_maps_error_execution_state():
-    view = DiagnosticView(make_dashboard_result())
-    model = DashboardViewModel(
-        view,
-        execution_state="ERROR"
-    )
-
-    assert model.execution_label == "Diagnostic Failed"
-    assert model.execution_severity == "critical"
-
-def test_dashboard_view_model_exposes_remediation_audit():
-    result = {
-        "diagnosis": {
-            "status": "NORMAL",
-            "total_findings": 0,
-            "findings": [],
-            "correlations": [],
-            "root_causes": [],
-            "recommendations": [],
-        },
-        "diagnostic_case": {
-            "root_cause_candidates": [],
-            "primary_root_cause": None,
-        },
-        "case_decision": {},
-        "remediation_audit": [
-            {
-                "action_id": "action_001",
-                "execution_status": "EXECUTED",
-                "reason": None,
-                "verification_result": None,
+            "health": {
+                "status": "HEALTHY",
+                "score": 100,
             }
-        ],
-    }
-
-    diagnostic_view = DiagnosticView(result)
-
-    dashboard_view_model = DashboardViewModel(
-        diagnostic_view,
-        execution_state="COMPLETED",
+        },
     )
 
-    assert dashboard_view_model.remediation_audit == [
+    data = dashboard.to_dict()
+
+    assert data["health"]["status"] == (
+        "HEALTHY"
+    )
+    assert data["summary"]["health_score"] == 100
+
+
+def test_dashboard_has_no_diagnostic_execution_surface():
+    dashboard = DashboardViewModel(
+        create_state()
+    )
+
+    assert not hasattr(
+        dashboard,
+        "diagnose",
+    )
+    assert not hasattr(
+        dashboard,
+        "analyze",
+    )
+    assert not hasattr(
+        dashboard,
+        "execute",
+    )
+    assert not hasattr(
+        dashboard,
+        "remediate",
+    )
+
+
+def test_dashboard_does_not_generate_recommendations():
+    dashboard = DashboardViewModel(
+        create_state()
+    )
+
+    assert not hasattr(
+        dashboard,
+        "generate_recommendations",
+    )
+
+
+def test_dashboard_does_not_change_application_state():
+    state = create_state()
+
+    dashboard = DashboardViewModel(
+        state,
         {
-            "action_id": "action_001",
-            "execution_status": "EXECUTED",
-            "reason": None,
-            "verification_result": None,
-        }
-    ]
-
-def test_dashboard_view_model_starts_with_empty_remediation_audit():
-    result = {
-        "diagnosis": {
-            "status": "NORMAL",
-            "total_findings": 0,
-            "findings": [],
-            "correlations": [],
-            "root_causes": [],
-            "recommendations": [],
-        },
-        "diagnostic_case": {
-            "root_cause_candidates": [],
-            "primary_root_cause": None,
-        },
-        "case_decision": {},
-    }
-
-    diagnostic_view = DiagnosticView(result)
-
-    dashboard_view_model = DashboardViewModel(
-        diagnostic_view,
-        execution_state="COMPLETED",
-    )
-
-    assert dashboard_view_model.remediation_audit == []
-
-def test_dashboard_view_model_exposes_diagnostic_view_remediation_audit():
-    result = {
-        "diagnosis": {
-            "status": "NORMAL",
-            "total_findings": 0,
-            "findings": [],
-            "correlations": [],
-            "root_causes": [],
-            "recommendations": [],
-        },
-        "diagnostic_case": {
-            "root_cause_candidates": [],
-            "primary_root_cause": None,
-        },
-        "case_decision": {},
-        "remediation_audit": [
-            {
-                "action_id": "action_001",
-                "execution_status": "EXECUTED",
-                "reason": None,
-                "verification_result": None,
+            "health": {
+                "status": "DEGRADED",
             }
-        ],
-    }
-
-    diagnostic_view = DiagnosticView(result)
-
-    dashboard_view_model = DashboardViewModel(
-        diagnostic_view,
-        execution_state="COMPLETED",
+        },
     )
 
-    assert dashboard_view_model.remediation_audit == [
+    before = state.to_dict()
+
+    dashboard.summary()
+
+    assert state.to_dict() == before
+
+
+def test_dashboard_can_present_system_wide_intelligence():
+    dashboard = DashboardViewModel(
+        create_state(),
         {
-            "action_id": "action_001",
-            "execution_status": "EXECUTED",
-            "reason": None,
-            "verification_result": None,
-        }
-    ]
-
-def test_dashboard_view_model_exposes_network_diagnostic_result():
-    result = {
-        "diagnosis": {
-            "status": "NORMAL",
-            "total_findings": 0,
-            "findings": [],
-            "correlations": [],
-            "root_causes": [],
-            "recommendations": [],
+            "health": {
+                "status": "DEGRADED",
+                "score": 55,
+            },
+            "system_findings": [
+                {
+                    "domain": "MEMORY",
+                    "severity": "WARNING",
+                },
+                {
+                    "domain": "PROCESS",
+                    "severity": "HIGH",
+                },
+            ],
+            "relationships": [
+                {
+                    "type": "RESOURCE_INTERACTION",
+                    "confidence": "MEDIUM",
+                }
+            ],
+            "root_causes": [
+                {
+                    "cause_type": "PROCESS_RESOURCE_CONSUMPTION",
+                    "confidence": "MEDIUM",
+                }
+            ],
+            "recommendations": [
+                {
+                    "priority": "HIGH",
+                    "action": "Investigate resource pressure.",
+                }
+            ],
         },
-        "diagnostic_case": {
-            "root_cause_candidates": [],
-            "primary_root_cause": None,
-        },
-        "case_decision": {},
-        "network_diagnostic_case": {
-            "observations": ["observation"],
-            "signals": ["signal"],
-            "findings": ["finding"],
-            "correlations": [],
-            "candidates": [],
-            "evaluations": [],
-            "primary_cause": None,
-            "confidences": [],
-            "explanations": [],
-            "recommendations": [],
-        },
-        "network_case_explanation": {
-            "summary": "Network explanation"
-        },
-    }
-
-    diagnostic_view = DiagnosticView(result)
-
-    dashboard_view_model = DashboardViewModel(
-        diagnostic_view,
-        execution_state="COMPLETED",
     )
 
-    assert dashboard_view_model.network_diagnostic_case == (
-        result["network_diagnostic_case"]
-    )
+    summary = dashboard.summary()
 
-    assert dashboard_view_model.network_case_explanation == (
-        result["network_case_explanation"]
-    )
-
-def test_dashboard_view_model_isolates_network_diagnostic_result():
-    result = {
-        "diagnosis": {
-            "status": "NORMAL",
-            "total_findings": 0,
-            "findings": [],
-            "correlations": [],
-            "root_causes": [],
-            "recommendations": [],
-        },
-        "diagnostic_case": {
-            "root_cause_candidates": [],
-            "primary_root_cause": None,
-        },
-        "case_decision": {},
-        "network_diagnostic_case": {
-            "observations": ["observation"],
-            "signals": ["signal"],
-            "findings": [],
-            "correlations": [],
-            "candidates": [],
-            "evaluations": [],
-            "primary_cause": None,
-            "confidences": [],
-            "explanations": [],
-            "recommendations": [],
-        },
-        "network_case_explanation": {
-            "summary": "Network explanation"
-        },
-    }
-
-    diagnostic_view = DiagnosticView(result)
-
-    dashboard_view_model = DashboardViewModel(
-        diagnostic_view,
-        execution_state="COMPLETED",
-    )
-
-    dashboard_view_model.network_diagnostic_case[
-        "observations"
-    ].append("changed")
-
-    dashboard_view_model.network_case_explanation[
-        "summary"
-    ] = "changed"
-
-    assert diagnostic_view.network_diagnostic_case[
-        "observations"
-    ] == ["observation"]
-
-    assert diagnostic_view.network_case_explanation[
-        "summary"
-    ] == "Network explanation"
-
+    assert summary["status"] == "DEGRADED"
+    assert summary["health_score"] == 55
+    assert summary["finding_count"] == 2
+    assert summary["relationship_count"] == 1
+    assert summary["root_cause_count"] == 1
+    assert summary["recommendation_count"] == 1

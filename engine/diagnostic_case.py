@@ -5,7 +5,7 @@
 
 from copy import deepcopy
 from engine.recommendation_intelligence import RecommendationIntelligence
-
+from engine.windows_problem_domain import WindowsProblemDomain
 
 class DiagnosticCase:
 
@@ -98,6 +98,7 @@ class DiagnosticCase:
         self.root_cause_candidates = []
         self.primary_root_cause = None
 
+        self.problem_domain = None
 
     # ==========================================
     # CORE DATA SETTERS
@@ -276,3 +277,13 @@ class DiagnosticCase:
         self.recommendations = recommendations
 
         return recommendations
+    
+    def set_problem_domain(self, domain):
+        """
+        Set the canonical Windows problem domain for this case.
+
+        The domain provides investigation context only. It does
+        not change case lifecycle, authorization, or remediation.
+        """
+        normalized_domain = WindowsProblemDomain.normalize(domain)
+        self.problem_domain = normalized_domain

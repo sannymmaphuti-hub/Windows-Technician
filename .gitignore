@@ -1,5 +1,5 @@
-# ==========================================
-# WINDOWS TECHNICIAN v0.6
+﻿# ==========================================
+# WINDOWS TECHNICIAN v0.9
 # GITIGNORE
 # ==========================================
 
@@ -40,3 +40,40 @@ Thumbs.db
 
 # Generated profiling output
 profile.txt
+
+# ==========================================
+# BUILD / PACKAGING OUTPUT
+# ==========================================
+
+# PyInstaller build workspace
+build/
+
+# Packaged application output
+dist/
+
+# Generated installer artifacts
+installer_artifacts/
+
+# Installer staging area
+installer_staging/
+
+# Python distribution metadata
+*.egg-info/
+
+# Local release/build archives
+*.zip
+*.tar
+*.tar.gz
+
+# ==========================================
+# LOCAL RUNTIME DATA
+# ==========================================
+
+# Local application runtime state
+runtime_state/
+
+# Local application logs
+*.log
+
+# Local caches
+.cache/
