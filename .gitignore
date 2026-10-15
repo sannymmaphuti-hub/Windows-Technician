@@ -77,3 +77,12 @@ runtime_state/
 
 # Local caches
 .cache/
+
+# Local V1.0 release outputs and working files
+/artifacts/
+/backups/
+/release/
+/release_candidates/
+/fix_phase8_10_fixture.ps1
+/patch_dashboard_health.py
+/phase16_packaging_baseline.txt
