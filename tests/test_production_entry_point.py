@@ -20,7 +20,7 @@ def test_entry_point_exposes_application_metadata():
     module = importlib.import_module("main")
 
     assert module.APP_NAME == "Windows Technician"
-    assert module.APP_VERSION.startswith("0.9.")
+    assert module.APP_VERSION.startswith("1.0.")
 
 
 def test_entry_point_defines_main_callable():

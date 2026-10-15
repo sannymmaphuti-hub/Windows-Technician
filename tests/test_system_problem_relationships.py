@@ -344,3 +344,45 @@ def test_result_has_stable_contract():
         "primary_root_cause",
     }
 
+def test_relationship_preserves_all_distinct_memory_evidence():
+    engine = SystemProblemRelationships()
+
+    evidence = [
+        {
+            "domain": "MEMORY",
+            "finding": {
+                "finding_type": "MEMORY_PRESSURE",
+                "finding_id": "memory-01",
+            },
+        },
+        {
+            "domain": "MEMORY",
+            "finding": {
+                "finding_type": "MEMORY_PRESSURE",
+                "finding_id": "memory-02",
+            },
+        },
+        {
+            "domain": "PROCESS",
+            "finding": {
+                "finding_type": "HIGH_PROCESS_MEMORY",
+                "finding_id": "process-01",
+            },
+        },
+    ]
+
+    result = engine.analyze(evidence)
+
+    assert result["relationship_count"] == 1
+
+    relationship = result["relationships"][0]
+
+    assert relationship["evidence"] == evidence
+    assert [
+        item["finding"]["finding_id"]
+        for item in relationship["evidence"]
+    ] == [
+        "memory-01",
+        "memory-02",
+        "process-01",
+    ]

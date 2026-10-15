@@ -53,6 +53,34 @@ class Recommendation:
             "rationale": self.rationale,
         }
 
+    def __eq__(self, other):
+        if not isinstance(other, Recommendation):
+            return NotImplemented
+
+        return (
+            self.recommendation_type
+            == other.recommendation_type
+            and self.category
+            == other.category
+            and self.priority
+            == other.priority
+            and self.description
+            == other.description
+            and self.rationale
+            == other.rationale
+        )
+
+    def __hash__(self):
+        return hash(
+            (
+                self.recommendation_type,
+                self.category,
+                self.priority,
+                self.description,
+                self.rationale,
+            )
+        )
+
     @staticmethod
     def _validate_text(value, field_name):
         if not isinstance(value, str):

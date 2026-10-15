@@ -137,8 +137,8 @@ def test_manifest_preserves_all_evidence():
 def test_manifest_contains_identity():
     manifest = build_release_manifest(_all_evidence())
 
-    assert manifest.identity.version == "0.9.0"
-    assert manifest.identity.release_channel == "beta"
+    assert manifest.identity.version == "1.0.0"
+    assert manifest.identity.release_channel == "production"
 
 
 def test_manifest_is_frozen():

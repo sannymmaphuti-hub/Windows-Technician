@@ -1,4 +1,4 @@
-# ==========================================
+﻿# ==========================================
 # Windows Technician v0.9
 # SYSTEM HEALTH MODEL
 # ==========================================
@@ -33,8 +33,8 @@ class SystemHealthModel:
     _SEVERITY_PENALTIES = {
         "LOW": 5,
         "MEDIUM": 15,
-        "WARNING": 25,
-        "HIGH": 25,
+        "WARNING": 10,
+        "HIGH": 20,
         "ERROR": 40,
         "CRITICAL": 50,
     }
@@ -165,6 +165,12 @@ class SystemHealthModel:
 
         return findings
 
+    @staticmethod
+    def _extract_severity(finding):
+        if not isinstance(finding, dict):
+            return ""
+        return str(finding.get("severity", "")).strip().upper()
+
     @classmethod
     def _calculate_domain_health(cls, domains):
         domain_health = {}
@@ -246,55 +252,75 @@ class SystemHealthModel:
 
         return "HEALTHY"
 
-    @classmethod
-    def _calculate_health_score(cls, findings):
-        """
-        Calculate a bounded 0-100 health score.
-
-        Each recognized finding contributes a severity-based
-        penalty. The score can never fall below zero.
-        """
-
-        score = 100
-
-        for item in findings:
-            severity = cls._extract_severity(
-                item["finding"]
-            )
-
-            penalty = cls._SEVERITY_PENALTIES.get(
-                severity,
-                0,
-            )
-
-            score -= penalty
-
-        return max(
-            0,
-            min(
-                100,
-                score,
-            ),
-        )
-
     @staticmethod
     def _calculate_coverage(domain_names):
         if not domain_names:
             return "NONE"
-
         if len(domain_names) == 1:
             return "PARTIAL"
-
         return "SYSTEM_WIDE"
 
-    @staticmethod
-    def _extract_severity(finding):
-        if not isinstance(finding, dict):
-            return ""
+    @classmethod
+    def _calculate_health_score(cls, findings):
+        """Score unique issues using their highest observed severity."""
+        issue_penalties = {}
+        unidentified_penalties = []
 
-        return str(
-            finding.get(
-                "severity",
-                "",
+        for item in findings:
+            if not isinstance(item, dict):
+                continue
+
+            finding = item.get("finding", {})
+            severity = cls._extract_severity(finding)
+            penalty = cls._SEVERITY_PENALTIES.get(severity, 0)
+
+            if not penalty:
+                continue
+
+            identity = None
+
+            if isinstance(finding, dict):
+                finding_id = finding.get("finding_id") or finding.get("id")
+                finding_type = (
+                    finding.get("finding_type")
+                    or finding.get("category")
+                    or finding.get("type")
+                )
+                message = finding.get("message")
+
+                normalized_type = (
+                    str(finding_type).strip().upper()
+                    if finding_type
+                    else ""
+                )
+
+                if normalized_type in {
+                    "MEMORY_PRESSURE",
+                    "MEMORY_EXHAUSTION",
+                }:
+                    identity = ("type", normalized_type)
+                elif finding_id:
+                    identity = ("id", str(finding_id).strip().casefold())
+                elif finding_type:
+                    identity = ("type", normalized_type)
+                elif message:
+                    identity = (
+                        "message",
+                        " ".join(str(message).split()).casefold(),
+                    )
+
+            if identity is None:
+                unidentified_penalties.append(penalty)
+                continue
+
+            issue_penalties[identity] = max(
+                issue_penalties.get(identity, 0),
+                penalty,
             )
-        ).strip().upper()
+
+        total_penalty = (
+            sum(issue_penalties.values())
+            + sum(unidentified_penalties)
+        )
+
+        return max(0, min(100, 100 - total_penalty))

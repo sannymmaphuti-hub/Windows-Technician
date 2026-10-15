@@ -1,4 +1,4 @@
-﻿"""Integration tests for configuration and environment architecture."""
+"""Integration tests for configuration and environment architecture."""
 
 from pathlib import Path
 
@@ -21,7 +21,7 @@ def make_windows_environment():
         windows_build="11",
         architecture="AMD64",
         python_version="3.14.4",
-        application_version="0.9.0",
+        application_version="1.0.0",
     )
 
 
@@ -62,7 +62,7 @@ def test_architecture_type(architecture):
 def test_windows_environment_is_integrated(architecture):
     assert (
         architecture.windows.application_version
-        == "0.9.0"
+        == "1.0.0"
     )
 
 

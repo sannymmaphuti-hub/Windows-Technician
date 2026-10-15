@@ -1,6 +1,8 @@
 ﻿from copy import deepcopy
 
-from PySide6.QtWidgets import QFrame, QLabel, QVBoxLayout
+from PySide6.QtCore import Signal
+
+from PySide6.QtWidgets import QFrame, QLabel, QVBoxLayout, QToolButton, QPlainTextEdit
 from PySide6.QtWidgets import QSizePolicy
 
 from engine.accessibility import AccessibilityHelper
@@ -21,7 +23,7 @@ class DashboardSection(QFrame):
     remediate, execute, retry, or verify.
     """
 
-    def __init__(self, title, object_name, parent=None):
+    def __init__(self, title, object_name, parent=None, scrollable=False):
         super().__init__(parent)
 
         self.setObjectName(f"{object_name}Section")
@@ -50,9 +52,23 @@ class DashboardSection(QFrame):
         self.title_label.setObjectName(object_name)
         self.title_label.setWordWrap(True)
 
-        self.value_label = QLabel()
+        if scrollable:
+            self.value_label = QPlainTextEdit()
+            self.value_label.setReadOnly(True)
+            self.value_label.setLineWrapMode(
+                QPlainTextEdit.LineWrapMode.WidgetWidth
+            )
+            self.value_label.setMinimumHeight(140)
+            self.value_label.setMaximumHeight(220)
+            self.value_label.setSizePolicy(
+                QSizePolicy.Policy.Expanding,
+                QSizePolicy.Policy.Preferred,
+            )
+        else:
+            self.value_label = QLabel()
+            self.value_label.setWordWrap(True)
+
         self.value_label.setObjectName(f"{object_name}Value")
-        self.value_label.setWordWrap(True)
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -62,10 +78,14 @@ class DashboardSection(QFrame):
         layout.addWidget(self.value_label)
 
     def text(self):
+        if isinstance(self.value_label, QPlainTextEdit):
+            return self.value_label.toPlainText()
         return self.value_label.text()
 
 
 class DashboardWidget(QFrame):
+    diagnostics_requested = Signal()
+
     """
     Main presentation dashboard for Windows Technician.
 
@@ -116,6 +136,32 @@ class DashboardWidget(QFrame):
 
         layout.addWidget(self.title_label)
 
+        self.run_diagnostics_button = QToolButton()
+        self.run_diagnostics_button.setText("Run Diagnostics")
+        self.run_diagnostics_button.setObjectName("runDiagnosticsButton")
+        self.run_diagnostics_button.setAccessibleName("Run Windows diagnostics")
+        self.run_diagnostics_button.setToolTip(
+            "Run the registered Windows diagnostic engines. "
+            "This does not authorize or execute repairs."
+        )
+        self.run_diagnostics_button.clicked.connect(
+            self.diagnostics_requested.emit
+        )
+
+        self.diagnostics_status_label = QLabel(
+            "Ready to diagnose this computer."
+        )
+        self.diagnostics_status_label.setObjectName(
+            "diagnosticsExecutionStatus"
+        )
+        self.diagnostics_status_label.setWordWrap(True)
+        self.diagnostics_status_label.setAccessibleName(
+            "Diagnostic execution status"
+        )
+
+        layout.addWidget(self.run_diagnostics_button)
+        layout.addWidget(self.diagnostics_status_label)
+
         self.health_status_label = self._value_section(
             "Health",
             "dashboardHealthStatus",
@@ -150,6 +196,7 @@ class DashboardWidget(QFrame):
         self.recommendations_label = self._value_section(
             "Recommendations",
             "dashboardRecommendationCount",
+            scrollable=True,
         )
 
         self.diagnostic_cards = DashboardDiagnosticCards(
@@ -195,10 +242,11 @@ class DashboardWidget(QFrame):
         layout.addStretch()
 
     @staticmethod
-    def _value_section(title, object_name):
+    def _value_section(title, object_name, scrollable=False):
         return DashboardSection(
             title,
             object_name,
+            scrollable=scrollable,
         )
 
     @staticmethod
@@ -239,6 +287,102 @@ class DashboardWidget(QFrame):
 
         return "\n".join(rendered)
 
+    @staticmethod
+    def _format_guidance_items(items):
+        """
+        Render structured system recommendations for dashboard users.
+
+        This formats presentation data only. It does not modify
+        recommendation evidence or authorize remediation.
+        """
+        if items is None:
+            return ""
+
+        if not isinstance(items, list):
+            items = [items]
+
+        rendered = []
+
+        for index, item in enumerate(items, start=1):
+            if not isinstance(item, dict):
+                rendered.append(f"{index}. {item}")
+                continue
+
+            priority = str(
+                item.get("priority", "UNSPECIFIED")
+            ).replace("_", " ").upper()
+
+            domain = item.get("domain")
+            if not domain:
+                domains = item.get("domains")
+                if isinstance(domains, (list, tuple, set)):
+                    domain = ", ".join(
+                        str(value) for value in domains
+                    )
+                elif domains:
+                    domain = str(domains)
+
+            action = item.get("action")
+            rationale = item.get("rationale")
+            recommendation_type = item.get("type")
+
+            # Support recommendations that wrap the original finding.
+            finding = item.get("finding")
+            if isinstance(finding, dict):
+                finding_type = (
+                    finding.get("finding_type")
+                    or finding.get("type")
+                    or finding.get("category")
+                )
+                finding_severity = (
+                    finding.get("severity")
+                    or finding.get("level")
+                )
+            else:
+                finding_type = None
+                finding_severity = None
+
+            lines = [
+                f"{index}. [{priority}]"
+            ]
+
+            if domain:
+                lines.append(f"   Domain: {domain}")
+
+            if finding_type:
+                lines.append(
+                    "   Finding: "
+                    + str(finding_type).replace("_", " ")
+                )
+
+            if finding_severity:
+                lines.append(
+                    "   Severity: "
+                    + str(finding_severity).replace("_", " ").upper()
+                )
+
+            if recommendation_type == "SYSTEM_PATTERN":
+                pattern = item.get("pattern")
+                if pattern:
+                    lines.append(f"   Pattern: {pattern}")
+
+            if action:
+                lines.append(f"   Recommended action: {action}")
+
+            if rationale:
+                lines.append(f"   Why: {rationale}")
+
+            # Preserve useful text for legacy recommendation records.
+            if not action and not rationale and not finding_type:
+                for key in ("message", "description", "recommendation"):
+                    value = item.get(key)
+                    if isinstance(value, (str, int, float)) and value:
+                        lines.append(f"   {key.capitalize()}: {value}")
+
+            rendered.append("\n".join(lines))
+
+        return "\n\n".join(rendered)
+
     def _clear_diagnostic_cards(self):
         while self.diagnostic_container.count():
             item = self.diagnostic_container.takeAt(0)
@@ -273,6 +417,17 @@ class DashboardWidget(QFrame):
             )
 
             self.diagnostic_container.addWidget(card)
+
+    def set_diagnostics_status(self, message):
+        """Update user-visible execution feedback."""
+        self.diagnostics_status_label.setText(str(message))
+
+    def set_diagnostics_running(self, running):
+        """Prevent overlapping diagnostic runs."""
+        self.run_diagnostics_button.setEnabled(not running)
+        self.run_diagnostics_button.setText(
+            "Running Diagnostics..." if running else "Run Diagnostics"
+        )
 
     def to_dict(self):
         return {
@@ -361,43 +516,34 @@ class DashboardWidget(QFrame):
         self.relationships_label.value_label.setText(
             self._format_items(relationships)
             if relationships
-            else "None"
+            else "No relationships identified from current evidence."
         )
 
         self.root_causes_label.value_label.setText(
             self._format_items(root_causes)
             if root_causes
-            else "None"
+            else "No root causes established from current evidence."
         )
 
-        self.recommendations_label.value_label.setText(
-            self._format_items(recommendations)
+        self.recommendations_label.value_label.setPlainText(
+            self._format_guidance_items(recommendations)
             if recommendations
-            else "None"
+            else "No recommendations available."
         )
 
         AccessibilityHelper.set_dynamic_description(
             self.relationships_label,
-            (
-                f"There are {len(relationships)} "
-                f"system relationships."
-            ),
+            f"There are {len(relationships)} system relationships."
         )
 
         AccessibilityHelper.set_dynamic_description(
             self.root_causes_label,
-            (
-                f"There are {len(root_causes)} "
-                f"identified root causes."
-            ),
+            f"There are {len(root_causes)} identified root causes."
         )
 
         AccessibilityHelper.set_dynamic_description(
             self.recommendations_label,
-            (
-                f"There are {len(recommendations)} "
-                f"system recommendations."
-            ),
+            f"There are {len(recommendations)} system recommendations."
         )
 
         self.diagnostic_cards.refresh()
@@ -415,4 +561,3 @@ class DashboardWidget(QFrame):
         KeyboardNavigation.set_tab_order(
             review_buttons
         )
-

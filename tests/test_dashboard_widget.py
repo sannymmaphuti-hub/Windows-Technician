@@ -229,7 +229,67 @@ def test_dashboard_does_not_modify_view_model(qapp):
     assert view_model.to_dict() == before
 
 
+def test_recommendation_formatter_displays_structured_details():
+    from engine.dashboard_widget import DashboardWidget
 
+    recommendations = [
+        {
+            "type": "FINDING",
+            "priority": "HIGH",
+            "domain": "PROCESS",
+            "finding": {
+                "finding_type": "HIGH_PROCESS_MEMORY",
+                "severity": "WARNING",
+                "evidence": {"process": "example"},
+            },
+            "action": "Review memory-intensive applications.",
+            "rationale": "A process is using significant memory.",
+        }
+    ]
+
+    rendered = DashboardWidget._format_guidance_items(
+        recommendations
+    )
+
+    assert "[HIGH]" in rendered
+    assert "Domain: PROCESS" in rendered
+    assert "Finding: HIGH PROCESS MEMORY" in rendered
+    assert "Severity: WARNING" in rendered
+    assert "Recommended action: Review memory-intensive applications." in rendered
+    assert "Why: A process is using significant memory." in rendered
+    assert "'evidence':" not in rendered
+
+
+def test_recommendation_formatter_supports_system_patterns():
+    from engine.dashboard_widget import DashboardWidget
+
+    rendered = DashboardWidget._format_guidance_items(
+        [
+            {
+                "type": "SYSTEM_PATTERN",
+                "priority": "HIGH",
+                "domains": ["MEMORY", "PROCESS"],
+                "pattern": "RESOURCE_INTERACTION",
+                "action": "Investigate correlated resource pressure.",
+                "rationale": "Multiple domains report related conditions.",
+            }
+        ]
+    )
+
+    assert "[HIGH]" in rendered
+    assert "Domain: MEMORY, PROCESS" in rendered
+    assert "Pattern: RESOURCE_INTERACTION" in rendered
+    assert "Recommended action: Investigate correlated resource pressure." in rendered
+
+
+def test_recommendation_formatter_supports_legacy_records():
+    from engine.dashboard_widget import DashboardWidget
+
+    rendered = DashboardWidget._format_guidance_items(
+        [{"action": "Review memory-intensive applications."}]
+    )
+
+    assert "Recommended action: Review memory-intensive applications." in rendered
 
 
 

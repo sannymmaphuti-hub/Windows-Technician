@@ -76,3 +76,36 @@ def test_build_validation_result_is_immutable():
         pass
     else:
         raise AssertionError("BuildValidationResult must be immutable.")
+
+
+
+def test_windows_version_info_matches_application_metadata():
+    from packaging.production_build import render_windows_version_info
+
+    version_info = render_windows_version_info()
+
+    assert APPLICATION_METADATA.display_name in version_info
+    assert APPLICATION_METADATA.version in version_info
+    assert APPLICATION_METADATA.executable_name in version_info
+    assert "FileVersion" in version_info
+    assert "ProductVersion" in version_info
+    assert "ProductName" in version_info
+
+
+def test_windows_version_info_uses_numeric_version_tuple():
+    from packaging.production_build import render_windows_version_info
+
+    version_info = render_windows_version_info()
+    expected = APPLICATION_METADATA.version_tuple + (0,)
+
+    assert f"filevers={expected}" in version_info
+    assert f"prodvers={expected}" in version_info
+
+
+def test_windows_version_info_path_is_inside_build_directory():
+    from packaging.production_build import windows_version_info_path
+
+    path = windows_version_info_path()
+
+    assert path.name == "windows_version_info.txt"
+    assert path.parent == PRODUCTION_BUILD_CONTRACT.build_root

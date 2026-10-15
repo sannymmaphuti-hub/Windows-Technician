@@ -460,3 +460,39 @@ def test_health_model_does_not_generate_recommendations():
 
     assert "recommendations" not in result
 
+
+
+def test_duplicate_warning_is_penalized_once_but_findings_are_preserved():
+    finding = {
+        "severity": "WARNING",
+        "finding_type": "MEMORY_PRESSURE",
+        "message": "High memory usage.",
+    }
+    result = SystemHealthModel().evaluate({
+        "PROCESS": {"findings": [finding]},
+        "MEMORY": {"findings": [dict(finding)]},
+    })
+    assert result["health_score"] == 90
+    assert len(result["findings"]) == 2
+
+
+def test_distinct_warnings_each_reduce_health_score():
+    result = SystemHealthModel().evaluate({
+        "PROCESS": {"findings": [
+            {"severity": "WARNING", "message": "High memory usage."}
+        ]},
+        "NETWORK": {"findings": [
+            {"severity": "WARNING", "message": "Packet loss detected."}
+        ]},
+    })
+    assert result["health_score"] == 80
+
+
+def test_warning_and_high_penalties_are_calibrated():
+    result = SystemHealthModel().evaluate({
+        "SYSTEM": {"findings": [
+            {"severity": "WARNING", "message": "Warning A"},
+            {"severity": "HIGH", "message": "High A"},
+        ]}
+    })
+    assert result["health_score"] == 70

@@ -1,4 +1,9 @@
-﻿from pathlib import Path
+from pathlib import Path
+from packaging.packaged_crash_logging import (
+    configure_packaged_crash_logging,
+    install_uncaught_exception_handlers,
+)
+from packaging.runtime_path_boundaries import resolve_application_paths
 import sys
 
 from PySide6.QtWidgets import QApplication
@@ -32,7 +37,10 @@ APP_VERSION = APPLICATION_METADATA.version
 
 def _project_root() -> Path:
     """Return the Windows Technician application project root."""
-    return Path(__file__).resolve().parent
+    return resolve_application_paths(
+        app_name=APP_NAME,
+        module_file=__file__,
+    ).resource_root
 
 
 def _application_state_from_runtime(
@@ -105,14 +113,23 @@ def create_application():
         qt_application = QApplication(sys.argv)
 
     runtime_paths = initialize_runtime_paths()
+    crash_logger, crash_log_path = configure_packaged_crash_logging(
+        APP_NAME,
+        runtime_paths.application_data,
+    )
+    install_uncaught_exception_handlers(crash_logger)
 
     project_root = _project_root()
+    application_paths = resolve_application_paths(
+        app_name=APP_NAME,
+        module_file=__file__,
+    )
 
     configuration_architecture = (
         build_configuration_environment_architecture(
             project_root=project_root,
             user_data_root=runtime_paths.application_data,
-            system_data_root=project_root,
+            system_data_root=application_paths.application_root,
         )
     )
 
@@ -182,12 +199,16 @@ def start_application():
     if not bootstrap.started:
         return qt_application, bootstrap, None
 
-    application_state = bootstrap.state
+    try:
+        application_state = bootstrap.state
 
-    window = create_main_window(application_state)
-    window.show()
+        window = create_main_window(application_state)
+        window.show()
 
-    return qt_application, bootstrap, window
+        return qt_application, bootstrap, window
+    except Exception:
+        bootstrap.stop()
+        raise
 
 
 def main():
@@ -199,13 +220,11 @@ def main():
     if window is None:
         return 1
 
-    exit_code = qt_application.exec()
-
-    bootstrap.stop()
-
-    return exit_code
+    try:
+        return qt_application.exec()
+    finally:
+        bootstrap.stop()
 
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

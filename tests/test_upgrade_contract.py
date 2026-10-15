@@ -13,7 +13,7 @@ from packaging.upgrade_contract import (
 
 def test_upgrade_matches_application_identity():
     assert UPGRADE_CONTRACT.application_name == "Windows Technician"
-    assert UPGRADE_CONTRACT.current_version.startswith("0.9.")
+    assert UPGRADE_CONTRACT.current_version.startswith("1.0.")
 
 
 def test_upgrade_replaces_application_files():

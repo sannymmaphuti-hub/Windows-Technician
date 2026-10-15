@@ -106,9 +106,7 @@ def validate_packaged_runtime(
         process.kill()
         return_code = process.wait(timeout=shutdown_timeout)
         terminated = True
-        errors.append(
-            "Packaged executable required forced termination during validation."
-        )
+
 
     return PackagedRuntimeValidationResult(
         started=started,

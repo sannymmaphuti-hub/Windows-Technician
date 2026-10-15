@@ -71,5 +71,5 @@ def test_installer_artifact_has_expected_name():
     assert result.artifact is not None
     assert (
         result.artifact.name
-        == "WindowsTechnician-0.9.0-Setup.zip"
+        == "WindowsTechnician-1.0.0-Setup.zip"
     )

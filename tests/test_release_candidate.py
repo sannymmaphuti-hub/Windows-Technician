@@ -75,8 +75,8 @@ def test_identity_requires_non_empty_fields():
         ReleaseCandidateIdentity(
             application_name="",
             display_name="Windows Technician",
-            version="0.9.0",
-            release_channel="beta",
+            version="1.0.0",
+            release_channel="production",
             executable_name="WindowsTechnician.exe",
             package_name="WindowsTechnician",
         )
@@ -116,8 +116,8 @@ def test_invalid_contract_type_returns_false():
 
 
 def test_candidate_contract_uses_beta_channel():
-    assert RELEASE_CANDIDATE_IDENTITY.release_channel == "beta"
+    assert RELEASE_CANDIDATE_IDENTITY.release_channel == "production"
 
 
 def test_candidate_contract_is_for_v09():
-    assert RELEASE_CANDIDATE_IDENTITY.version == "0.9.0"
+    assert RELEASE_CANDIDATE_IDENTITY.version == "1.0.0"

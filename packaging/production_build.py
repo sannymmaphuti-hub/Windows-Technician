@@ -75,6 +75,50 @@ PRODUCTION_BUILD_CONTRACT = ProductionBuildContract(
 )
 
 
+def render_windows_version_info() -> str:
+    """Render PyInstaller-compatible Windows executable version resources."""
+    version = APPLICATION_METADATA.version_tuple
+    version_string = ".".join(str(part) for part in version)
+
+    return f"""VSVersionInfo(
+  ffi=FixedFileInfo(
+    filevers={version + (0,) if len(version) == 3 else version},
+    prodvers={version + (0,) if len(version) == 3 else version},
+    mask=0x3f,
+    flags=0x0,
+    OS=0x40004,
+    fileType=0x1,
+    subtype=0x0,
+    date=(0, 0)
+  ),
+  kids=[
+    StringFileInfo([
+      StringTable(
+        '040904B0',
+        [
+          StringStruct('FileDescription', {APPLICATION_METADATA.display_name!r}),
+          StringStruct('FileVersion', {version_string!r}),
+          StringStruct('InternalName', {APPLICATION_METADATA.name!r}),
+          StringStruct('OriginalFilename', {APPLICATION_METADATA.executable_name!r}),
+          StringStruct('ProductName', {APPLICATION_METADATA.display_name!r}),
+          StringStruct('ProductVersion', {version_string!r})
+        ]
+      )
+    ]),
+    VarFileInfo([VarStruct('Translation', [1033, 1200])])
+  ]
+)
+"""
+
+
+def windows_version_info_path(
+    contract: ProductionBuildContract = PRODUCTION_BUILD_CONTRACT,
+) -> Path:
+    """Return the generated Windows version-resource file path."""
+    if not isinstance(contract, ProductionBuildContract):
+        raise TypeError("contract must be a ProductionBuildContract.")
+    return contract.build_root / "windows_version_info.txt"
+
 @dataclass(frozen=True)
 class BuildValidationResult:
     """Result of validating the production build boundary."""
@@ -288,6 +332,12 @@ def build_production_executable(
             validation=unavailable,
         )
 
+    version_info = windows_version_info_path(contract)
+    version_info.write_text(
+        render_windows_version_info(),
+        encoding="utf-8",
+    )
+
     command = [
         "py",
         "-m",
@@ -296,6 +346,8 @@ def build_production_executable(
         "--clean",
         "--windowed",
         "--onedir",
+        "--version-file",
+        str(version_info),
         "--name",
         contract.executable_name.removesuffix(".exe"),
         "--distpath",

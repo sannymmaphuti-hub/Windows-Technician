@@ -455,7 +455,7 @@ def test_system_resource_pressure_pattern_generates_high_priority_recommendation
     assert len(result["recommendations"]) == 1
     assert (
         result["recommendations"][0]["priority"]
-        == "HIGH"
+        == "MEDIUM"
     )
 
 
@@ -789,4 +789,170 @@ def test_recommendation_does_not_claim_definite_causality(
     assert "certainly" not in text
     assert "proves" not in text
     assert "confirmed root cause" not in text
+def test_finding_recommendation_exposes_traceable_evidence():
+    finding = {
+        "id": "memory-finding-001",
+        "finding_type": "MEMORY_PRESSURE",
+        "severity": "WARNING",
+        "evidence": [{"source": "memory_monitor", "value": 92}],
+        "provenance": {"collector": "memory_engine"},
+    }
 
+    result = SystemLevelRecommendations().generate({
+        "findings": [{"domain": "MEMORY", "finding": finding}],
+    })
+
+    recommendation = result["recommendations"][0]
+
+    assert recommendation["finding"] == finding
+    assert recommendation.get("finding_id") == "memory-finding-001"
+    assert recommendation.get("evidence") == finding["evidence"]
+    assert recommendation.get("provenance") == finding["provenance"]
+
+
+def test_finding_traceability_preserves_distinct_finding_ids():
+    findings = [
+        {
+            "domain": "MEMORY",
+            "finding": {
+                "id": finding_id,
+                "finding_type": "MEMORY_PRESSURE",
+                "severity": "WARNING",
+                "evidence": [{"source": "memory_monitor", "value": value}],
+            },
+        }
+        for finding_id, value in (
+            ("memory-001", 90),
+            ("memory-002", 95),
+        )
+    ]
+
+    result = SystemLevelRecommendations().generate({"findings": findings})
+    recommendations = result["recommendations"]
+
+    assert len(recommendations) == 2
+    assert {item.get("finding_id") for item in recommendations} == {
+        "memory-001",
+        "memory-002",
+    }
+
+@pytest.mark.parametrize(
+    "finding",
+    [
+        {
+            "finding_type": "MEMORY_PRESSURE",
+        },
+        {
+            "finding_type": "MEMORY_PRESSURE",
+            "severity": "URGENT_UNKNOWN",
+        },
+    ],
+    ids=["missing-severity", "unrecognized-severity"],
+)
+def test_unassessed_severity_is_explicit_in_recommendation(
+    recommendations,
+    finding,
+):
+    result = recommendations.generate(
+        {
+            "findings": [
+                {
+                    "domain": "MEMORY",
+                    "finding": finding,
+                }
+            ],
+            "patterns": [],
+        }
+    )
+
+    recommendation = next(
+        item
+        for item in result["recommendations"]
+        if item["type"] == "FINDING"
+    )
+
+    assert recommendation["priority"] == "LOW"
+    assert recommendation["severity_assessment"] == "UNASSESSED"
+    assert "severity is unassessed" in recommendation["rationale"].lower()
+
+
+def test_known_severity_is_marked_assessed(
+    recommendations,
+):
+    result = recommendations.generate(
+        {
+            "findings": [
+                {
+                    "domain": "MEMORY",
+                    "finding": {
+                        "finding_type": "MEMORY_PRESSURE",
+                        "severity": "WARNING",
+                    },
+                }
+            ],
+            "patterns": [],
+        }
+    )
+
+    recommendation = next(
+        item
+        for item in result["recommendations"]
+        if item["type"] == "FINDING"
+    )
+
+    assert recommendation["priority"] == "MEDIUM"
+    assert recommendation["severity_assessment"] == "ASSESSED"
+
+@pytest.mark.parametrize(
+    "pattern",
+    [
+        {
+            "type": "SYSTEM_RESOURCE_PRESSURE",
+            "domains": ["MEMORY", "PROCESS"],
+        },
+        {
+            "type": "SYSTEM_RESOURCE_PRESSURE",
+            "confidence": "UNRECOGNIZED",
+            "domains": ["MEMORY", "PROCESS"],
+        },
+    ],
+    ids=["missing-confidence", "unknown-confidence"],
+)
+def test_unassessed_pattern_confidence_is_explicit(
+    recommendations,
+    pattern,
+):
+    result = recommendations.generate({"patterns": [pattern]})
+    recommendation = next(
+        item
+        for item in result["recommendations"]
+        if item["type"] == "SYSTEM_PATTERN"
+    )
+
+    assert recommendation["priority"] == "LOW"
+    assert recommendation["confidence_assessment"] == "UNASSESSED"
+    assert recommendation["pattern"] == pattern
+    assert "confidence is unassessed" in recommendation["rationale"].lower()
+
+    if "confidence" not in pattern:
+        assert "confidence" not in recommendation
+
+
+def test_assessed_pattern_confidence_is_preserved(recommendations):
+    pattern = {
+        "type": "SYSTEM_RESOURCE_PRESSURE",
+        "confidence": "MEDIUM",
+        "domains": ["MEMORY", "PROCESS"],
+    }
+
+    result = recommendations.generate({"patterns": [pattern]})
+    recommendation = next(
+        item
+        for item in result["recommendations"]
+        if item["type"] == "SYSTEM_PATTERN"
+    )
+
+    assert recommendation["confidence"] == "MEDIUM"
+    assert recommendation["confidence_assessment"] == "ASSESSED"
+    assert recommendation["priority"] == "MEDIUM"
+    assert recommendation["pattern"] == pattern

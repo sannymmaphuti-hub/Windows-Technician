@@ -32,7 +32,7 @@ def make_windows(version: str = "11.0") -> WindowsEnvironment:
         windows_build="26200",
         architecture="AMD64",
         python_version="3.14.4",
-        application_version="0.9.0",
+        application_version="1.0.0",
     )
 
 

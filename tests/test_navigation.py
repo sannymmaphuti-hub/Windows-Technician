@@ -237,7 +237,7 @@ def test_controller_to_dict():
 
     assert data["visible"] is True
     assert data["current_page"] == "MACHINES"
-    assert data["application"]["version"] == "0.9.0"
+    assert data["application"]["version"] == "1.0.0"
 
 
 def test_navigation_has_no_execution_surface():

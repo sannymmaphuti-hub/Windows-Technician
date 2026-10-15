@@ -63,7 +63,16 @@ class MemoryDiagnosticFindingBuilder:
             ""
         )
 
-        return {
+        # Reuse established thresholds: system memory >= 80%
+        # and process memory >= 1000 MB.
+        try:
+            system_usage = float(system_memory_percent)
+            process_usage = float(process_memory_mb)
+        except (TypeError, ValueError):
+            system_usage = 0.0
+            process_usage = 0.0
+
+        finding = {
             "category": "MEMORY",
             "severity": severity,
             "process": process_name,
@@ -76,3 +85,8 @@ class MemoryDiagnosticFindingBuilder:
             "change_percent": change_percent,
             "message": message
         }
+
+        if system_usage >= 80 and process_usage >= 1000:
+            finding["finding_type"] = "HIGH_PROCESS_MEMORY"
+
+        return finding

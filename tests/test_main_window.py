@@ -1,4 +1,4 @@
-﻿import pytest
+import pytest
 
 pytest.importorskip("PySide6")
 
@@ -129,3 +129,29 @@ def test_main_window_has_no_execution_surface(qapp):
             name in attribute.lower()
             for attribute in declared_names
         )
+
+def test_main_window_uses_production_design_system(qapp):
+    from ui.design_system import DesignSystem
+
+    window = MainWindow(ApplicationState())
+
+    assert isinstance(window.design_system, DesignSystem)
+    assert window.styleSheet() == window.design_system.stylesheet()
+    assert window.dashboard is not None
+
+
+def test_design_system_is_applied_without_changing_startup_navigation(qapp):
+    window = MainWindow(ApplicationState())
+
+    assert window.styleSheet()
+    assert window.current_page() == "DASHBOARD"
+    assert window.pages.currentWidget() is window.dashboard
+
+
+def test_refresh_preserves_design_system(qapp):
+    window = MainWindow(ApplicationState())
+    original_stylesheet = window.styleSheet()
+
+    window.refresh_dashboard()
+
+    assert window.styleSheet() == original_stylesheet

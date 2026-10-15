@@ -9,7 +9,7 @@ def test_default_application_state():
     state = ApplicationState()
 
     assert state.application_name == "Windows Technician"
-    assert state.version == "0.9.0"
+    assert state.version == "1.0.0"
     assert state.status == "STARTING"
     assert state.configuration == {}
     assert state.active_case_id is None
@@ -176,7 +176,7 @@ def test_to_dict_contains_canonical_fields():
 
     assert data == {
         "application_name": "Windows Technician",
-        "version": "0.9.0",
+        "version": "1.0.0",
         "status": "READY",
         "configuration": {
             "theme": "dark",

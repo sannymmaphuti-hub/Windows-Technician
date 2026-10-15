@@ -1,6 +1,7 @@
 ﻿"""Application bootstrap compatibility and production startup boundary."""
 
 from engine.application_state import ApplicationState
+from packaging.application_metadata import APPLICATION_METADATA
 
 from packaging.application_runtime import (
     ApplicationRuntime,
@@ -56,7 +57,7 @@ class ApplicationBootstrap:
         self,
         *,
         application_name="Windows Technician",
-        version="0.9.0",
+        version=APPLICATION_METADATA.version,
         configuration=None,
         operational_state=None,
         operational_logger=None,
@@ -333,4 +334,3 @@ class ApplicationBootstrap:
             self._runtime.services,
             name,
         ).state
-

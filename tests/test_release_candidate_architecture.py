@@ -157,5 +157,5 @@ def test_architecture_preserves_evidence():
 def test_v09_beta_identity_is_preserved():
     architecture = build_release_candidate_architecture(_all_evidence())
 
-    assert architecture.contract.identity.version == "0.9.0"
-    assert architecture.contract.identity.release_channel == "beta"
+    assert architecture.contract.identity.version == "1.0.0"
+    assert architecture.contract.identity.release_channel == "production"

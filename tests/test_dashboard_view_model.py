@@ -1,4 +1,4 @@
-﻿import pytest
+import pytest
 
 from engine.application_bootstrap import (
     ApplicationBootstrap,
@@ -497,3 +497,227 @@ def test_dashboard_can_present_system_wide_intelligence():
     assert summary["relationship_count"] == 1
     assert summary["root_cause_count"] == 1
     assert summary["recommendation_count"] == 1
+
+# ==========================================================
+# V1.0 Technician Dashboard Contract
+# ==========================================================
+
+def test_v1_dashboard_surfaces_default_to_empty():
+    dashboard = DashboardViewModel(
+        create_state()
+    )
+
+    assert dashboard.active_cases() == []
+    assert dashboard.fleet_alerts() == []
+    assert dashboard.unresolved_problems() == []
+    assert dashboard.remediation_status() == []
+    assert dashboard.verification_status() == []
+    assert dashboard.recent_activity() == []
+
+
+def test_v1_dashboard_surfaces_accept_production_projections():
+    dashboard = DashboardViewModel(
+        create_state(),
+        {
+            "active_cases": [
+                {"case_id": "CASE-001"}
+            ],
+            "fleet_alerts": [
+                {"alert_id": "ALERT-001"}
+            ],
+            "unresolved_problems": [
+                {"problem_id": "PROBLEM-001"}
+            ],
+            "remediation_status": [
+                {
+                    "action_id": "ACTION-001",
+                    "authorization_status": "AUTHORIZED",
+                    "execution_status": "EXECUTED",
+                }
+            ],
+            "verification_status": [
+                {
+                    "action_id": "ACTION-001",
+                    "status": "VERIFIED",
+                }
+            ],
+            "recent_activity": [
+                {
+                    "activity_id": "ACT-001",
+                    "type": "CASE_UPDATED",
+                }
+            ],
+        },
+    )
+
+    assert dashboard.active_cases() == [
+        {"case_id": "CASE-001"}
+    ]
+
+    assert dashboard.fleet_alerts() == [
+        {"alert_id": "ALERT-001"}
+    ]
+
+    assert dashboard.unresolved_problems() == [
+        {"problem_id": "PROBLEM-001"}
+    ]
+
+    assert dashboard.remediation_status() == [
+        {
+            "action_id": "ACTION-001",
+            "authorization_status": "AUTHORIZED",
+            "execution_status": "EXECUTED",
+        }
+    ]
+
+    assert dashboard.verification_status() == [
+        {
+            "action_id": "ACTION-001",
+            "status": "VERIFIED",
+        }
+    ]
+
+    assert dashboard.recent_activity() == [
+        {
+            "activity_id": "ACT-001",
+            "type": "CASE_UPDATED",
+        }
+    ]
+
+
+def test_v1_dashboard_surfaces_are_defensive():
+    dashboard = DashboardViewModel(
+        create_state(),
+        {
+            "active_cases": [
+                {"case_id": "CASE-001"}
+            ],
+            "fleet_alerts": [
+                {"alert_id": "ALERT-001"}
+            ],
+            "recent_activity": [
+                {"type": "CASE_UPDATED"}
+            ],
+        },
+    )
+
+    cases = dashboard.active_cases()
+    alerts = dashboard.fleet_alerts()
+    activity = dashboard.recent_activity()
+
+    cases[0]["case_id"] = "MUTATED"
+    alerts[0]["alert_id"] = "MUTATED"
+    activity[0]["type"] = "MUTATED"
+
+    assert dashboard.active_cases()[0]["case_id"] == "CASE-001"
+    assert dashboard.fleet_alerts()[0]["alert_id"] == "ALERT-001"
+    assert dashboard.recent_activity()[0]["type"] == "CASE_UPDATED"
+
+
+def test_v1_dashboard_invalid_surface_payloads_are_ignored():
+    dashboard = DashboardViewModel(
+        create_state(),
+        {
+            "active_cases": {},
+            "fleet_alerts": "invalid",
+            "unresolved_problems": None,
+            "remediation_status": 123,
+            "verification_status": {},
+            "recent_activity": "invalid",
+        },
+    )
+
+    assert dashboard.active_cases() == []
+    assert dashboard.fleet_alerts() == []
+    assert dashboard.unresolved_problems() == []
+    assert dashboard.remediation_status() == []
+    assert dashboard.verification_status() == []
+    assert dashboard.recent_activity() == []
+
+
+def test_v1_dashboard_to_dict_contains_all_operational_surfaces():
+    dashboard = DashboardViewModel(
+        create_state(),
+        {
+            "active_cases": [{"case_id": "CASE-001"}],
+            "fleet_alerts": [{"alert_id": "ALERT-001"}],
+            "unresolved_problems": [{"problem_id": "P-001"}],
+            "remediation_status": [{"action_id": "A-001"}],
+            "verification_status": [{"action_id": "A-001"}],
+            "recent_activity": [{"type": "CASE_UPDATED"}],
+        },
+    )
+
+    data = dashboard.to_dict()
+
+    assert "active_cases" in data
+    assert "fleet_alerts" in data
+    assert "unresolved_problems" in data
+    assert "remediation_status" in data
+    assert "verification_status" in data
+    assert "recent_activity" in data
+
+
+def test_v1_dashboard_remains_presentation_only():
+    dashboard = DashboardViewModel(
+        create_state()
+    )
+
+    forbidden = {
+        "diagnose",
+        "analyze",
+        "reason",
+        "recommend",
+        "authorize",
+        "execute",
+        "remediate",
+        "verify",
+        "retry",
+    }
+
+    public_methods = {
+        name
+        for name in dir(dashboard)
+        if not name.startswith("_")
+    }
+
+    assert forbidden.isdisjoint(public_methods)
+
+def test_v1_dashboard_operational_surfaces_report_counts():
+    dashboard = DashboardViewModel(
+        create_state(),
+        {
+            "active_cases": [
+                {},
+                {},
+            ],
+            "fleet_alerts": [
+                {},
+            ],
+            "unresolved_problems": [
+                {},
+                {},
+                {},
+            ],
+            "remediation_status": [
+                {},
+            ],
+            "verification_status": [
+                {},
+                {},
+            ],
+            "recent_activity": [
+                {},
+                {},
+                {},
+                {},
+            ],
+        },
+    )
+
+    assert len(dashboard.active_cases()) == 2
+    assert len(dashboard.fleet_alerts()) == 1
+    assert len(dashboard.unresolved_problems()) == 3
+    assert len(dashboard.remediation_status()) == 1
+    assert len(dashboard.verification_status()) == 2
+    assert len(dashboard.recent_activity()) == 4

@@ -51,4 +51,4 @@ def test_packaging_architecture_is_consistent():
 
 def test_production_packaging_identity_is_v09_beta():
     assert PACKAGING_ARCHITECTURE.application_name == "Windows Technician"
-    assert PACKAGING_ARCHITECTURE.version.startswith("0.9.")
+    assert PACKAGING_ARCHITECTURE.version.startswith("1.0.")

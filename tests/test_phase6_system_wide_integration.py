@@ -318,7 +318,7 @@ def test_phase6_health_model_evaluates_all_domains(
         "SERVICE",
     ]
 
-    assert result["health_score"] == 10
+    assert result["health_score"] == 45
 
 
 def test_phase6_health_model_preserves_domain_health(

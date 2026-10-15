@@ -166,12 +166,9 @@ class SystemProblemRelationships:
             return None
 
         selected = [
-            memory_evidence[0]
+            *memory_evidence,
+            *process_evidence,
         ]
-
-        selected.extend(
-            process_evidence
-        )
 
         unique_evidence = []
 

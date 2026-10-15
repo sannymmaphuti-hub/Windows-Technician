@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QSizePolicy, QLabel, QPushButton
+﻿from PySide6.QtWidgets import QSizePolicy, QLabel, QPushButton
 
 from engine.main_window import MainWindow
 
@@ -12,7 +12,7 @@ def make_state():
         def to_dict(self):
             return {
                 "application_name": "Windows Technician",
-                "version": "0.9.0",
+                "version": "1.0.0",
                 "status": "READY",
                 "active_case_id": None,
                 "active_machine_id": None,

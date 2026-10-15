@@ -34,6 +34,7 @@ class TechnicianWorkflow:
         },
         WorkflowState.REMEDIATING: {
             WorkflowState.VERIFYING,
+            WorkflowState.INVESTIGATING,
             WorkflowState.ESCALATED,
         },
         WorkflowState.VERIFYING: {
@@ -95,6 +96,11 @@ class TechnicianWorkflow:
 
     def start_verification(self):
         self._transition_to(WorkflowState.VERIFYING)
+
+    def start_recovery_investigation(self):
+        # Explicit recovery transition. No diagnosis, remediation,
+        # execution, or retry is performed here.
+        self._transition_to(WorkflowState.INVESTIGATING)
 
     def resolve(self):
         self._transition_to(WorkflowState.RESOLVED)

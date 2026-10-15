@@ -170,6 +170,8 @@ This is expected behavior for some classes of Windows problems.
 
 # 11. Remediation Fails
 
+**Executed ≠ Verified:** A remediation operation is not considered successful until its outcome has been independently verified.
+
 If remediation fails:
 
 1. Read the failure information.
@@ -353,26 +355,7 @@ First determine:
 
 Persistent operational data may contain information required for troubleshooting.
 
----
-
-# 24. When to Stop Troubleshooting
-
-Stop and escalate when:
-
-- The problem involves hardware.
-- Repeated remediation attempts would be unsafe.
-- Evidence is contradictory.
-- Configuration may be corrupted.
-- Persistent data may be at risk.
-- The application repeatedly crashes.
-- An upgrade leaves the application unusable.
-- A security or permission issue cannot be resolved safely.
-- You do not understand what an attempted remediation will change.
-
-Stopping is a valid diagnostic decision.
-
----
-# 23. Packaging Runtime Problems
+---rnrn## 23. Packaging Runtime Problems
 
 The production Windows distribution uses an onedir structure.
 
@@ -380,16 +363,16 @@ The expected structure includes:
 
 ```text
 WindowsTechnician/
-├── WindowsTechnician.exe
-└── _internal/
+â”œâ”€â”€ WindowsTechnician.exe
+â””â”€â”€ _internal/
 
 If the executable is present but _internal is missing or incomplete, the application package may be incomplete.
 
-Do not copy arbitrary Python or Qt files into the distribution as a workaround.
-
-Use a validated production build.
+Do not copy arbitrary Python or Qt files into the distribution as a workaround. Use a validated production build.
 
 24. When to Stop Troubleshooting
+
+# 24. When to Stop Troubleshooting
 
 Stop and escalate when:
 
@@ -407,18 +390,14 @@ Stopping is a valid diagnostic decision.
 
 25. Information to Give a Technician
 
-When escalating a problem, provide as much useful evidence as possible.
+When escalating a problem, provide as much useful evidence as possible:
 
-Useful information includes:
-
-What happened.
-What you expected to happen.
+What happened and what you expected.
 When the problem began.
 What action was being performed.
 The displayed error or finding.
 Relevant diagnostic information.
-Application logs.
-Diagnostic reports.
+Application logs and diagnostic reports, after reviewing them for sensitive information.
 Whether the application was recently installed or upgraded.
 Whether the problem happens consistently.
 
@@ -426,7 +405,6 @@ Avoid deleting evidence before reporting the problem.
 
 26. Troubleshooting Safety Rule
 
-# 26. Troubleshooting Safety Rule
 The most important rule is:
 
 Do not destroy evidence while trying to diagnose the problem.
@@ -440,5 +418,10 @@ over:
 Delete → Reinstall → Retry → Hope
 
 Windows Technician is designed around the first approach.
+```
 
+# 26. Troubleshooting Safety Rule
 
+Follow the safe sequence: Observe ? Collect Evidence ? Understand ? Act ? Verify.
+
+Never repeat remediation blindly or delete persistent data as a first response. Stop and escalate to a technician when the cause, risk, or outcome cannot be established. A remediation is complete only after its result has been independently verified.

@@ -10,6 +10,6 @@ def test_main_uses_canonical_application_version():
     assert APP_VERSION == APPLICATION_METADATA.version
 
 
-def test_main_application_identity_is_v09_beta():
+def test_main_application_identity_is_v1_production():
     assert APP_NAME == "Windows Technician"
-    assert APP_VERSION.startswith("0.9.")
+    assert APP_VERSION.startswith("1.0.")

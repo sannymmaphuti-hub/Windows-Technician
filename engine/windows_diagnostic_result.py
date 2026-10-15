@@ -1,4 +1,4 @@
-# ==========================================
+﻿# ==========================================
 # Windows Technician v0.9
 # WINDOWS DIAGNOSTIC RESULT
 # ==========================================
@@ -88,3 +88,26 @@ class WindowsDiagnosticResult:
             if confidences is not None
             else []
         )
+
+    def __getitem__(self, key):
+        """Provide dictionary-style read access for legacy callers."""
+        if key not in {
+            "observations",
+            "signals",
+            "findings",
+            "correlations",
+            "candidates",
+            "primary_cause",
+            "recommendations",
+            "confidences",
+        }:
+            raise KeyError(key)
+
+        return getattr(self, key)
+
+    def get(self, key, default=None):
+        """Provide dictionary-style get() compatibility."""
+        try:
+            return self[key]
+        except KeyError:
+            return default

@@ -1,5 +1,7 @@
 ﻿from copy import deepcopy
 
+from packaging.application_metadata import APPLICATION_METADATA
+
 
 class ApplicationState:
     """
@@ -22,7 +24,7 @@ class ApplicationState:
     def __init__(
         self,
         application_name="Windows Technician",
-        version="0.9.0",
+        version=APPLICATION_METADATA.version,
         status="STARTING",
         configuration=None,
         active_case_id=None,

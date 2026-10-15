@@ -1,6 +1,8 @@
 ﻿import pytest
 
 from engine.application_bootstrap import ApplicationBootstrap
+from packaging.application_runtime_configuration import RuntimeConfigurationState
+from packaging.production_configuration import ProductionConfiguration
 
 
 def test_bootstrap_starts_in_starting_state():
@@ -19,12 +21,14 @@ def test_start_transitions_to_ready():
     assert state.status == "READY"
 
 
-def test_start_returns_application_state():
+def test_start_returns_canonical_runtime():
     bootstrap = ApplicationBootstrap()
 
-    state = bootstrap.start()
+    runtime = bootstrap.start()
 
-    assert state is bootstrap.state
+    assert runtime is bootstrap.runtime
+    assert runtime.status == "READY"
+    assert bootstrap.state.status == "READY"
 
 
 def test_start_is_idempotent():
@@ -91,11 +95,18 @@ def test_failed_bootstrap_can_be_started_again():
 
 
 def test_configuration_reaches_application_state():
+    configuration = ProductionConfiguration(
+        state=RuntimeConfigurationState(
+            configuration={
+                "theme": "dark",
+                "diagnostics_enabled": True,
+            },
+            recovered=False,
+            safe=True,
+        )
+    )
     bootstrap = ApplicationBootstrap(
-        configuration={
-            "theme": "dark",
-            "diagnostics_enabled": True,
-        }
+        configuration=configuration,
     )
 
     assert bootstrap.state.configuration == {
@@ -154,7 +165,7 @@ def test_bootstrap_state_is_serializable():
     data = bootstrap.state.to_dict()
 
     assert data["application_name"] == "Windows Technician"
-    assert data["version"] == "0.9.0"
+    assert data["version"] == "1.0.0"
     assert data["status"] == "READY"
 
 

@@ -30,9 +30,9 @@ class ApplicationMetadata:
                     f"{field_name} must be a non-empty string."
                 )
 
-        if not self.version.startswith("0.9."):
+        if not self.version.startswith("1.0."):
             raise ValueError(
-                "Windows Technician packaging metadata must target v0.9."
+                "Windows Technician packaging metadata must target v1.0."
             )
 
     @property
@@ -49,8 +49,8 @@ class ApplicationMetadata:
 APPLICATION_METADATA = ApplicationMetadata(
     name="windows-technician",
     display_name="Windows Technician",
-    version="0.9.0",
-    release_channel="beta",
+    version="1.0.0",
+    release_channel="production",
     executable_name="WindowsTechnician.exe",
     package_name="WindowsTechnician",
 )

@@ -18,6 +18,7 @@ class Correlation:
                 "Correlation strength must be LOW, MEDIUM, or HIGH."
             )
 
+
         self.correlation_type = correlation_type
         self.findings = findings
         self.strength = strength

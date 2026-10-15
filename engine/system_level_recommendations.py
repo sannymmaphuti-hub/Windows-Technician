@@ -238,6 +238,12 @@ class SystemLevelRecommendations:
             finding
         )
 
+        severity_assessment = (
+            "ASSESSED"
+            if severity in cls._SEVERITY_PRIORITY
+            else "UNASSESSED"
+        )
+
         priority = cls._SEVERITY_PRIORITY.get(
             severity,
             "LOW",
@@ -250,6 +256,16 @@ class SystemLevelRecommendations:
             )
         ).strip().upper()
 
+        # Generic classifications alone are insufficient evidence
+        # for a finding-specific recommendation.
+        if finding_type in {
+            "",
+            "UNKNOWN",
+            "MEMORY",
+            "PROCESS",
+        }:
+            return None
+
         action = cls._build_action(
             item["domain"],
             finding_type,
@@ -261,16 +277,36 @@ class SystemLevelRecommendations:
             severity,
         )
 
-        return {
+        if severity_assessment == "UNASSESSED":
+            rationale = (
+                f"{rationale} Severity is unassessed; "
+                "LOW is a compatibility fallback, not "
+                "a confirmed severity classification."
+            )
+
+        recommendation = {
             "type": "FINDING",
             "priority": priority,
+            "severity_assessment": severity_assessment,
             "domain": item["domain"],
-            "finding": deepcopy(
-                finding
-            ),
+            "finding": deepcopy(finding),
             "action": action,
             "rationale": rationale,
         }
+
+        finding_id = finding.get("id")
+        if finding_id is None:
+            finding_id = finding.get("finding_id")
+        if finding_id is not None:
+            recommendation["finding_id"] = deepcopy(finding_id)
+
+        if "evidence" in finding:
+            recommendation["evidence"] = deepcopy(finding["evidence"])
+
+        if "provenance" in finding:
+            recommendation["provenance"] = deepcopy(finding["provenance"])
+
+        return recommendation
 
     @classmethod
     def _build_pattern_recommendation(
@@ -288,9 +324,62 @@ class SystemLevelRecommendations:
             )
         )
 
-        return {
+        raw_confidence = pattern.get("confidence")
+        normalized_confidence = (
+            str(raw_confidence).strip().upper()
+            if raw_confidence is not None
+            else ""
+        )
+        confidence_assessment = (
+            "ASSESSED"
+            if normalized_confidence in {"LOW", "MEDIUM", "HIGH"}
+            else "UNASSESSED"
+        )
+
+        if confidence_assessment == "UNASSESSED":
+            rationale = (
+                f"{rationale} Pattern confidence is unassessed; "
+                "investigate the supporting evidence before "
+                "drawing a causal conclusion."
+            )
+
+        pattern_findings = pattern.get("findings", [])
+        finding_priorities = []
+
+        if isinstance(pattern_findings, (list, tuple)):
+            for finding in pattern_findings:
+                if not isinstance(finding, dict):
+                    continue
+
+                severity = cls._extract_severity(finding)
+                if severity in cls._SEVERITY_PRIORITY:
+                    finding_priorities.append(
+                        cls._SEVERITY_PRIORITY[severity]
+                    )
+
+        if finding_priorities:
+            priority = max(
+                finding_priorities,
+                key=lambda value: cls._PRIORITY_RANK[value],
+            )
+            priority_basis = "FINDING_SEVERITY"
+        else:
+            priority = {
+                "HIGH": "HIGH",
+                "MEDIUM": "MEDIUM",
+                "LOW": "LOW",
+            }.get(normalized_confidence, "LOW")
+            priority_basis = (
+                "PATTERN_CONFIDENCE"
+                if confidence_assessment == "ASSESSED"
+                else "UNASSESSED_FALLBACK"
+            )
+
+        recommendation = {
             "type": "SYSTEM_PATTERN",
-            "priority": "HIGH",
+            "priority": priority,
+            "priority_basis": priority_basis,
+            "confidence_assessment": confidence_assessment,
             "domains": deepcopy(
                 pattern.get(
                     "domains",
@@ -303,6 +392,13 @@ class SystemLevelRecommendations:
             "action": action,
             "rationale": rationale,
         }
+
+        if "confidence" in pattern:
+            recommendation["confidence"] = deepcopy(
+                pattern["confidence"]
+            )
+
+        return recommendation
 
     @staticmethod
     def _extract_severity(finding):

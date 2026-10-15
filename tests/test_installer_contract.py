@@ -26,7 +26,7 @@ def test_installer_matches_application_metadata():
 
 def test_installer_identity_is_v09():
     assert INSTALLER_CONTRACT.application_name == "Windows Technician"
-    assert INSTALLER_CONTRACT.version.startswith("0.9.")
+    assert INSTALLER_CONTRACT.version.startswith("1.0.")
     assert INSTALLER_CONTRACT.executable_name == "WindowsTechnician.exe"
 
 
@@ -72,4 +72,4 @@ def test_start_menu_directory_requires_path():
 
 def test_installer_contract_is_immutable():
     with pytest.raises(AttributeError):
-        INSTALLER_CONTRACT.version = "0.9.1"
+        INSTALLER_CONTRACT.version = "1.0.1"

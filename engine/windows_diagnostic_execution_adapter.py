@@ -49,6 +49,13 @@ class WindowsDiagnosticExecutionAdapter:
                 f"for {resolution.domain}."
             )
 
+        # Production PROCESS and MEMORY diagnostics must use the
+        # configured collectors and rules, not an empty Analyzer().
+        if resolution.domain in {"PROCESS", "MEMORY"}:
+            from engine.factory import create_diagnostic_engine
+
+            return create_diagnostic_engine()
+
         return implementation_class()
 
     def execute(self, evidence=_UNSET):
