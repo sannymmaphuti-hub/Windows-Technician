@@ -1,4 +1,4 @@
-import pytest
+﻿import pytest
 
 from engine.observation import Observation
 from engine.signal import Signal
@@ -27,7 +27,6 @@ class HighMemoryUsageRule(SignalRule):
 
 def test_signal_rule_defines_match_contract():
     rule = HighMemoryUsageRule()
-
     observation = Observation(
         source="memory",
         subject="system_memory",
@@ -40,7 +39,6 @@ def test_signal_rule_defines_match_contract():
 
 def test_signal_rule_can_reject_non_matching_observation():
     rule = HighMemoryUsageRule()
-
     observation = Observation(
         source="memory",
         subject="system_memory",
@@ -53,7 +51,6 @@ def test_signal_rule_can_reject_non_matching_observation():
 
 def test_signal_rule_can_create_signal_from_matching_observation():
     rule = HighMemoryUsageRule()
-
     observation = Observation(
         source="memory",
         subject="system_memory",
@@ -69,7 +66,6 @@ def test_signal_rule_can_create_signal_from_matching_observation():
 
 def test_signal_rule_preserves_observation_context():
     rule = HighMemoryUsageRule()
-
     observation = Observation(
         source="memory",
         subject="system_memory",
@@ -85,29 +81,24 @@ def test_signal_rule_preserves_observation_context():
     assert signal.value == observation.value
 
 
+def test_signal_rule_cannot_be_instantiated_directly():
+    with pytest.raises(TypeError):
+        SignalRule()
+
+
 def test_signal_rule_requires_matches_implementation():
-    rule = SignalRule()
+    class IncompleteMatchesRule(SignalRule):
+        def create_signal(self, observation):
+            return None
 
-    observation = Observation(
-        source="memory",
-        subject="system_memory",
-        attribute="usage_percent",
-        value=88,
-    )
-
-    with pytest.raises(NotImplementedError):
-        rule.matches(observation)
+    with pytest.raises(TypeError):
+        IncompleteMatchesRule()
 
 
 def test_signal_rule_requires_create_signal_implementation():
-    rule = SignalRule()
+    class IncompleteCreateSignalRule(SignalRule):
+        def matches(self, observation):
+            return False
 
-    observation = Observation(
-        source="memory",
-        subject="system_memory",
-        attribute="usage_percent",
-        value=88,
-    )
-
-    with pytest.raises(NotImplementedError):
-        rule.create_signal(observation)
+    with pytest.raises(TypeError):
+        IncompleteCreateSignalRule()
