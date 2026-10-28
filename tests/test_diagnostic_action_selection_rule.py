@@ -1,45 +1,45 @@
+﻿import pytest
+
 from engine.diagnostic_action_selection_rule import (
     DiagnosticActionSelectionRule,
 )
 
 
-class StubActionSelectionRule(DiagnosticActionSelectionRule):
-    def matches(self, decision_type):
-        raise NotImplementedError
-
-    def create_action(self, decision_type):
-        raise NotImplementedError
+def test_action_selection_rule_cannot_be_instantiated_directly():
+    with pytest.raises(TypeError):
+        DiagnosticActionSelectionRule()
 
 
-def test_action_selection_rule_defines_matches_contract():
-    rule = StubActionSelectionRule()
+def test_action_selection_rule_requires_matches_implementation():
+    class IncompleteRule(DiagnosticActionSelectionRule):
+        def create_action(self, decision_type):
+            return {"type": decision_type}
 
-    assert callable(rule.matches)
-
-
-def test_action_selection_rule_defines_create_action_contract():
-    rule = StubActionSelectionRule()
-
-    assert callable(rule.create_action)
+    with pytest.raises(TypeError):
+        IncompleteRule()
 
 
-def test_base_rule_matches_is_not_implemented():
-    rule = StubActionSelectionRule()
+def test_action_selection_rule_requires_create_action_implementation():
+    class IncompleteRule(DiagnosticActionSelectionRule):
+        def matches(self, decision_type):
+            return True
 
-    try:
-        rule.matches("CHECK_GATEWAY_REACHABILITY")
-    except NotImplementedError:
-        pass
-    else:
-        raise AssertionError("Expected NotImplementedError")
+    with pytest.raises(TypeError):
+        IncompleteRule()
 
 
-def test_base_rule_create_action_is_not_implemented():
-    rule = StubActionSelectionRule()
+def test_concrete_action_selection_rule_implements_both_methods():
+    class ConcreteRule(DiagnosticActionSelectionRule):
+        def matches(self, decision_type):
+            return decision_type == "CHECK_GATEWAY_REACHABILITY"
 
-    try:
-        rule.create_action("CHECK_GATEWAY_REACHABILITY")
-    except NotImplementedError:
-        pass
-    else:
-        raise AssertionError("Expected NotImplementedError")
+        def create_action(self, decision_type):
+            return {"type": decision_type}
+
+    rule = ConcreteRule()
+
+    assert rule.matches("CHECK_GATEWAY_REACHABILITY") is True
+    assert rule.matches("OTHER_ACTION") is False
+    assert rule.create_action("CHECK_GATEWAY_REACHABILITY") == {
+        "type": "CHECK_GATEWAY_REACHABILITY"
+    }
